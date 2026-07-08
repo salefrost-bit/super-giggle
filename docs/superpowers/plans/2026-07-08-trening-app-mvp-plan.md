@@ -52,10 +52,16 @@ src/
       reps.test.ts
       timer.ts
       timer.test.ts
+      summarize.ts
+      summarize.test.ts
+      README.md
     supabase/
       client.ts
       queries.ts
+      queries.test.ts
       sessions.ts
+      sessions.test.ts
+      README.md
     auth/
       AuthContext.tsx
     gamification/
@@ -238,14 +244,15 @@ create table profiles (
 create table sessions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
-  total_cards int not null,
+  difficulty_level_id uuid not null references difficulty_levels(id),
+  total_cards int not null check (total_cards in (13, 26, 52)),
   rep_multiplier numeric not null,
   game_mode text not null default 'classic',
   settings jsonb not null default '{}'::jsonb,
   started_at timestamptz not null,
   completed_at timestamptz,
   total_duration_seconds int,
-  status text not null default 'in_progress'
+  status text not null default 'in_progress' check (status in ('in_progress', 'completed'))
 );
 
 create table session_exercises (
@@ -259,13 +266,21 @@ create table card_draws (
   id uuid primary key default gen_random_uuid(),
   session_id uuid not null references sessions(id) on delete cascade,
   order_index int not null,
-  suit text not null,
-  card_value int not null,
+  suit text not null check (suit in ('hearts', 'clubs', 'spades', 'diamonds')),
+  card_value int not null check (card_value between 2 and 14),
   reps int not null,
-  completed_at timestamptz not null
+  completed_at timestamptz not null,
+  unique (session_id, order_index)
 );
 
--- Auto-create a profile row when a new auth user signs up
+create index sessions_user_id_idx on sessions (user_id);
+create index card_draws_session_id_idx on card_draws (session_id);
+create index exercises_difficulty_level_id_idx on exercises (difficulty_level_id);
+
+-- Auto-create a profile row when a new auth user signs up.
+-- NOTE: username defaults to the email local-part. Harmless today (no public
+-- read policy on profiles besides the owner), but revisit before Phase 2 adds
+-- a leaderboard read policy on is_public=true profiles — don't leak emails.
 create function public.handle_new_user()
 returns trigger as $$
 begin
@@ -1143,7 +1158,12 @@ describe('createSession', () => {
 
     expect(sessionId).toBe('session-1');
     expect(sessionsInsert).toHaveBeenCalledWith(
-      expect.objectContaining({ user_id: 'user-1', total_cards: 13, rep_multiplier: 1 })
+      expect.objectContaining({
+        user_id: 'user-1',
+        difficulty_level_id: 'd1',
+        total_cards: 13,
+        rep_multiplier: 1,
+      })
     );
     expect(sessionExercisesInsert).toHaveBeenCalledWith([
       { session_id: 'session-1', category_id: 'c1', exercise_id: 'e1' },
@@ -1197,7 +1217,7 @@ describe('completeSession', () => {
 });
 
 describe('getUserSessions', () => {
-  it('maps snake_case rows to SessionHistoryEntry objects, newest first', async () => {
+  it('maps snake_case rows (including the joined difficulty name) to SessionHistoryEntry objects, newest first', async () => {
     const order = vi.fn().mockResolvedValue({
       data: [
         {
@@ -1206,6 +1226,7 @@ describe('getUserSessions', () => {
           total_duration_seconds: 180,
           total_cards: 13,
           status: 'completed',
+          difficulty_levels: { name: 'Srednji' },
         },
       ],
       error: null,
@@ -1224,6 +1245,7 @@ describe('getUserSessions', () => {
         totalDurationSeconds: 180,
         totalCards: 13,
         status: 'completed',
+        difficultyName: 'Srednji',
       },
     ]);
   });
@@ -1256,6 +1278,7 @@ export async function createSession(params: CreateSessionParams): Promise<string
     .from('sessions')
     .insert({
       user_id: params.userId,
+      difficulty_level_id: params.config.difficultyLevelId,
       total_cards: params.config.deckSize,
       rep_multiplier: params.config.repMultiplier,
       started_at: params.startedAtIso,
@@ -1315,13 +1338,14 @@ export interface SessionHistoryEntry {
   totalDurationSeconds: number | null;
   totalCards: number;
   status: string;
+  difficultyName: string;
 }
 
 export async function getUserSessions(userId: string): Promise<SessionHistoryEntry[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('sessions')
-    .select('id, started_at, total_duration_seconds, total_cards, status')
+    .select('id, started_at, total_duration_seconds, total_cards, status, difficulty_levels(name)')
     .eq('user_id', userId)
     .order('started_at', { ascending: false });
   if (error) throw error;
@@ -1332,6 +1356,7 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
       total_duration_seconds: number | null;
       total_cards: number;
       status: string;
+      difficulty_levels: { name: string };
     }>
   ).map((row) => ({
     id: row.id,
@@ -1339,6 +1364,7 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
     totalDurationSeconds: row.total_duration_seconds,
     totalCards: row.total_cards,
     status: row.status,
+    difficultyName: row.difficulty_levels.name,
   }));
 }
 ```
@@ -1731,7 +1757,7 @@ export default defineConfig({
 - [ ] **Step 4: Run the full test suite, verify all existing tests still pass**
 
 Run: `npm test`
-Expected: all previously-passing tests (deck, reps, timer, queries, sessions — 18 tests total) still PASS under the jsdom environment.
+Expected: all previously-passing tests (deck, reps, timer, queries, sessions — 24 tests total) still PASS under the jsdom environment.
 
 - [ ] **Step 5: Commit**
 
@@ -2249,8 +2275,8 @@ git commit -m "feat: add setup screen orchestration"
 Create `src/hooks/useStopwatch.test.ts`:
 
 ```typescript
-import { describe, it, expect, vi, beforeEach, afterEach, act } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
 import { useStopwatch } from './useStopwatch';
 
 describe('useStopwatch', () => {
@@ -2472,7 +2498,7 @@ Create `src/components/session/SessionScreen.test.tsx`:
 
 ```tsx
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SessionScreen } from './SessionScreen';
 import type { CardDrawResult, SessionConfig } from '@/lib/domain/types';
@@ -2521,8 +2547,14 @@ describe('SessionScreen — guest', () => {
 });
 
 describe('SessionScreen — logged in', () => {
-  it('creates a session, records each draw, and completes the session', async () => {
-    vi.mocked(createSession).mockResolvedValue('session-1');
+  it('disables "Sledeća karta" until the session is created, then records each draw and completes the session', async () => {
+    let resolveCreateSession: (id: string) => void = () => {};
+    vi.mocked(createSession).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveCreateSession = resolve;
+        })
+    );
     vi.mocked(recordCardDraw).mockResolvedValue(undefined);
     vi.mocked(completeSession).mockResolvedValue(undefined);
     const onFinish = vi.fn();
@@ -2538,13 +2570,40 @@ describe('SessionScreen — logged in', () => {
       />
     );
 
-    await waitFor(() => expect(createSession).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user-1' })));
+    expect(screen.getByRole('button', { name: 'Priprema treninga...' })).toBeDisabled();
+
+    resolveCreateSession('session-1');
+    await screen.findByRole('button', { name: 'Sledeća karta' });
 
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
 
+    expect(createSession).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user-1' }));
     expect(recordCardDraw).toHaveBeenCalledTimes(2);
     expect(completeSession).toHaveBeenCalledWith('session-1', expect.any(Number));
+    expect(onFinish).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a warning and stops trying to save if session creation fails, but still lets the workout continue', async () => {
+    vi.mocked(createSession).mockRejectedValue(new Error('network down'));
+    const onFinish = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <SessionScreen
+        config={config}
+        draws={draws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByText(/Čuvanje treninga trenutno ne radi/);
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    expect(recordCardDraw).not.toHaveBeenCalled();
     expect(onFinish).toHaveBeenCalledTimes(1);
   });
 });
@@ -2578,6 +2637,8 @@ interface SessionScreenProps {
   onFinish: (result: SessionResult) => void;
 }
 
+type SessionSaveState = 'guest' | 'creating' | 'ready' | 'failed';
+
 export function SessionScreen({
   config,
   draws,
@@ -2588,6 +2649,8 @@ export function SessionScreen({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedDraws, setCompletedDraws] = useState<CardDrawResult[]>(draws);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<SessionSaveState>(userId ? 'creating' : 'guest');
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const stopwatch = useStopwatch();
 
   useEffect(() => {
@@ -2598,24 +2661,32 @@ export function SessionScreen({
       categoryIdByKey,
       startedAtIso: new Date().toISOString(),
     })
-      .then(setSessionId)
-      .catch((err) => console.error('Failed to create session', err));
+      .then((id) => {
+        setSessionId(id);
+        setSaveState('ready');
+      })
+      .catch((err) => {
+        console.error('Failed to create session', err);
+        setSaveState('failed');
+      });
     // Intentionally runs once on mount only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleNext() {
+    setIsAdvancing(true);
     const completedAt = new Date().toISOString();
     const updatedDraw: CardDrawResult = { ...completedDraws[currentIndex], completedAt };
     const nextDraws = [...completedDraws];
     nextDraws[currentIndex] = updatedDraw;
     setCompletedDraws(nextDraws);
 
-    if (userId && sessionId) {
+    if (userId && sessionId && saveState === 'ready') {
       try {
         await recordCardDraw(sessionId, updatedDraw);
       } catch (err) {
         console.error('Failed to record card draw', err);
+        setSaveState('failed');
       }
     }
 
@@ -2623,26 +2694,35 @@ export function SessionScreen({
     if (nextIndex >= draws.length) {
       stopwatch.pause();
       const totalDurationSeconds = stopwatch.elapsedSeconds;
-      if (userId && sessionId) {
+      if (userId && sessionId && saveState === 'ready') {
         try {
           await completeSession(sessionId, totalDurationSeconds);
         } catch (err) {
           console.error('Failed to complete session', err);
+          setSaveState('failed');
         }
       }
       onFinish({ totalDurationSeconds, draws: nextDraws });
       return;
     }
     setCurrentIndex(nextIndex);
+    setIsAdvancing(false);
   }
 
   const current = draws[currentIndex];
+  const isWaitingForSession = userId !== null && saveState === 'creating';
+  const nextDisabled = stopwatch.isPaused || isAdvancing || isWaitingForSession;
 
   return (
     <div className="flex flex-col items-center gap-6 p-6">
       <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} />
       <ProgressIndicator current={currentIndex + 1} total={draws.length} />
       <CardDisplay exerciseName={current.exercise.name} reps={current.reps} />
+      {saveState === 'failed' && (
+        <p className="text-sm text-red-600">
+          Čuvanje treninga trenutno ne radi — rezultat možda neće biti sačuvan u istoriji.
+        </p>
+      )}
       <div className="flex gap-3">
         <button
           onClick={stopwatch.isPaused ? stopwatch.resume : stopwatch.pause}
@@ -2652,10 +2732,10 @@ export function SessionScreen({
         </button>
         <button
           onClick={handleNext}
-          disabled={stopwatch.isPaused}
+          disabled={nextDisabled}
           className="bg-blue-600 text-white rounded px-6 py-2 disabled:opacity-50"
         >
-          Sledeća karta
+          {isWaitingForSession ? 'Priprema treninga...' : 'Sledeća karta'}
         </button>
       </div>
     </div>
@@ -2663,10 +2743,12 @@ export function SessionScreen({
 }
 ```
 
+Note: `saveState` deliberately gates both `recordCardDraw` and `completeSession` calls (not just `sessionId`) — if session creation fails partway through, the workout degrades gracefully to guest-like behavior (shows the warning, stops attempting further writes) instead of throwing on every subsequent card.
+
 - [ ] **Step 4: Run tests, verify they pass**
 
 Run: `npm test -- SessionScreen`
-Expected: PASS — 2 tests passed.
+Expected: PASS — 3 tests passed.
 
 - [ ] **Step 5: Commit**
 
@@ -2879,6 +2961,7 @@ export function HistoryScreen({ userId }: HistoryScreenProps) {
       {sessions.map((session) => (
         <div key={session.id} className="flex justify-between border-b py-2">
           <span>{new Date(session.startedAt).toLocaleDateString('sr-RS')}</span>
+          <span>{session.difficultyName}</span>
           <span>{formatDuration(session.totalDurationSeconds)}</span>
           <span>{session.totalCards} karata</span>
         </div>
@@ -3160,12 +3243,18 @@ Expected: CLI prints a production URL such as `https://trening-app.vercel.app`.
 
 Check `.gitignore` contains `.vercel` (the Vercel CLI adds this automatically when running `vercel link`; confirm it's present).
 
-- [ ] **Step 6: Smoke test the production deployment**
+- [ ] **Step 6: Point Supabase Auth at the production URL**
 
-Open the production URL from Step 4. Repeat the full manual walkthrough from Task 26 Step 6 (guest flow, then signed-in flow) against the live deployment.
-Expected: identical behavior to local `npm run dev`, with data persisting in the real Supabase project.
+By default, Supabase Auth's "Site URL" is `http://localhost:3000`, so signup confirmation emails link back to localhost instead of the deployed app. In the Supabase Dashboard, go to Authentication → URL Configuration:
+- Set **Site URL** to the production URL from Step 4 (e.g. `https://trening-app.vercel.app`).
+- Add the same URL under **Redirect URLs**.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 7: Smoke test the production deployment**
+
+Open the production URL from Step 4. Repeat the full manual walkthrough from Task 26 Step 6 (guest flow, then signed-in flow) against the live deployment, including signing up with a real email and confirming via the link that email contains.
+Expected: identical behavior to local `npm run dev`, with data persisting in the real Supabase project, and the confirmation link pointing at the production URL (not localhost).
+
+- [ ] **Step 8: Commit**
 
 ```bash
 git add .gitignore
@@ -3174,15 +3263,64 @@ git commit -m "chore: deploy to Vercel"
 
 ---
 
-### Task 28: Phase 2 scaffolding placeholders (draft migration + module doc)
+### Task 28: Module READMEs and Phase 2 scaffolding placeholders
 
 **Files:**
-- Create: `supabase/phase2_gamification.sql` (draft, NOT applied to the database), `src/lib/gamification/README.md`
+- Create: `src/lib/domain/README.md`, `src/lib/supabase/README.md`, `supabase/phase2_gamification.sql` (draft, NOT applied to the database), `src/lib/gamification/README.md`
 
 **Interfaces:**
-- Produces: a written reference for Phase 2 gamification work (spec section 10) so a future session — Cursor or Claude — has the full intended direction without re-deriving it. No code or live schema changes.
+- Produces: the per-module documentation committed to in spec section 4.3.3 (item 3), plus a written reference for Phase 2 gamification work (spec section 10) so a future session — Cursor or Claude — has the full intended direction without re-deriving it. No code or live schema changes.
 
-- [ ] **Step 1: Write the draft Phase 2 migration**
+- [ ] **Step 1: Write the domain module README**
+
+Create `src/lib/domain/README.md`:
+
+```markdown
+# Domain module
+
+Pure, framework-independent business logic. No Supabase imports, no
+React imports, no side effects — every function here takes plain
+data in and returns plain data out, which is why it's fully covered
+by unit tests instead of manual verification.
+
+- `types.ts` — the single source of truth for domain shapes
+  (`Card`, `Exercise`, `SessionConfig`, `CardDrawResult`, etc.) and
+  the `CATEGORY_KEY_TO_NAME` mapping, which MUST match the `name`
+  column seeded in `supabase/migrations/0002_seed.sql` exactly.
+- `deck.ts` — deck creation, shuffling, and session card draw.
+- `reps.ts` — card rank -> rep count.
+- `timer.ts` — **invariant: elapsed/remaining time is always derived
+  from stored timestamps, never accumulated via a tick counter.**
+  See spec section 4.2. Any new timer-like feature (e.g. Phase 2
+  challenge countdown) must follow this same pattern.
+- `summarize.ts` — per-category rollup of a finished session's draws.
+```
+
+- [ ] **Step 2: Write the supabase module README**
+
+Create `src/lib/supabase/README.md`:
+
+```markdown
+# Supabase module
+
+All Supabase I/O lives here — nothing outside this module calls
+`@supabase/supabase-js` directly.
+
+- `client.ts` — browser client factory, reads
+  `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- `queries.ts` — read-only lookups (`categories`, `difficulty_levels`,
+  `exercises`) plus `buildCategoryIdByKey` / `categoryKeyForName`,
+  which translate between the app's internal `CategoryKey` enum and
+  the database's category rows by name. If you rename a category in
+  the database, update `CATEGORY_KEY_TO_NAME` in
+  `src/lib/domain/types.ts` in the same change.
+- `sessions.ts` — the only place that writes `sessions`,
+  `session_exercises`, and `card_draws`. Guest sessions never call
+  any function here — that branch is decided by the caller
+  (`SessionScreen`), not by this module.
+```
+
+- [ ] **Step 3: Write the draft Phase 2 migration**
 
 Create `supabase/phase2_gamification.sql`:
 
@@ -3217,7 +3355,7 @@ create table challenge_results (
 -- leaderboard is a query over sessions joined to profiles where profiles.is_public = true.
 ```
 
-- [ ] **Step 2: Write the gamification module placeholder doc**
+- [ ] **Step 4: Write the gamification module placeholder doc**
 
 Create `src/lib/gamification/README.md`:
 
@@ -3241,11 +3379,11 @@ Planned contents (none implemented yet):
 Do not add code here until Phase 2 has its own approved spec and plan.
 ```
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/phase2_gamification.sql src/lib/gamification/README.md
-git commit -m "docs: add Phase 2 gamification draft schema and module placeholder"
+git add src/lib/domain/README.md src/lib/supabase/README.md supabase/phase2_gamification.sql src/lib/gamification/README.md
+git commit -m "docs: add per-module READMEs and Phase 2 gamification draft schema"
 ```
 
 ---
@@ -3255,6 +3393,7 @@ git commit -m "docs: add Phase 2 gamification draft schema and module placeholde
 - **Spec coverage:** every spec section (2 scope, 3 stack, 4 architecture principles, 5 data model, 6 card/deck logic, 7 user flow, 8 exercise library, 9 guest vs account, 11 non-functional) maps to at least one task above. Section 10 (Phase 2 preview) is intentionally not implemented — see "Deferred to Phase 2" below.
 - **Type consistency verified:** `CardDrawResult`, `SessionConfig`, `SessionResult`, `Category`, `DifficultyLevel`, `Exercise`, `CategoryKey` are defined once in Task 6 and referenced with identical shapes through Tasks 7–26 (checked: `reps` vs `rank` naming, `categoryKey` vs `category_id` snake/camel mapping at the Supabase boundary in Tasks 11–12 only).
 - **No placeholders:** every step contains complete, runnable code or an exact command with expected output.
+- **Independent review pass:** this plan and the spec were reviewed by a second model (Fable) before handoff. Findings applied: `sessions.difficulty_level_id` added (Tasks 3, 12, 25) so history can show difficulty per spec section 7; DB indexes and CHECK constraints added on `sessions`, `card_draws`, `exercises` (Task 3); `card_draws` gained a `unique (session_id, order_index)` constraint; Task 21's test had a broken import (`act` doesn't exist in `vitest`, fixed to import from `@testing-library/react`); Task 16's expected test count corrected from 18 to 24; Task 23 (`SessionScreen`) reworked to fix a race condition where early card draws could be silently lost if `createSession` hadn't resolved yet, add double-submit protection, and surface save failures to the user instead of only logging them; Task 27 gained a step to point Supabase Auth's Site URL at the production domain (otherwise confirmation emails link to localhost); Task 28 gained `lib/domain/README.md` and `lib/supabase/README.md` to satisfy spec section 4.3.3's per-module doc requirement (previously only the Phase 2 placeholder had one).
 
 ## Deferred to Phase 2 (not built in this plan)
 
