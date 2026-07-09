@@ -93,9 +93,9 @@ Svaki mod igre je modul u `src/lib/modes/` sa zajedničkim interfejsom (definisa
 
 - **Biblioteka:** `next-intl` u režimu **bez i18n rutiranja** (URL-ovi se ne menjaju) — ICU format poruka rešava srpske množine (1 karta / 2 karte / 5 karata)
 - **Fajlovi:** `messages/sr.json`, `messages/en.json` — dodavanje jezika = novi JSON fajl + registracija
-- **Izbor jezika:** localStorage; podrazumevano iz `navigator.language` (`sr` za sr/bs/hr/sh prefikse, inače `en`); diskretno SR/EN dugme na landing ekranu
-- **Obuhvat:** SVI UI stringovi — uključujući retrofit postojećih MVP/redizajn ekrana; imena iz baze (kategorije, težine, vežbe) kroz `name_en` fallback (sekcija 5)
-- Srpski ostaje izvorni/podrazumevani jezik sadržaja
+- **Izbor jezika:** localStorage; **podrazumevani jezik je ENGLESKI** (bez obzira na jezik browsera); diskretno SR/EN dugme na landing ekranu menja i pamti izbor
+- **Obuhvat:** SVI UI stringovi — uključujući retrofit postojećih MVP/redizajn ekrana; imena iz baze (kategorije, težine, vežbe) kroz `name_en` (za engleski) sa fallback-om na srpsko `name` ako je `name_en` null
+- Engleski je podrazumevani jezik prikaza; srpski je izvorni jezik podataka u bazi (`name` kolone), a seed popunjava `name_en` za sav ugrađeni sadržaj
 
 ## 9. Testiranje
 
@@ -107,3 +107,5 @@ Svaki mod igre je modul u `src/lib/modes/` sa zajedničkim interfejsom (definisa
 ## 10. Proces do implementacije
 
 Posle odobrenja ovog spec-a: implementacioni plan **istog standarda kao MVP plan** (bite-sized taskovi, kompletan kod u svakom koraku, TDD, tačne komande i očekivani izlazi, Interfaces blokovi, preflight gate koji proverava da su MVP i redizajn planovi završeni) → **nezavisna revizija spec-a i plana (Fable, svež kontekst)** → primena nalaza → commit → handoff Cursoru.
+
+Nezavisna revizija, pored tehničke provere (model podataka, pokrivenost spec-a, kvalitet dekompozicije taskova, bagovi u kodu, bezbednost), OBAVEZNO ocenjuje i **game design**: da li je mehanika "Perfektan špil" logična i konzistentna, da li će stvarno biti ZABAVNA (motivaciona petlja, osećaj napretka, pravednost kvota, da li use-it-or-lose-it frustrira ili motiviše), i ako ima slabosti — šta konkretno dodati ili promeniti da igra bude zabavnija.
