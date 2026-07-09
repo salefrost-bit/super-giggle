@@ -1,0 +1,108 @@
+<h2>Faza 2 — kako izgledaju novi ekrani</h2>
+<p class="subtitle">Tri ključna ekrana gamifikacije u već izabranom volt stilu. Ovo je pregled za reakciju — reci šta bi menjao.</p>
+
+<style>
+  .phones { display:flex; gap:24px; flex-wrap:wrap; justify-content:center; }
+  .phone { width:270px; background:#18181b; border-radius:24px; padding:18px; font-family:'Nunito','Segoe UI',system-ui,sans-serif; color:#fafafa; box-shadow:0 8px 30px rgba(0,0,0,.45); }
+  .phone h4 { margin:0 0 12px; font-size:13px; color:#a1a1aa; text-align:center; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+  @keyframes pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(239,68,68,.5);} 50%{ box-shadow:0 0 0 7px rgba(239,68,68,0);} }
+  @keyframes drain { from{ width:38%; } to{ width:34%; } }
+</style>
+
+<div class="phones">
+
+  <!-- KORAK 0 -->
+  <div class="phone">
+    <h4>Korak 0 — izbor moda</h4>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <div style="background:#27272a;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;">←</div>
+      <div style="font-size:12px;font-weight:700;color:#a1a1aa;">Korak 1/4</div>
+    </div>
+    <div style="display:flex;gap:5px;margin:10px 0 18px;">
+      <div style="flex:1;height:4px;border-radius:2px;background:#ccff00;"></div>
+      <div style="flex:1;height:4px;border-radius:2px;background:#27272a;"></div>
+      <div style="flex:1;height:4px;border-radius:2px;background:#27272a;"></div>
+      <div style="flex:1;height:4px;border-radius:2px;background:#27272a;"></div>
+    </div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:14px;">Kako treniraš?</div>
+    <div style="background:#27272a;border:2px solid rgba(255,255,255,.06);border-radius:15px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:16px;font-weight:800;">🃏 Klasično</div>
+      <div style="font-size:12px;color:#a1a1aa;font-weight:600;margin-top:3px;">Svojim tempom, meri se ukupno vreme.</div>
+    </div>
+    <div style="background:rgba(204,255,0,.08);border:2px solid #ccff00;border-radius:15px;padding:14px;">
+      <div style="font-size:16px;font-weight:800;color:#ccff00;">⚡ Challenge: Perfektan špil</div>
+      <div style="font-size:12px;color:#a1a1aa;font-weight:600;margin-top:3px;">Svaka karta ima svoj rok. Obori ih sve.</div>
+      <div style="margin-top:8px;background:#18181b;display:inline-block;padding:5px 9px;border-radius:8px;font-size:11px;font-weight:800;color:#ccff00;">Obori: 18:32 (½ špila · Srednji)</div>
+    </div>
+  </div>
+
+  <!-- CHALLENGE TRENING -->
+  <div class="phone">
+    <h4>Challenge trening — karta pri isteku</h4>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="background:#27272a;padding:5px 9px;border-radius:9px;font-size:11px;font-weight:800;color:#ccff00;">⚡ 12/14</div>
+      <div style="font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;">07:41</div>
+      <div style="background:#27272a;padding:5px 9px;border-radius:9px;font-size:11px;font-weight:700;color:#a1a1aa;">Karta 15/26</div>
+    </div>
+    <div style="background:rgba(39,39,42,.7);border:2px solid #ef4444;border-radius:18px;padding:16px;animation:pulse 1.2s infinite;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="background:#ccff00;color:#18181b;font-weight:800;font-size:11px;padding:5px 8px;border-radius:8px;">♥ GURANJE</div>
+        <div style="font-size:17px;font-weight:900;color:#a1a1aa;">Q</div>
+      </div>
+      <div style="text-align:center;padding:10px 0 4px;">
+        <div style="font-size:15px;font-weight:800;">Standardni sklekovi</div>
+        <div style="font-size:52px;font-weight:900;color:#ccff00;line-height:1.05;">12</div>
+        <div style="font-size:10px;font-weight:700;color:#a1a1aa;letter-spacing:1px;">PONAVLJANJA</div>
+        <div style="margin-top:10px;font-size:24px;font-weight:900;color:#ef4444;font-variant-numeric:tabular-nums;">0:07</div>
+        <div style="font-size:9px;font-weight:700;color:#ef4444;letter-spacing:1px;">ROK ZA KARTU</div>
+      </div>
+      <div style="height:5px;border-radius:3px;background:#18181b;overflow:hidden;margin-top:8px;">
+        <div style="height:100%;background:#ef4444;border-radius:3px;animation:drain 1s linear infinite alternate;"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <div style="flex:1;background:rgba(39,39,42,.6);border:2px solid rgba(255,255,255,.12);border-radius:13px;padding:12px;text-align:center;font-weight:800;font-size:12px;">Pauza</div>
+      <div style="flex:2;background:#ccff00;color:#18181b;border-radius:13px;padding:12px;text-align:center;font-weight:800;font-size:13px;">Sledeća karta</div>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:#a1a1aa;text-align:center;font-weight:600;">Traka i rok: volt → narandžasto (&lt;50%) → crveno + pulsiranje (&lt;25%)</div>
+  </div>
+
+  <!-- NAPREDAK -->
+  <div class="phone">
+    <h4>Napredak</h4>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="background:#27272a;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;">←</div>
+      <div style="font-size:18px;font-weight:800;">Napredak</div>
+    </div>
+    <div style="background:#27272a;border-radius:15px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <div style="font-size:34px;">🔥</div>
+      <div>
+        <div style="font-size:24px;font-weight:900;line-height:1;">7 dana</div>
+        <div style="font-size:11px;color:#a1a1aa;font-weight:600;margin-top:3px;">niz · zamrzavanja ove nedelje: ❄️❄️</div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:800;color:#a1a1aa;letter-spacing:1px;text-transform:uppercase;margin:12px 0 8px;">Rekordi</div>
+    <div style="background:#27272a;border-radius:13px;padding:11px 13px;display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+      <div style="font-size:12px;font-weight:700;">½ špila · Srednji</div>
+      <div style="text-align:right;">
+        <div style="font-size:14px;font-weight:900;color:#ccff00;">18:32</div>
+        <div style="font-size:10px;color:#a1a1aa;font-weight:700;">⚡ najbolje: 24/26</div>
+      </div>
+    </div>
+    <div style="background:#27272a;border-radius:13px;padding:11px 13px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;">Ceo špil · Napredni</div>
+      <div style="text-align:right;">
+        <div style="font-size:14px;font-weight:900;color:#ccff00;">41:07</div>
+        <div style="font-size:10px;color:#a1a1aa;font-weight:700;">⚡ najbolje: 47/52</div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:800;color:#a1a1aa;letter-spacing:1px;text-transform:uppercase;margin:12px 0 8px;">Istorija</div>
+    <div style="background:#27272a;border-radius:13px;padding:10px 13px;display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:6px;">
+      <span>09.07.2026.</span><span style="color:#ccff00;">⚡ 22/26</span><span style="color:#a1a1aa;">19:04</span>
+    </div>
+    <div style="background:#27272a;border-radius:13px;padding:10px 13px;display:flex;justify-content:space-between;font-size:11px;font-weight:700;">
+      <span>08.07.2026.</span><span style="color:#a1a1aa;">🃏 klasično</span><span style="color:#a1a1aa;">18:32</span>
+    </div>
+  </div>
+
+</div>
