@@ -30,7 +30,7 @@ Kompletan, piksel-precizan vizuelni dizajn je već napravljen u Claude Design-u 
 | font | Nunito (400/600/700/800/900) | Jedini font u aplikaciji |
 | radius | 14–24px (veće za kartice, manje za manje elemente) | Svi zaobljeni uglovi |
 
-Ovi tokeni idu u `tailwind.config.ts` kao imenovane boje (npr. `bg-surface`, `text-accent`) — ne kao raštrkane hex vrednosti po komponentama.
+Ovi tokeni idu u `src/app/globals.css` kroz `@theme` blok (projekat koristi Tailwind v4, CSS-first konfiguraciju — nema `tailwind.config.ts`) kao imenovane boje (npr. `bg-surface`, `text-accent`) — ne kao raštrkane hex vrednosti po komponentama.
 
 ## 4. Odstupanja od fajla (implementirati DRUGAČIJE od onoga što fajl doslovno pokazuje)
 
@@ -54,7 +54,7 @@ Fajl-ov ugrađeni JS (`buildFullDeck()` u `<script type="text/x-dc">`) koristi A
 
 ## 6. Pristup implementaciji
 
-- Tailwind theme tokeni u `tailwind.config.ts` (sekcija 3) — jednom definisano, korišćeno svuda.
+- Tailwind theme tokeni u `src/app/globals.css` `@theme` bloku (sekcija 3) — jednom definisano, korišćeno svuda.
 - Font Nunito učitan preko `next/font/google` u `layout.tsx`.
 - Svaka od već postojećih 5+ MVP komponenti (`LandingScreen`, `DifficultySelector`, `ExercisePicker`, `SessionLengthSelector`, `SetupScreen`, `CardDisplay`, `ProgressIndicator`, `StopwatchDisplay`, `SessionScreen`, `SummaryScreen`, `HistoryScreen`) se **retušira** — menja se samo JSX/Tailwind klase da vizuelno prate `Trening.dc.html`, ne menja se logika, props, ni postojeći testovi. Testovi moraju i dalje da prolaze nepromenjeni posle retuširanja (osim testova eksplicitno navedenih u sekciji 5, koji se menjaju zbog As=1 ispravke).
 - Novi vizuelni elementi iz fajla koji ne postoje u trenutnom MVP kodu (progress dots za 3 koraka setup-a, glassmorphism kartica na ekranu treninga, pauza kao pun-ekran overlay, procena vremena uz svaku opciju dužine treninga npr. "~10 min") — dodaju se u odgovarajuće komponente kao deo retuširanja.
