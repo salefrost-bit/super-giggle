@@ -5,7 +5,7 @@ interface ProgressIndicatorProps {
 
 export function ProgressIndicator({ current, total }: ProgressIndicatorProps) {
   return (
-    <p className="text-sm text-gray-500">
+    <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-muted">
       Karta {current}/{total}
     </p>
   );
