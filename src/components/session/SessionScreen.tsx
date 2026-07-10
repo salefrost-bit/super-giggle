@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useStopwatch } from '@/hooks/useStopwatch';
+import { useCardQuota } from '@/hooks/useCardQuota';
+import { calculateCardWeight, calculateQuotaSeconds, computeScore } from '@/lib/domain/challenge';
 import { CardDisplay } from './CardDisplay';
 import { ProgressIndicator } from './ProgressIndicator';
 import { StopwatchDisplay } from './StopwatchDisplay';
@@ -32,7 +34,19 @@ export function SessionScreen({
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SessionSaveState>(userId ? 'creating' : 'guest');
   const [isAdvancing, setIsAdvancing] = useState(false);
+  const [outcomeFlash, setOutcomeFlash] = useState<'won' | 'lost' | null>(null);
   const stopwatch = useStopwatch();
+  const pauseCountRef = useRef(0);
+
+  const isChallenge = config.gameMode === 'perfect_deck' && config.budgetSeconds != null;
+  const parRates = { parSecondsPerRep: config.parSecondsPerRep, parTransitionSeconds: config.parTransitionSeconds };
+  const cardWeights = draws.map((d) => calculateCardWeight(d.reps, parRates));
+  const totalWeight = cardWeights.reduce((sum, w) => sum + w, 0);
+  const quotaSeconds = isChallenge
+    ? calculateQuotaSeconds(config.budgetSeconds as number, cardWeights[currentIndex], totalWeight)
+    : null;
+  const quota = useCardQuota(quotaSeconds, currentIndex, stopwatch.isPaused);
+  const scoreSoFar = computeScore(completedDraws.slice(0, currentIndex));
 
   useEffect(() => {
     if (!userId || !categoryIdByKey) return;
@@ -41,6 +55,10 @@ export function SessionScreen({
       config,
       categoryIdByKey,
       startedAtIso: new Date().toISOString(),
+      gameMode: config.gameMode,
+      settings: isChallenge
+        ? { budget_seconds: config.budgetSeconds as number, par_source: config.parSource ?? 'par' }
+        : undefined,
     })
       .then((id) => {
         setSessionId(id);
@@ -57,10 +75,16 @@ export function SessionScreen({
   async function handleNext() {
     setIsAdvancing(true);
     const completedAt = new Date().toISOString();
-    const updatedDraw: CardDrawResult = { ...completedDraws[currentIndex], completedAt };
+    const updatedDraw: CardDrawResult = {
+      ...completedDraws[currentIndex],
+      completedAt,
+      ...(isChallenge ? { beatQuota: !quota.expired } : {}),
+    };
     const nextDraws = [...completedDraws];
     nextDraws[currentIndex] = updatedDraw;
     setCompletedDraws(nextDraws);
+    setOutcomeFlash(isChallenge ? (!quota.expired ? 'won' : 'lost') : null);
+    setTimeout(() => setOutcomeFlash(null), 600);
 
     if (userId && sessionId && saveState === 'ready') {
       try {
@@ -75,9 +99,22 @@ export function SessionScreen({
     if (nextIndex >= draws.length) {
       stopwatch.pause();
       const totalDurationSeconds = stopwatch.elapsedSeconds;
+      const settingsPayload = isChallenge
+        ? {
+            budget_seconds: config.budgetSeconds as number,
+            par_source: config.parSource ?? ('par' as const),
+            best_score: config.bestScoreForCombo ?? null,
+            pause_count: pauseCountRef.current,
+            ...(({ score, won }) => ({ score, won }))(computeScore(nextDraws)),
+          }
+        : undefined;
       if (userId && sessionId && saveState === 'ready') {
         try {
-          await completeSession(sessionId, totalDurationSeconds);
+          if (settingsPayload) {
+            await completeSession(sessionId, totalDurationSeconds, settingsPayload);
+          } else {
+            await completeSession(sessionId, totalDurationSeconds);
+          }
         } catch (err) {
           console.error('Failed to complete session', err);
           setSaveState('failed');
@@ -97,7 +134,16 @@ export function SessionScreen({
   return (
     <div className="min-h-screen relative flex flex-col px-6 pt-5 pb-7">
       <div className="flex items-center justify-between mb-[22px]">
-        <div className="w-10" />
+        {isChallenge ? (
+          <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">
+            ⚡ {scoreSoFar.score}/{currentIndex}
+            {config.bestScoreForCombo != null
+              ? ` · ${t('progress.bestScore', { score: config.bestScoreForCombo, total: draws.length })}`
+              : ''}
+          </p>
+        ) : (
+          <div className="w-10" />
+        )}
         <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} />
         <ProgressIndicator current={currentIndex + 1} total={draws.length} />
       </div>
@@ -109,6 +155,10 @@ export function SessionScreen({
           suit={current.card.suit}
           rank={current.card.rank}
           categoryKey={current.categoryKey}
+          categoryLabel={undefined}
+          quotaRemainingSeconds={isChallenge ? quota.remainingSeconds : null}
+          quotaFraction={quota.fraction}
+          outcomeFlash={outcomeFlash}
         />
         <div className="h-1.5 rounded-[3px] bg-surface/70 mt-5 overflow-hidden">
           <div
@@ -124,7 +174,14 @@ export function SessionScreen({
 
       <div className="flex gap-3 mt-6">
         <button
-          onClick={stopwatch.isPaused ? stopwatch.resume : stopwatch.pause}
+          onClick={
+            stopwatch.isPaused
+              ? stopwatch.resume
+              : () => {
+                  pauseCountRef.current += 1;
+                  stopwatch.pause();
+                }
+          }
           className="flex-1 bg-surface/60 border-2 border-white/15 text-foreground rounded-[18px] p-5 font-extrabold text-base"
         >
           {stopwatch.isPaused ? t('workout.resume') : t('workout.pause')}

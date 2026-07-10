@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithIntl } from '@/test/renderWithIntl';
 import { SessionScreen } from './SessionScreen';
@@ -111,5 +111,61 @@ describe('SessionScreen — logged in', () => {
 
     expect(recordCardDraw).not.toHaveBeenCalled();
     expect(onFinish).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('SessionScreen — perfect_deck challenge', () => {
+  it('records beatQuota per card and completes with challenge settings', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    const challengeConfig = {
+      ...config,
+      gameMode: 'perfect_deck' as const,
+      budgetSeconds: 110,
+      parSource: 'par' as const,
+      parSecondsPerRep: 3,
+      parTransitionSeconds: 20,
+    };
+
+    renderWithIntl(
+      <SessionScreen
+        config={challengeConfig}
+        draws={draws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    // Weights: card1 (5 reps) = 5*3+20 = 35, card2 (6 reps) = 6*3+20 = 38, total = 73.
+    // Card 1 quota = round(110*35/73) = 53s. Click immediately → beaten.
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    await waitFor(() =>
+      expect(recordCardDraw).toHaveBeenLastCalledWith('session-1', expect.objectContaining({ beatQuota: true }))
+    );
+
+    // Card 2 quota = round(110*38/73) = 57s. Let it expire, then click → lost.
+    await vi.advanceTimersByTimeAsync(58_000);
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    await waitFor(() =>
+      expect(recordCardDraw).toHaveBeenLastCalledWith('session-1', expect.objectContaining({ beatQuota: false }))
+    );
+
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({ budget_seconds: 110, par_source: 'par', score: 1, won: false })
+      )
+    );
+    const result = onFinish.mock.calls[0][0];
+    expect(result.draws.map((d: { beatQuota?: boolean | null }) => d.beatQuota)).toEqual([true, false]);
+    vi.useRealTimers();
   });
 });
