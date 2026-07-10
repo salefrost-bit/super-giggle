@@ -49,11 +49,30 @@ export interface Exercise {
   difficultyLevelId: string;
 }
 
+export type GameMode = 'classic' | 'perfect_deck';
+
+export interface ChallengeSettings {
+  budget_seconds: number;
+  par_source: 'par' | 'record';
+  score?: number;
+  won?: boolean;
+  best_score?: number | null;
+  pause_count?: number;
+}
+
 export interface SessionConfig {
   difficultyLevelId: string;
   repMultiplier: number;
   deckSize: DeckSize;
   exerciseByCategory: Record<CategoryKey, Exercise>;
+  gameMode?: GameMode;
+  budgetSeconds?: number;
+  parSource?: 'par' | 'record';
+  bestScoreForCombo?: number | null;
+  // Carried alongside the budget so SessionScreen can compute each card's
+  // weighted quota (calculateCardWeight) without re-fetching the difficulty row.
+  parSecondsPerRep?: number;
+  parTransitionSeconds?: number;
 }
 
 export interface CardDrawResult {
@@ -63,6 +82,7 @@ export interface CardDrawResult {
   exercise: Exercise;
   reps: number;
   completedAt: string | null; // ISO timestamp, set when user confirms the card is done
+  beatQuota?: boolean | null;
 }
 
 export interface SessionResult {
