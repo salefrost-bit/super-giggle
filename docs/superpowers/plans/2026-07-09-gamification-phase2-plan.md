@@ -187,7 +187,7 @@ git commit -m "feat: additive gamification columns (par, beat_quota, name_en) an
 - Modify: `src/app/layout.tsx`
 
 **Interfaces:**
-- Produces: `useTranslations(ns)` available in every client component; `useLocaleSetting(): { locale: 'en' | 'sr'; setLocale: (l) => void }`; `localizedName(row: { name: string; nameEn?: string | null }, locale: string): string`; test helper `renderWithIntl(ui)` rendering with locale `sr` so existing Serbian assertions pass. Default locale **en**, persisted in `localStorage['spil_locale']`.
+- Produces: `useTranslations(ns)` available in every client component; `useLocaleSetting(): { locale: 'en' | 'sr'; setLocale: (l) => void }` backed by an exported `LocaleContext`; `localizedName(row: { name: string; nameEn?: string | null }, locale: string): string`; test helper `renderWithIntl(ui)` rendering with locale `sr` (via BOTH `NextIntlClientProvider` AND a stub `LocaleContext.Provider`) so existing Serbian assertions pass AND any component calling `useLocaleSetting()` doesn't throw. Default locale **en**, persisted in `localStorage['spil_locale']`.
 - Consumed by every later task. Components are NOT retrofitted yet (Task 4+) — this task only adds infrastructure, so all existing tests still pass untouched.
 
 - [ ] **Step 1: Install**
@@ -254,6 +254,7 @@ Create `messages/en.json`:
     "score": "{score}/{total} cards beaten",
     "perfectDeck": "PERFECT DECK!",
     "newRecord": "NEW RECORD",
+    "newBestScore": "NEW BEST SCORE",
     "guestNote": "Guest results aren't saved. Create an account to track progress over time.",
     "createAccount": "Create account",
     "backHome": "Back to start"
@@ -348,6 +349,7 @@ Create `messages/sr.json` — every key mirrored, values copied from the CURRENT
     "score": "{score}/{total} oborenih karata",
     "perfectDeck": "PERFEKTAN ŠPIL!",
     "newRecord": "NOVI REKORD",
+    "newBestScore": "NOVI NAJBOLJI SKOR",
     "guestNote": "Rezultati gostiju se ne čuvaju. Napravi nalog da pratiš napredak kroz vreme.",
     "createAccount": "Napravi nalog",
     "backHome": "Nazad na početak"
@@ -405,7 +407,9 @@ interface LocaleSetting {
   setLocale: (l: AppLocale) => void;
 }
 
-const LocaleContext = createContext<LocaleSetting | undefined>(undefined);
+// Exported so the test helper (renderWithIntl) can provide a fixed locale
+// without mounting the real provider (which reads localStorage).
+export const LocaleContext = createContext<LocaleSetting | undefined>(undefined);
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<AppLocale>('en');
@@ -478,13 +482,18 @@ import { render } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import type { ReactElement } from 'react';
 import sr from '../../messages/sr.json';
+import { LocaleContext } from '@/i18n/LocaleProvider';
 
 // Existing tests assert Serbian strings; app default is English, tests pin sr.
+// Also stubs LocaleContext so components calling useLocaleSetting() (e.g. the
+// SR/EN toggle on LandingScreen, Task 14) don't throw outside the real provider.
 export function renderWithIntl(ui: ReactElement) {
   return render(
-    <NextIntlClientProvider locale="sr" messages={sr} timeZone="Europe/Belgrade">
-      {ui}
-    </NextIntlClientProvider>
+    <LocaleContext.Provider value={{ locale: 'sr', setLocale: () => {} }}>
+      <NextIntlClientProvider locale="sr" messages={sr} timeZone="Europe/Belgrade">
+        {ui}
+      </NextIntlClientProvider>
+    </LocaleContext.Provider>
   );
 }
 ```
@@ -505,7 +514,7 @@ git commit -m "feat: i18n foundation with next-intl, en/sr catalogs, English def
 ### Task 4: i18n retrofit of existing small components
 
 **Files:**
-- Modify: `src/components/setup/DifficultySelector.tsx`, `src/components/setup/ExercisePicker.tsx`, `src/components/setup/SessionLengthSelector.tsx`, `src/components/session/CardDisplay.tsx`, `src/components/session/ProgressIndicator.tsx`, `src/components/auth/LoginForm.tsx`, `src/components/auth/SignupForm.tsx`
+- Modify: `src/components/setup/DifficultySelector.tsx`, `src/components/setup/ExercisePicker.tsx`, `src/components/setup/SessionLengthSelector.tsx`, `src/components/session/CardDisplay.tsx`, `src/components/session/ProgressIndicator.tsx`, `src/components/session/SessionScreen.tsx`, `src/components/summary/SummaryScreen.tsx`, `src/components/auth/LoginForm.tsx`, `src/components/auth/SignupForm.tsx`
 - Modify: `src/components/setup/ExercisePicker.test.tsx`, `src/components/setup/SetupScreen.test.tsx`, `src/components/session/SessionScreen.test.tsx`, `src/app/page.test.tsx` (render-wrapper only)
 
 **Interfaces:**
@@ -532,6 +541,14 @@ In each component add `import { useTranslations } from 'next-intl';` and (where 
 | ProgressIndicator | `Karta {current}/{total}` | `t('workout.cardOf', { current, total })` |
 | LoginForm | all literals | `auth.*` keys per catalog (`loginTitle`, `email`, `password`, `loginCta`, `loggingIn`, `backHome`) |
 | SignupForm | all literals | `auth.*` keys (`signupTitle`, `passwordMin`, `signupCta`, `creating`, `successTitle`, `successNote`, `goLogin`, `backHome`) |
+| SessionScreen | `Nastavi` / `Pauza` | `t('workout.resume')` / `t('workout.pause')` |
+| SessionScreen | `Priprema treninga...` / `Sledeća karta` | `t('workout.preparing')` / `t('workout.nextCard')` — the button's accessible name changes from the hardcoded Serbian string to the translation; **update `SessionScreen.test.tsx`** to query these buttons via `renderWithIntl` (sr locale), which resolves to the SAME Serbian text as before, so assertions stay unchanged |
+| SessionScreen | `PAUZIRANO` / `Nastavi trening` | `t('workout.paused')` / `t('workout.resumeWorkout')` |
+| SessionScreen | save-failed warning text | `t('workout.saveFailed')` — test asserts via `screen.findByText(...)`; keep matching on the translated (sr) text |
+| SummaryScreen | `Trening završen` / `ukupno vreme` | `t('results.workoutDone')` / `t('results.totalTime')` |
+| SummaryScreen | `Rezultati gostiju se ne čuvaju...` / `Napravi nalog` / `Nazad na početak` | `t('results.guestNote')` / `t('results.createAccount')` / `t('results.backHome')` |
+
+Both `SessionScreen.tsx` and `SummaryScreen.tsx` add `import { useTranslations } from 'next-intl';` and call `const t = useTranslations();` at the top of the component. These two files are the most-seen screens in the app (every workout passes through them) — leaving them untranslated would mean English-default users see Serbian on the core loop, so they are in scope for this task, not deferred to Tasks 11/12 which only ADD challenge-specific strings on top of this baseline.
 
 - [ ] **Step 2: Update test render wrappers**
 
@@ -562,8 +579,9 @@ git commit -m "feat: retrofit existing components to next-intl, English default"
 - Produces (Tasks 9–12 depend on these exact signatures):
   - types: `GameMode = 'classic' | 'perfect_deck'`; `SessionConfig` gains `gameMode?: GameMode; budgetSeconds?: number; parSource?: 'par' | 'record'`; `CardDrawResult` gains `beatQuota?: boolean | null`; new `ChallengeSettings = { budget_seconds: number; par_source: 'par' | 'record'; score?: number; won?: boolean }`
   - `calculateParSeconds(totalReps: number, cardCount: number, level: DifficultyLevel): number`
-  - `resolveBudget(parSeconds: number, recordSeconds: number | null): { budgetSeconds: number; parSource: 'par' | 'record' }`
-  - `calculateQuotaSeconds(budgetSeconds: number, cardReps: number, totalReps: number): number`
+  - `resolveBudget(parSeconds: number, recordSeconds: number | null): { budgetSeconds: number; parSource: 'par' | 'record' }` — when a record exists, the budget is `record * 1.05` (a fixed 5% buffer — see spec section 4: without it, every win tightens the next budget until the challenge becomes unplayable)
+  - `calculateCardWeight(reps: number, parRates: Pick<DifficultyLevel, 'parSecondsPerRep' | 'parTransitionSeconds'>): number` — `reps * parSecondsPerRep + parTransitionSeconds`; a card's "share" of the deck's effort, used both by the par formula and by quota allocation so the two stay consistent. Accepts just the two rate fields (not a full `DifficultyLevel`) because SessionScreen (Task 11) only carries those two numbers via `SessionConfig`, not the whole row.
+  - `calculateQuotaSeconds(budgetSeconds: number, cardWeight: number, totalWeight: number): number` — allocates by WEIGHT, not raw reps, so a low-rep card still gets its fixed setup/transition time instead of being mathematically unbeatable
   - `computeScore(draws: Pick<CardDrawResult, 'beatQuota'>[]): { score: number; total: number; won: boolean }`
 
 - [ ] **Step 1: Extend types**
@@ -578,6 +596,8 @@ export interface ChallengeSettings {
   par_source: 'par' | 'record';
   score?: number;
   won?: boolean;
+  best_score?: number | null;
+  pause_count?: number;
 }
 ```
 
@@ -592,6 +612,11 @@ export interface SessionConfig {
   gameMode?: GameMode;
   budgetSeconds?: number;
   parSource?: 'par' | 'record';
+  bestScoreForCombo?: number | null;
+  // Carried alongside the budget so SessionScreen can compute each card's
+  // weighted quota (calculateCardWeight) without re-fetching the difficulty row.
+  parSecondsPerRep?: number;
+  parTransitionSeconds?: number;
 }
 
 export interface CardDrawResult {
@@ -611,7 +636,13 @@ Create `src/lib/domain/challenge.test.ts`:
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { calculateParSeconds, resolveBudget, calculateQuotaSeconds, computeScore } from './challenge';
+import {
+  calculateParSeconds,
+  resolveBudget,
+  calculateCardWeight,
+  calculateQuotaSeconds,
+  computeScore,
+} from './challenge';
 import type { DifficultyLevel } from './types';
 
 const level: DifficultyLevel = {
@@ -631,18 +662,27 @@ describe('calculateParSeconds', () => {
 });
 
 describe('resolveBudget', () => {
-  it('uses the record when one exists', () => {
-    expect(resolveBudget(1066, 950)).toEqual({ budgetSeconds: 950, parSource: 'record' });
+  it('adds a 5% buffer to the record so beating it stays achievable', () => {
+    expect(resolveBudget(1066, 1000)).toEqual({ budgetSeconds: 1050, parSource: 'record' });
   });
 
-  it('uses par when there is no record', () => {
+  it('uses par as-is when there is no record', () => {
     expect(resolveBudget(1066, null)).toEqual({ budgetSeconds: 1066, parSource: 'par' });
   });
 });
 
+describe('calculateCardWeight', () => {
+  it('is reps * secondsPerRep + transitionSeconds', () => {
+    expect(calculateCardWeight(2, level)).toBe(2 * 3 + 20); // 26 — a low-rep card still gets its setup time
+    expect(calculateCardWeight(13, level)).toBe(13 * 3 + 20); // 59
+  });
+});
+
 describe('calculateQuotaSeconds', () => {
-  it('splits the budget proportionally to reps', () => {
-    expect(calculateQuotaSeconds(1000, 10, 100)).toBe(100);
+  it('splits the budget proportionally to weight, not raw reps', () => {
+    // At budget === totalWeight (i.e. budget equals par), each card's quota equals its own weight.
+    expect(calculateQuotaSeconds(1066, 26, 1066)).toBe(26);
+    expect(calculateQuotaSeconds(1066, 59, 1066)).toBe(59);
   });
 
   it('rounds and never returns less than 1', () => {
@@ -686,20 +726,33 @@ export function calculateParSeconds(
   return Math.round(totalReps * perRep + cardCount * transition);
 }
 
+const RECORD_BUFFER_MULTIPLIER = 1.05;
+
 export function resolveBudget(
   parSeconds: number,
   recordSeconds: number | null
 ): { budgetSeconds: number; parSource: 'par' | 'record' } {
-  if (recordSeconds !== null) return { budgetSeconds: recordSeconds, parSource: 'record' };
+  if (recordSeconds !== null) {
+    return { budgetSeconds: Math.round(recordSeconds * RECORD_BUFFER_MULTIPLIER), parSource: 'record' };
+  }
   return { budgetSeconds: parSeconds, parSource: 'par' };
+}
+
+export function calculateCardWeight(
+  reps: number,
+  parRates: Pick<DifficultyLevel, 'parSecondsPerRep' | 'parTransitionSeconds'>
+): number {
+  const perRep = parRates.parSecondsPerRep ?? FALLBACK_SECONDS_PER_REP;
+  const transition = parRates.parTransitionSeconds ?? FALLBACK_TRANSITION_SECONDS;
+  return reps * perRep + transition;
 }
 
 export function calculateQuotaSeconds(
   budgetSeconds: number,
-  cardReps: number,
-  totalReps: number
+  cardWeight: number,
+  totalWeight: number
 ): number {
-  return Math.max(1, Math.round((budgetSeconds * cardReps) / totalReps));
+  return Math.max(1, Math.round((budgetSeconds * cardWeight) / totalWeight));
 }
 
 export function computeScore(draws: Pick<CardDrawResult, 'beatQuota'>[]): {
@@ -764,11 +817,24 @@ describe('calculateStreak', () => {
     expect(r.days).toBe(2);
   });
 
-  it('freezes up to 2 missed days in one ISO week', () => {
+  it('freezes up to 2 missed days in one ISO week, frozen days count toward the streak', () => {
     // Mon 07-06 and Tue 07-07 missed (same ISO week as NOW), Wed 07-08 done.
     const r = calculateStreak([d('2026-07-08'), d('2026-07-05'), d('2026-07-04')], NOW);
-    expect(r.days).toBe(4); // 04,05,(06,07 frozen),08 — streak survives, frozen days count as kept
+    expect(r.days).toBe(5); // 04,05,(06,07 frozen),08 — 5 calendar days, frozen days count
     expect(r.freezesLeftThisWeek).toBe(0);
+  });
+
+  it('a frozen yesterday keeps the streak alive', () => {
+    // Worked Mon-Tue (06,07), missed Wed 08 (yesterday), today Thu 09 not yet trained.
+    const r = calculateStreak([d('2026-07-07'), d('2026-07-06')], NOW);
+    expect(r.days).toBe(3); // 06,07,(08 frozen)
+    expect(r.freezesLeftThisWeek).toBe(1);
+  });
+
+  it('never freezes days before the oldest workout in history', () => {
+    // Single workout today — no freezes are spent reaching into the void.
+    const r = calculateStreak([d('2026-07-09')], NOW);
+    expect(r).toEqual({ days: 1, freezesLeftThisWeek: 2 });
   });
 
   it('breaks on the third miss in one ISO week', () => {
@@ -821,37 +887,48 @@ function isoWeekKey(date: Date): string {
   return `${isoYear}-W${String(week).padStart(2, '0')}`;
 }
 
+// DST-safe: build the previous calendar day via the Date constructor,
+// never by subtracting 24h of milliseconds (spring-forward days are 23h long).
+function previousDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+}
+
 export function calculateStreak(
   completedAtIso: string[],
   now: Date
 ): { days: number; freezesLeftThisWeek: number } {
   const workoutDays = new Set(completedAtIso.map((iso) => localDayKey(new Date(iso))));
-  const freezesUsed = new Map<string, number>();
+  if (workoutDays.size === 0) return { days: 0, freezesLeftThisWeek: FREEZES_PER_WEEK };
+
+  const oldestKey = Array.from(workoutDays).sort()[0];
   const currentWeek = isoWeekKey(now);
+  const freezesUsed = new Map<string, number>();
 
   let cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  // Today without a workout: skip back to yesterday without penalty.
+  // Today without a workout doesn't consume a freeze and doesn't break the chain.
   if (!workoutDays.has(localDayKey(cursor))) {
-    cursor = new Date(cursor.getTime() - DAY_MS);
+    cursor = previousDay(cursor);
   }
 
   let days = 0;
+  let anchored = false; // a streak must contain at least one real workout
   for (;;) {
     const key = localDayKey(cursor);
+    if (key < oldestKey) break; // never freeze days before the oldest workout
     if (workoutDays.has(key)) {
       days += 1;
+      anchored = true;
     } else {
       const week = isoWeekKey(cursor);
       const used = freezesUsed.get(week) ?? 0;
-      if (used >= FREEZES_PER_WEEK) break;
+      if (used >= FREEZES_PER_WEEK) break; // third miss in one ISO week: chain broken
       freezesUsed.set(week, used + 1);
-      if (days === 0 && week !== currentWeek) break; // streak never started
-      days += 1; // frozen day preserves the chain
+      days += 1; // frozen day preserves the chain and counts toward it
     }
-    cursor = new Date(cursor.getTime() - DAY_MS);
-    if (days === 0) break; // nothing found at the anchor — no streak
+    cursor = previousDay(cursor);
   }
 
+  if (!anchored) return { days: 0, freezesLeftThisWeek: FREEZES_PER_WEEK };
   return {
     days,
     freezesLeftThisWeek: FREEZES_PER_WEEK - (freezesUsed.get(currentWeek) ?? 0),
@@ -859,7 +936,7 @@ export function calculateStreak(
 }
 ```
 
-- [ ] **Step 3: Run tests** — `npm test -- streak` → PASS (7 tests). If the walk-in edge tests fail, fix the implementation, not the tests — the test cases ARE the spec's rule.
+- [ ] **Step 3: Run tests** — `npm test -- streak` → PASS (9 tests). If any edge test fails, fix the implementation, not the tests — the test cases encode the spec's counting convention (spec section 6): frozen days count toward the streak, a frozen yesterday keeps it alive, freezes never reach before the oldest workout, and an unanchored chain is 0.
 
 - [ ] **Step 4: Commit**
 
@@ -989,8 +1066,9 @@ git commit -m "feat: persist game mode, challenge settings, and per-card quota o
 
 **Interfaces:**
 - Consumes: `createClient` (existing).
-- Produces (Tasks 9/13/14 depend on):
+- Produces (Tasks 9/11/12/13/14 depend on):
   - `getBestDurationSeconds(userId: string, difficultyLevelId: string, totalCards: number): Promise<number | null>` — best completed duration, any mode
+  - `getBestScore(userId: string, difficultyLevelId: string, totalCards: number): Promise<number | null>` — best `perfect_deck` score for this exact combination, used as the secondary score-ladder goal (spec section 4)
   - `PersonalRecord = { difficultyName: string; totalCards: number; bestDurationSeconds: number; bestScore: number | null; scoreTotal: number | null }`
   - `getPersonalRecords(userId: string): Promise<PersonalRecord[]>`
   - `getCompletedSessionDates(userId: string): Promise<string[]>` — `completed_at` of all completed sessions (streak input)
@@ -1134,6 +1212,27 @@ export async function getBestDurationSeconds(
   return row ? row.total_duration_seconds : null;
 }
 
+export async function getBestScore(
+  userId: string,
+  difficultyLevelId: string,
+  totalCards: number
+): Promise<number | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('settings')
+    .eq('user_id', userId)
+    .eq('difficulty_level_id', difficultyLevelId)
+    .eq('total_cards', totalCards)
+    .eq('game_mode', 'perfect_deck')
+    .eq('status', 'completed');
+  if (error) throw error;
+  const scores = (data as Array<{ settings: { score?: number } | null }>)
+    .map((row) => row.settings?.score)
+    .filter((score): score is number => typeof score === 'number');
+  return scores.length > 0 ? Math.max(...scores) : null;
+}
+
 export async function getCompletedSessionDates(userId: string): Promise<string[]> {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -1243,7 +1342,7 @@ export function ModeSelector({ onSelect, beatChipLabel }: ModeSelectorProps) {
 - [ ] **Step 3: Update the SetupScreen test first**
 
 In `src/components/setup/SetupScreen.test.tsx`:
-- Mock the records module at the top: `vi.mock('@/lib/supabase/records', () => ({ getBestDurationSeconds: vi.fn().mockResolvedValue(null) }));`
+- Mock the records module at the top: `vi.mock('@/lib/supabase/records', () => ({ getBestDurationSeconds: vi.fn().mockResolvedValue(null), getBestScore: vi.fn().mockResolvedValue(null) }));`
 - Classic walk-through test: insert `await user.click(await screen.findByRole('button', { name: /Klasično/ }));` as the FIRST click; assert additionally `expect(config.gameMode).toBe('classic')`.
 - Add a challenge test:
 
@@ -1316,23 +1415,30 @@ Modify `src/components/setup/SetupScreen.tsx` — changes relative to the redesi
       const totalReps = draws.reduce((sum, d) => sum + d.reps, 0);
       const par = calculateParSeconds(totalReps, deckSize, difficulty);
       let record: number | null = null;
+      let bestScore: number | null = null;
       if (userId) {
         try {
-          record = await getBestDurationSeconds(userId, difficulty.id, deckSize);
+          [record, bestScore] = await Promise.all([
+            getBestDurationSeconds(userId, difficulty.id, deckSize),
+            getBestScore(userId, difficulty.id, deckSize),
+          ]);
         } catch (err) {
-          console.error('Failed to fetch record, falling back to par', err);
+          console.error('Failed to fetch record/best score, falling back to par', err);
         }
       }
       const { budgetSeconds, parSource } = resolveBudget(par, record);
       config.budgetSeconds = budgetSeconds;
       config.parSource = parSource;
+      config.bestScoreForCombo = bestScore;
+      config.parSecondsPerRep = difficulty.parSecondsPerRep;
+      config.parTransitionSeconds = difficulty.parTransitionSeconds;
     }
 
     onStart(config, draws);
   }
 ```
 
-with imports `calculateParSeconds, resolveBudget` from `@/lib/domain/challenge`, `getBestDurationSeconds` from `@/lib/supabase/records`, `GameMode` type, and `ModeSelector`.
+with imports `calculateParSeconds, resolveBudget` from `@/lib/domain/challenge`, `getBestDurationSeconds, getBestScore` from `@/lib/supabase/records`, `GameMode` type, and `ModeSelector`.
 - `src/app/page.tsx`: pass `userId={user?.id ?? null}` to `SetupScreen`.
 
 Run: `npm test -- SetupScreen` → PASS. Run: `npm test` → all pass (`page.test` mocks SetupScreen).
@@ -1516,7 +1622,7 @@ git commit -m "feat: timestamp-based per-card quota countdown hook"
 - Modify: `src/components/session/SessionScreen.test.tsx` (additive challenge test)
 
 **Interfaces:**
-- Consumes: `useCardQuota` (Task 10), `calculateQuotaSeconds`, `computeScore` (Task 5), sessions extensions (Task 7), i18n (Task 3), `localizedName`.
+- Consumes: `useCardQuota` (Task 10), `calculateCardWeight`, `calculateQuotaSeconds`, `computeScore` (Task 5), sessions extensions (Task 7), i18n (Task 3).
 - Produces: `CardDisplay` gains optional props `quotaRemainingSeconds?: number | null; quotaFraction?: number; outcomeFlash?: 'won' | 'lost' | null; categoryLabel?: string` — classic mode passes none of them and renders exactly as before. `SessionScreen` behavior for classic mode is UNCHANGED (all existing tests must pass untouched). For `perfect_deck`: quota countdown + draining bar on the card, score pill, per-card `beatQuota` computed at click time, `completeSession` receives final `ChallengeSettings`, `onFinish` result draws carry `beatQuota`.
 
 - [ ] **Step 1: Extend CardDisplay**
@@ -1578,7 +1684,13 @@ plus a draining bar at the card's bottom (`width: ${Math.round(fraction * 100)}%
 
 - [ ] **Step 2: Add the failing challenge test for SessionScreen**
 
-Append to `src/components/session/SessionScreen.test.tsx`:
+First update the import line at the top of `src/components/session/SessionScreen.test.tsx` to include `waitFor` (the new test below uses it to avoid flakiness with fake timers + userEvent):
+
+```tsx
+import { render, screen, waitFor } from '@testing-library/react';
+```
+
+Then append:
 
 ```tsx
 describe('SessionScreen — perfect_deck challenge', () => {
@@ -1590,7 +1702,14 @@ describe('SessionScreen — perfect_deck challenge', () => {
     const onFinish = vi.fn();
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
-    const challengeConfig = { ...config, gameMode: 'perfect_deck' as const, budgetSeconds: 110, parSource: 'par' as const };
+    const challengeConfig = {
+      ...config,
+      gameMode: 'perfect_deck' as const,
+      budgetSeconds: 110,
+      parSource: 'par' as const,
+      parSecondsPerRep: 3,
+      parTransitionSeconds: 20,
+    };
 
     renderWithIntl(
       <SessionScreen
@@ -1603,19 +1722,26 @@ describe('SessionScreen — perfect_deck challenge', () => {
     );
 
     await screen.findByRole('button', { name: 'Sledeća karta' });
-    // Card 1 (5 reps of 11 total): quota = round(110*5/11) = 50s. Click immediately → beaten.
+    // Weights: card1 (5 reps) = 5*3+20 = 35, card2 (6 reps) = 6*3+20 = 38, total = 73.
+    // Card 1 quota = round(110*35/73) = 53s. Click immediately → beaten.
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
-    expect(recordCardDraw).toHaveBeenLastCalledWith('session-1', expect.objectContaining({ beatQuota: true }));
+    await waitFor(() =>
+      expect(recordCardDraw).toHaveBeenLastCalledWith('session-1', expect.objectContaining({ beatQuota: true }))
+    );
 
-    // Card 2 (6 reps): quota = round(110*6/11) = 60s. Let it expire, then click → lost.
-    await vi.advanceTimersByTimeAsync(61_000);
+    // Card 2 quota = round(110*38/73) = 57s. Let it expire, then click → lost.
+    await vi.advanceTimersByTimeAsync(58_000);
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
-    expect(recordCardDraw).toHaveBeenLastCalledWith('session-1', expect.objectContaining({ beatQuota: false }));
+    await waitFor(() =>
+      expect(recordCardDraw).toHaveBeenLastCalledWith('session-1', expect.objectContaining({ beatQuota: false }))
+    );
 
-    expect(completeSession).toHaveBeenCalledWith(
-      'session-1',
-      expect.any(Number),
-      expect.objectContaining({ budget_seconds: 110, par_source: 'par', score: 1, won: false })
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({ budget_seconds: 110, par_source: 'par', score: 1, won: false })
+      )
     );
     const result = onFinish.mock.calls[0][0];
     expect(result.draws.map((d: { beatQuota?: boolean | null }) => d.beatQuota)).toEqual([true, false]);
@@ -1629,39 +1755,42 @@ Run: `npm test -- SessionScreen` → FAIL.
 - [ ] **Step 3: Extend SessionScreen**
 
 In `src/components/session/SessionScreen.tsx` (all classic-mode paths untouched):
-- Imports: `useCardQuota`, `calculateQuotaSeconds`, `computeScore`, `useTranslations`, `useLocaleSetting`, `localizedName`, `CATEGORY_KEY_TO_NAME`.
+- Imports: `useRef` added to the existing `react` import; `useCardQuota`, `calculateQuotaSeconds`, `computeScore`, `useTranslations`. (`CATEGORY_KEY_TO_NAME` is NOT needed here — CardDisplay already falls back to it internally when `categoryLabel` is omitted, per the documented simplification below.)
 - Derivations before render:
 
 ```tsx
   const isChallenge = config.gameMode === 'perfect_deck' && config.budgetSeconds != null;
-  const totalReps = draws.reduce((sum, d) => sum + d.reps, 0);
+  const parRates = { parSecondsPerRep: config.parSecondsPerRep, parTransitionSeconds: config.parTransitionSeconds };
+  const cardWeights = draws.map((d) => calculateCardWeight(d.reps, parRates));
+  const totalWeight = cardWeights.reduce((sum, w) => sum + w, 0);
   const quotaSeconds = isChallenge
-    ? calculateQuotaSeconds(config.budgetSeconds as number, draws[currentIndex].reps, totalReps)
+    ? calculateQuotaSeconds(config.budgetSeconds as number, cardWeights[currentIndex], totalWeight)
     : null;
   const quota = useCardQuota(quotaSeconds, currentIndex, stopwatch.isPaused);
   const scoreSoFar = computeScore(completedDraws.slice(0, currentIndex));
   const [outcomeFlash, setOutcomeFlash] = useState<'won' | 'lost' | null>(null);
+  const pauseCountRef = useRef(0);
 ```
+
+Add `pauseCountRef.current += 1;` inside the pause button's `onClick` handler ONLY for the challenge case — simplest: wrap the existing `stopwatch.pause` call: change `onClick={stopwatch.isPaused ? stopwatch.resume : stopwatch.pause}` to `onClick={stopwatch.isPaused ? stopwatch.resume : () => { pauseCountRef.current += 1; stopwatch.pause(); }}` (classic mode also increments the ref harmlessly — it's simply never read since `finalSettings` below is only built when `isChallenge`).
 
 - In `handleNext`, when building `updatedDraw`, add: `beatQuota: isChallenge ? !quota.expired : draw.beatQuota` (i.e. `{ ...completedDraws[currentIndex], completedAt, ...(isChallenge ? { beatQuota: !quota.expired } : {}) }`), and set the flash: `setOutcomeFlash(isChallenge ? (!quota.expired ? 'won' : 'lost') : null);` followed by `setTimeout(() => setOutcomeFlash(null), 600);` (visual-only; no timing logic depends on it).
 - At the finish branch, compute and pass final settings:
 
 ```tsx
-      const finalSettings = isChallenge
+      const settingsPayload = isChallenge
         ? {
             budget_seconds: config.budgetSeconds as number,
-            par_source: config.parSource ?? 'par',
-            ...computeScore(nextDraws),
+            par_source: config.parSource ?? ('par' as const),
+            best_score: config.bestScoreForCombo ?? null,
+            pause_count: pauseCountRef.current,
+            ...(({ score, won }) => ({ score, won }))(computeScore(nextDraws)),
           }
-        : undefined;
-      // computeScore returns { score, total, won } — total is redundant in settings; keep score & won:
-      const settingsPayload = finalSettings
-        ? { budget_seconds: finalSettings.budget_seconds, par_source: finalSettings.par_source, score: finalSettings.score, won: finalSettings.won }
         : undefined;
 ```
 
 and call `completeSession(sessionId, totalDurationSeconds, settingsPayload)` (guest/failed save-state guards unchanged).
-- Render additions (challenge only): score pill in the header row's left slot (replacing the `w-10` spacer when `isChallenge`): `<p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">⚡ {scoreSoFar.score}/{currentIndex}</p>` (shows beaten/attempted so far; keep the spacer for classic). Pass to CardDisplay: `categoryLabel={localizedName(categoryRow…)}` — the category display name: use `CATEGORY_KEY_TO_NAME[current.categoryKey]` for sr and the exercise's category… categories aren't fetched here; simplest correct source: `categoryLabel` = `t(...)`-free `localizedName` needs the Category row which SessionScreen doesn't have. Pass `categoryLabel={undefined}` and let CardDisplay fall back to `CATEGORY_KEY_TO_NAME` (Serbian) — acceptable: category label on the card badge stays Serbian in both locales in this release (DB-driven localization of the badge would require threading Category rows through; documented simplification). Also pass `quotaRemainingSeconds={isChallenge ? quota.remainingSeconds : null}`, `quotaFraction={quota.fraction}`, `outcomeFlash={outcomeFlash}`.
+- Render additions (challenge only): score pill in the header row's left slot (replacing the `w-10` spacer when `isChallenge`): `<p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">⚡ {scoreSoFar.score}/{currentIndex}{config.bestScoreForCombo != null ? ` · ${t('progress.bestScore', { score: config.bestScoreForCombo, total: draws.length })}` : ''}</p>` (shows beaten/attempted so far, plus the combo's best score when known; keep the spacer for classic). Pass to CardDisplay: `categoryLabel={undefined}` — CardDisplay falls back internally to `CATEGORY_KEY_TO_NAME` (Serbian) when this prop is omitted. This means the category badge stays Serbian in both locales in this release (full DB-driven localization of that one spot would require threading `Category` rows through SessionScreen, which doesn't otherwise need them) — a documented, deliberate simplification, not a bug. Also pass `quotaRemainingSeconds={isChallenge ? quota.remainingSeconds : null}`, `quotaFraction={quota.fraction}`, `outcomeFlash={outcomeFlash}`.
 
 Run: `npm test -- SessionScreen` → PASS (existing 3 classic tests + 1 challenge test).
 
@@ -1685,7 +1814,7 @@ git commit -m "feat: perfect-deck challenge UI with quota countdown, urgency sta
 
 **Interfaces:**
 - Consumes: `computeScore` (Task 5), i18n, `SessionResult` draws carrying `beatQuota` (Task 11).
-- Produces: `SummaryScreen` gains optional prop `config?: SessionConfig | null` (page passes the session's config). When `config?.gameMode === 'perfect_deck'`: caption uses `results.challengeDone`; score line `t('results.score', { score, total })` under the time; if `won` → `t('results.perfectDeck')` banner with a CSS confetti burst; if `result.totalDurationSeconds < (config.budgetSeconds ?? Infinity)` → `t('results.newRecord')` chip. Classic rendering unchanged. No automated test (presentation-only, consistent with SummaryScreen's MVP/redesign treatment) — verified visually.
+- Produces: `SummaryScreen` gains optional prop `config?: SessionConfig | null` (page passes the session's config). When `config?.gameMode === 'perfect_deck'`: caption uses `results.challengeDone`; score line `t('results.score', { score, total })` under the time; if `won` → `t('results.perfectDeck')` banner with a CSS confetti burst; `t('results.newRecord')` chip ONLY when `config.parSource === 'record'` AND `result.totalDurationSeconds < config.budgetSeconds` (spec section 7 — beating par on a first-ever run isn't a "record", there was nothing before it to beat); `t('results.newBestScore')` chip when `challenge.score > (config.bestScoreForCombo ?? -1)`. Classic rendering unchanged. No automated test (presentation-only, consistent with SummaryScreen's MVP/redesign treatment) — verified visually.
 
 - [ ] **Step 1: Implement**
 
@@ -1710,9 +1839,14 @@ score line under the time block:
     {t('results.score', { score: challenge.score, total: challenge.total })}
   </p>
 )}
-{challenge && config?.budgetSeconds != null && result.totalDurationSeconds < config.budgetSeconds && (
+{challenge && config?.parSource === 'record' && config.budgetSeconds != null && result.totalDurationSeconds < config.budgetSeconds && (
   <p className="inline-block mx-auto mt-2 bg-accent text-background text-xs font-extrabold px-3 py-1.5 rounded-lg text-center">
     {t('results.newRecord')}
+  </p>
+)}
+{challenge && challenge.score > (config?.bestScoreForCombo ?? -1) && (
+  <p className="inline-block mx-auto mt-2 bg-accent text-background text-xs font-extrabold px-3 py-1.5 rounded-lg text-center">
+    {t('results.newBestScore')}
   </p>
 )}
 ```
@@ -1782,6 +1916,7 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
         setRecords(recordRows);
         setStreak(calculateStreak(dates, new Date()));
       })
+      .catch((err) => console.error('Failed to load progress data', err))
       .finally(() => setIsLoading(false));
   }, [userId]);
 
@@ -1951,5 +2086,6 @@ git push origin main
 
 - **Spec coverage:** section 1 scope → Tasks 5–14 (challenge, records, streak, Progress, i18n, effects); out-of-scope modes documented in the registry comment (Task 9). Section 2 sequencing → Task 1 gate. Section 3 registry → Task 9. Section 4 mechanics → Tasks 5/10/11 (budget par-then-record, proportional quotas, use-it-or-lose-it via per-card reset, never-blocking losses, pause via timestamp shift, guest par-only — guests get `userId null` so record lookup is skipped and nothing persists). Section 5 data model → Task 2 (+ Task 7 writes). Section 6 streak rule → Task 6 (tests encode the 2-per-ISO-week freeze rule, today-doesn't-break, per-week allowances). Section 7 screens → Tasks 9/11/12/13/14 per the committed mockup. Section 8 i18n → Tasks 3/4 (English default, localStorage, catalogs, `name_en` fallback). Section 9 testing → every domain task is TDD; components with logic get tests; presentation-only summary stays manual (consistent with MVP/redesign precedent).
 - **Documented simplifications (deliberate, do not "fix" silently):** (a) the beat-chip on the mode card is omitted this release — records surface on the Progress screen and results instead (chip needs a combination before one is chosen); (b) the category badge on the workout card and difficulty names on the Progress screen show Serbian DB names in both locales (full DB-content localization of those two spots would require threading Category rows; exercise names ARE localized where picked); (c) `setTimeout` for the 600ms outcome flash is visual-only and does not participate in any timing logic (invariant intact).
-- **Type consistency check:** `useCardQuota(quotaSeconds, cardIndex, isPaused)` matches Task 11's call; `completeSession(sessionId, seconds, settings?)` matches Tasks 7/11; `SessionHistoryEntry.gameMode/score` match Tasks 7/13; `PersonalRecord` fields match Tasks 8/13; optional-only type extensions keep every pre-existing mock compiling.
+- **Type consistency check:** `useCardQuota(quotaSeconds, cardIndex, isPaused)` matches Task 11's call; `completeSession(sessionId, seconds, settings?)` matches Tasks 7/11; `SessionHistoryEntry.gameMode/score` match Tasks 7/13; `PersonalRecord` fields match Tasks 8/13; `calculateCardWeight`'s `Pick<DifficultyLevel, ...>` parameter matches what `SessionConfig.parSecondsPerRep/parTransitionSeconds` (Task 9) actually carries into Task 11; optional-only type extensions keep every pre-existing mock compiling.
+- **Independent review pass (Fable) and fixes applied:** (1) Task 6's streak algorithm was internally inconsistent with its own tests (empty history, frozen-day counting, freezing before the oldest workout) — rewrote the walk to anchor on a real workout, stop at the oldest history day, and count frozen days toward the streak; added tests for "frozen yesterday keeps it alive" and "no freezing before history begins"; spec section 6 now states the counting convention explicitly. (2) Quota allocation was proportional to raw reps only, making low-rep cards mathematically unbeatable even at par (a 2-rep card got ~12s against a ~26s real cost) — replaced with `calculateCardWeight` (reps × per-rep-seconds + transition-seconds) so quotas allocate by full per-card cost; `SessionConfig` now carries `parSecondsPerRep`/`parTransitionSeconds` from Task 9 to Task 11 so the weight can be recomputed without an extra fetch. (3) A record-based budget with no buffer was a one-way ratchet (every win strictly tightens the next budget until unplayable) — `resolveBudget` now applies a fixed 5% buffer to record-based budgets. (4) Added a secondary "best score" ladder (Task 8's `getBestScore`, threaded through Task 9's `SessionConfig.bestScoreForCombo`, displayed in Task 11's score pill and Task 12's "NEW BEST SCORE" chip) so losing one card early doesn't turn the rest of the deck into pointless play toward an already-unreachable perfect run. (5) `renderWithIntl` didn't provide `LocaleContext`, which would have crashed any test on a component calling `useLocaleSetting()` (Tasks 4/14) — `LocaleContext` is now exported and stubbed in the test helper. (6) Task 4's i18n retrofit omitted SessionScreen and SummaryScreen — the two most-seen screens in the app — leaving them Serbian under an English-default app; added their full string mapping to Task 4. (7) Minor: `settings.score/won`/`beat_quota` are client-written under owner RLS — noted in spec section 5 as acceptable solo-only but NOT trustworthy input for a future leaderboard; added `pause_count` to `ChallengeSettings` for transparency (Task 5/11); wrapped Task 11's fake-timer test assertions in `waitFor` to avoid flakiness; `ProgressScreen`'s `Promise.all` (Task 13) now has a `.catch`; "NEW RECORD" now only shows when `parSource === 'record'` (beating par on a first-ever run isn't a record).
 

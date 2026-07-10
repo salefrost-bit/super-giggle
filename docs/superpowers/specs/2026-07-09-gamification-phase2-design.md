@@ -35,14 +35,14 @@ Svaki mod igre je modul u `src/lib/modes/` sa zajedničkim interfejsom (definisa
 
 **Budžet** (ukupno ciljno vreme za ceo špil):
 - Prvi put za kombinaciju (težina × dužina): **par formula** = `Σ(ponavljanja svih karata) × par_seconds_per_rep(težina) + broj_karata × par_transition_seconds(težina)`
-- Kad postoji lični rekord: **budžet = najbolje `total_duration_seconds`** među SVIM završenim sesijama iste kombinacije (klasične i challenge) — trkaš se protiv svog najboljeg stvarnog vremena
+- Kad postoji lični rekord: **budžet = najbolje `total_duration_seconds` × 1.05** među SVIM završenim sesijama iste kombinacije (klasične i challenge) — trkaš se protiv svog najboljeg vremena, ali sa 5% "vazduha". Bez tog bafera bi svaka pobeda pravila strože kvote od prošlih (rekord-spirala) dok igra ne postane nemoguća; ovako moraš da oboriš rekord da bi postavio novi, a kvote ostaju dostižne.
 - `par_source` (`'par'` ili `'record'`) se pamti u `settings` radi prikaza
 
-**Kvota po karti:** `budžet × ponavljanja_karte / ukupna_ponavljanja` — teže karte dobijaju proporcionalno više vremena. Tranzicioni deo budžeta je utopljen u proporciju (nema posebne "tranzicione kvote").
+**Kvota po karti:** raspodela po **punoj težini karte**, ne samo po ponavljanjima: `težina_karte = ponavljanja × par_seconds_per_rep + par_transition_seconds`, `kvota = budžet × težina_karte / Σ(težine svih karata)`. Ovim svaka karta dobija i svoj fiksni "tranzicioni" deo — karta od 2 ponavljanja pri par budžetu dobija ~26s (2×3+20), ne 12s koje bi dobila čistom proporcijom ponavljanja (što bi male karte činilo nepobedivim, a "Perfektan špil" nedostižnim od prvog igranja).
 
 **Pobeda karte:** klik na "Sledeća karta" pre isteka kvote te karte = karta oborena (✓). Istek kvote = karta izgubljena (✗), ali se ponavljanja svejedno završavaju i prelazi se dalje — trening se nikad ne prekida zbog igre. Neiskorišćeno vreme oborene karte **propada** (use-it-or-lose-it): ne prenosi se na sledeće karte.
 
-**Skor i pobeda:** skor = broj oborenih karata (npr. 22/26). Challenge pobeđen ("PERFEKTAN ŠPIL") = sve karte oborene. Gubitak jedne karte ne prekida ništa — igra se dalje za što bolji skor.
+**Skor i pobeda:** skor = broj oborenih karata (npr. 22/26). Challenge pobeđen ("PERFEKTAN ŠPIL") = sve karte oborene. Gubitak jedne karte ne prekida ništa — igra se dalje za što bolji skor. **Sekundarna lestvica — najbolji skor:** pre starta se učitava dosadašnji najbolji skor za tu kombinaciju i prikazuje uz skor pill tokom treninga (`⚡ 12/14 · najbolje 22`); obaranje najboljeg skora dobija "NOVI NAJBOLJI SKOR" oznaku na rezultatima. Ovo daje dostižan cilj i posle prvog izgubljene karte (kad "perfektan špil" više nije moguć u toj sesiji), umesto 40+ karata "mrtve" igre.
 
 **Pauza:** dozvoljena; zamrzava i kvotu karte i ukupno vreme. Implementacija po istom timestamp-shift principu kao MVP štoperica — **tajmer invarijanta iz MVP spec-a (sekcija 4.2) važi u potpunosti**: preostala kvota = `deadline − sada`, pauza pomera `deadline` unapred; nikad tick-akumulacija.
 
@@ -61,10 +61,13 @@ Svaki mod igre je modul u `src/lib/modes/` sa zajedničkim interfejsom (definisa
 
 **Bez novih tabela.** Rekordi = SQL upit nad `sessions` (najbolje vreme; najbolji skor iz `settings`). Streak = čist algoritam nad datumima `completed_at` (sekcija 6). Nacrt `phase2_gamification.sql` (achievements/challenge_results tabele iz MVP faze) ostaje neiskorišćen nacrt za Fazu 3 — ovaj spec ga NE primenjuje.
 
+**Napomena o poverenju u podatke:** `settings.score/won`, `beat_quota` i `total_duration_seconds` upisuje klijent pod owner-RLS politikom — vlasnik naloga ih tehnički može falsifikovati. To je prihvatljivo dok su podaci isključivo lični (solo izdanje). **Faza 3 leaderboard NE SME da veruje ovim klijentskim vrednostima** bez server-side validacije. Radi transparentnosti, `settings` beleži i `pause_count` (broj pauza tokom challenge-a).
+
 ## 6. Streak (niz)
 
 - **Definicija:** broj uzastopnih dana (lokalna vremenska zona uređaja) zaključno sa danas ili juče, u kojima postoji bar jedna završena sesija (bilo koji mod). Današnji dan bez treninga ne prekida niz dok ne istekne.
 - **Zamrzavanja:** do **2 propuštena dana po ISO nedelji** se automatski "zamrzavaju" i ne prekidaju niz. Treći propušten dan u istoj nedelji prekida niz. Zamrzavanja se ne prenose među nedeljama.
+- **Konvencija brojanja (obavezujuća za implementaciju):** zamrznuti dani se RAČUNAJU u dužinu niza (niz 04–08. sa zamrznutim 06. i 07. = 5 dana). Zamrzavanje sme da pokrije i juče/prekjuče (niz "preživljava" i kad poslednji trening nije bio juče, dok god zamrzavanja te nedelje dostaju). Niz mora biti "usidren" bar jednim stvarnim treningom — lanac sastavljen samo od zamrznutih dana je 0. Zamrzavanja se troše samo IZMEĐU treninga, nikad pre najstarijeg treninga u istoriji.
 - **Implementacija:** čista funkcija `calculateStreak(completedDates, today)` — deterministična, bez uskladištenog stanja, pokrivena unit testovima (ivice: prelaz nedelje, više treninga istog dana, prazna istorija, niz koji počinje sred nedelje).
 - **Prikaz:** 🔥 + broj dana; preostala zamrzavanja tekuće nedelje kao ❄️ ikonice (0–2).
 
@@ -80,7 +83,7 @@ Svaki mod igre je modul u `src/lib/modes/` sa zajedničkim interfejsom (definisa
 - **Efekti** (svi CSS-only, boje/stanja izvedeni iz istog timestamp računa kao kvota — bez novih JS tajmera): kvota > 50% = volt; 25–50% = narandžasta; < 25% = crvena + blago pulsiranje ivice kartice; obaranje karte = kratak volt blesak + ✓; gubitak = kratko crveno treperenje + ✗ pa se prelazi na sledeću kartu
 - Pauza overlay zamrzava sve (i vizuelno zaustavlja pražnjenje trake)
 
-**Rezultati challenge-a:** skor veliko (`22/26`), ukupno vreme, `won` → "PERFEKTAN ŠPIL!" proslava (CSS konfete animacija), novi rekord (vreme ili skor) → oznaka "NOVI REKORD"; pregled po kategorijama kao u klasičnom + zbir ✓/✗. Gost: postojeća poruka + poziv na registraciju.
+**Rezultati challenge-a:** skor veliko (`22/26`), ukupno vreme, `won` → "PERFEKTAN ŠPIL!" proslava (CSS konfete animacija); oznaka "NOVI REKORD" (vreme) samo kad je `par_source = 'record'` i vreme je bolje od budžeta/1.05 (obaranje para na prvom igranju nije "rekord" — nije bilo prethodnog); oznaka "NOVI NAJBOLJI SKOR" kad skor premaši dosadašnji najbolji za kombinaciju; pregled po kategorijama kao u klasičnom + zbir ✓/✗. Gost: postojeća poruka + poziv na registraciju.
 
 **Napredak ekran** (zamenjuje "Istorija" ulaz sa landing-a; ruta/ekran unutar postojećeg state machine-a):
 1. Streak kartica: 🔥 broj dana + ❄️ preostala zamrzavanja ove nedelje
