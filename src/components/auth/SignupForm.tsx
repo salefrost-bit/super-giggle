@@ -2,9 +2,11 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export function SignupForm() {
+  const t = useTranslations();
   const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,10 +30,10 @@ export function SignupForm() {
   if (success) {
     return (
       <div className="min-h-screen flex flex-col justify-center gap-4 px-7 text-center">
-        <p className="text-lg font-bold">Registracija uspešna!</p>
-        <p className="text-sm text-muted">Proveri email da potvrdiš nalog pre prijave.</p>
+        <p className="text-lg font-bold">{t('auth.successTitle')}</p>
+        <p className="text-sm text-muted">{t('auth.successNote')}</p>
         <Link href="/login" className="text-accent font-bold underline">
-          Idi na prijavu
+          {t('auth.goLogin')}
         </Link>
       </div>
     );
@@ -39,11 +41,11 @@ export function SignupForm() {
 
   return (
     <form onSubmit={handleSubmit} className="min-h-screen flex flex-col justify-center gap-4 px-7">
-      <h1 className="text-[28px] font-extrabold mb-2">Registracija</h1>
+      <h1 className="text-[28px] font-extrabold mb-2">{t('auth.signupTitle')}</h1>
       <input
         type="email"
         required
-        placeholder="Email"
+        placeholder={t('auth.email')}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="bg-surface border-2 border-white/5 rounded-2xl px-4 py-3.5 text-foreground placeholder:text-muted focus:border-accent/50 outline-none"
@@ -52,7 +54,7 @@ export function SignupForm() {
         type="password"
         required
         minLength={6}
-        placeholder="Lozinka (min. 6 karaktera)"
+        placeholder={t('auth.passwordMin')}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="bg-surface border-2 border-white/5 rounded-2xl px-4 py-3.5 text-foreground placeholder:text-muted focus:border-accent/50 outline-none"
@@ -63,10 +65,10 @@ export function SignupForm() {
         disabled={isSubmitting}
         className="bg-accent text-background rounded-[18px] p-5 font-extrabold text-lg disabled:opacity-50"
       >
-        {isSubmitting ? 'Kreiranje naloga...' : 'Registruj se'}
+        {isSubmitting ? t('auth.creating') : t('auth.signupCta')}
       </button>
       <Link href="/" className="text-center text-sm text-muted underline">
-        ← Nazad na početak
+        {t('auth.backHome')}
       </Link>
     </form>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { summarizeByCategory } from '@/lib/domain/summarize';
 import { CATEGORY_KEY_TO_NAME } from '@/lib/domain/types';
 import type { CategoryKey, SessionResult } from '@/lib/domain/types';
@@ -26,18 +27,19 @@ function formatDuration(totalSeconds: number): string {
 }
 
 export function SummaryScreen({ result, isGuest, onDone }: SummaryScreenProps) {
+  const t = useTranslations();
   const breakdown = summarizeByCategory(result.draws);
 
   return (
     <div className="min-h-screen flex flex-col px-6 pt-9 pb-8">
       <p className="text-[15px] font-extrabold text-accent tracking-widest uppercase text-center">
-        Trening završen
+        {t('results.workoutDone')}
       </p>
       <div className="text-center mt-5 mb-8">
         <p className="text-[64px] font-black tabular-nums leading-none">
           {formatDuration(result.totalDurationSeconds)}
         </p>
-        <p className="text-sm font-bold text-muted mt-2 uppercase tracking-widest">ukupno vreme</p>
+        <p className="text-sm font-bold text-muted mt-2 uppercase tracking-widest">{t('results.totalTime')}</p>
       </div>
 
       <div className="flex flex-col gap-2.5">
@@ -65,13 +67,13 @@ export function SummaryScreen({ result, isGuest, onDone }: SummaryScreenProps) {
       {isGuest && (
         <div className="bg-surface border-2 border-accent/30 rounded-[18px] p-5 mt-6 text-center">
           <p className="text-sm font-semibold text-muted mb-3.5 leading-snug">
-            Rezultati gostiju se ne čuvaju. Napravi nalog da pratiš napredak kroz vreme.
+            {t('results.guestNote')}
           </p>
           <Link
             href="/signup"
             className="block w-full bg-accent text-background rounded-2xl p-4 font-extrabold text-[15px]"
           >
-            Napravi nalog
+            {t('results.createAccount')}
           </Link>
         </div>
       )}
@@ -80,7 +82,7 @@ export function SummaryScreen({ result, isGuest, onDone }: SummaryScreenProps) {
         onClick={onDone}
         className="mt-auto pt-6 border-2 border-white/15 text-foreground rounded-[18px] p-[18px] font-bold text-base"
       >
-        Nazad na početak
+        {t('results.backHome')}
       </button>
     </div>
   );

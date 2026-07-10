@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithIntl } from '@/test/renderWithIntl';
 import { SetupScreen } from './SetupScreen';
 import type { Category, DifficultyLevel, Exercise } from '@/lib/domain/types';
 
@@ -44,7 +45,7 @@ describe('SetupScreen', () => {
     const onStart = vi.fn();
     const user = userEvent.setup();
 
-    render(<SetupScreen onStart={onStart} />);
+    renderWithIntl(<SetupScreen onStart={onStart} />);
 
     await user.click(await screen.findByRole('button', { name: 'Srednji' }));
     await user.click(await screen.findByRole('button', { name: 'Sklekovi' }));

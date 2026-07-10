@@ -3,9 +3,11 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export function LoginForm() {
+  const t = useTranslations();
   const { signIn } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -28,11 +30,11 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="min-h-screen flex flex-col justify-center gap-4 px-7">
-      <h1 className="text-[28px] font-extrabold mb-2">Prijava</h1>
+      <h1 className="text-[28px] font-extrabold mb-2">{t('auth.loginTitle')}</h1>
       <input
         type="email"
         required
-        placeholder="Email"
+        placeholder={t('auth.email')}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="bg-surface border-2 border-white/5 rounded-2xl px-4 py-3.5 text-foreground placeholder:text-muted focus:border-accent/50 outline-none"
@@ -40,7 +42,7 @@ export function LoginForm() {
       <input
         type="password"
         required
-        placeholder="Lozinka"
+        placeholder={t('auth.password')}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="bg-surface border-2 border-white/5 rounded-2xl px-4 py-3.5 text-foreground placeholder:text-muted focus:border-accent/50 outline-none"
@@ -51,10 +53,10 @@ export function LoginForm() {
         disabled={isSubmitting}
         className="bg-accent text-background rounded-[18px] p-5 font-extrabold text-lg disabled:opacity-50"
       >
-        {isSubmitting ? 'Prijavljivanje...' : 'Prijavi se'}
+        {isSubmitting ? t('auth.loggingIn') : t('auth.loginCta')}
       </button>
       <Link href="/" className="text-center text-sm text-muted underline">
-        ← Nazad na početak
+        {t('auth.backHome')}
       </Link>
     </form>
   );

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithIntl } from '@/test/renderWithIntl';
 import Home from './page';
 
 vi.mock('@/lib/auth/AuthContext', () => ({
@@ -26,7 +27,7 @@ vi.mock('@/components/summary/SummaryScreen', () => ({
 describe('Home (top-level state machine)', () => {
   it('walks a guest through landing -> setup -> session -> summary -> back to landing', async () => {
     const user = userEvent.setup();
-    render(<Home />);
+    renderWithIntl(<Home />);
 
     await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
     await user.click(await screen.findByRole('button', { name: 'finish-setup' }));

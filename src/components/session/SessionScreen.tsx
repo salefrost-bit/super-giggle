@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useStopwatch } from '@/hooks/useStopwatch';
 import { CardDisplay } from './CardDisplay';
 import { ProgressIndicator } from './ProgressIndicator';
@@ -25,6 +26,7 @@ export function SessionScreen({
   userId,
   onFinish,
 }: SessionScreenProps) {
+  const t = useTranslations();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedDraws, setCompletedDraws] = useState<CardDrawResult[]>(draws);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -117,9 +119,7 @@ export function SessionScreen({
       </div>
 
       {saveState === 'failed' && (
-        <p className="text-sm text-red-500 text-center mt-4">
-          Čuvanje treninga trenutno ne radi — rezultat možda neće biti sačuvan u istoriji.
-        </p>
+        <p className="text-sm text-red-500 text-center mt-4">{t('workout.saveFailed')}</p>
       )}
 
       <div className="flex gap-3 mt-6">
@@ -127,26 +127,26 @@ export function SessionScreen({
           onClick={stopwatch.isPaused ? stopwatch.resume : stopwatch.pause}
           className="flex-1 bg-surface/60 border-2 border-white/15 text-foreground rounded-[18px] p-5 font-extrabold text-base"
         >
-          {stopwatch.isPaused ? 'Nastavi' : 'Pauza'}
+          {stopwatch.isPaused ? t('workout.resume') : t('workout.pause')}
         </button>
         <button
           onClick={handleNext}
           disabled={nextDisabled}
           className="flex-[2] bg-accent text-background rounded-[18px] p-5 font-extrabold text-lg disabled:opacity-50"
         >
-          {isWaitingForSession ? 'Priprema treninga...' : 'Sledeća karta'}
+          {isWaitingForSession ? t('workout.preparing') : t('workout.nextCard')}
         </button>
       </div>
 
       {stopwatch.isPaused && (
         <div className="absolute inset-0 bg-background/90 flex flex-col items-center justify-center gap-6 z-10">
-          <p className="text-[30px] font-black text-accent tracking-widest">PAUZIRANO</p>
+          <p className="text-[30px] font-black text-accent tracking-widest">{t('workout.paused')}</p>
           <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} />
           <button
             onClick={stopwatch.resume}
             className="bg-accent text-background rounded-[18px] px-10 py-[18px] font-extrabold text-base"
           >
-            Nastavi trening
+            {t('workout.resumeWorkout')}
           </button>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithIntl } from '@/test/renderWithIntl';
 import { SessionScreen } from './SessionScreen';
 import type { CardDrawResult, SessionConfig } from '@/lib/domain/types';
 
@@ -34,7 +35,7 @@ describe('SessionScreen — guest', () => {
   it('never touches Supabase and calls onFinish after the last card', async () => {
     const onFinish = vi.fn();
     const user = userEvent.setup();
-    render(
+    renderWithIntl(
       <SessionScreen config={config} draws={draws} categoryIdByKey={null} userId={null} onFinish={onFinish} />
     );
 
@@ -65,7 +66,7 @@ describe('SessionScreen — logged in', () => {
     const onFinish = vi.fn();
     const user = userEvent.setup();
 
-    render(
+    renderWithIntl(
       <SessionScreen
         config={config}
         draws={draws}
@@ -94,7 +95,7 @@ describe('SessionScreen — logged in', () => {
     const onFinish = vi.fn();
     const user = userEvent.setup();
 
-    render(
+    renderWithIntl(
       <SessionScreen
         config={config}
         draws={draws}

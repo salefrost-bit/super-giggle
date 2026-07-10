@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { renderWithIntl } from '@/test/renderWithIntl';
 import { ExercisePicker } from './ExercisePicker';
 import type { Category, Exercise } from '@/lib/domain/types';
 
@@ -22,7 +23,7 @@ describe('ExercisePicker', () => {
   it('does not call onComplete until all four categories have a selection', async () => {
     const onComplete = vi.fn();
     const user = userEvent.setup();
-    render(<ExercisePicker categories={categories} exercises={exercises} onComplete={onComplete} />);
+    renderWithIntl(<ExercisePicker categories={categories} exercises={exercises} onComplete={onComplete} />);
 
     await user.click(screen.getByRole('button', { name: 'Sklekovi' }));
     expect(onComplete).not.toHaveBeenCalled();
@@ -47,7 +48,7 @@ describe('ExercisePicker', () => {
     ];
     const onComplete = vi.fn();
     const user = userEvent.setup();
-    render(
+    renderWithIntl(
       <ExercisePicker categories={categories} exercises={moreExercises} onComplete={onComplete} />
     );
 
