@@ -1,11 +1,13 @@
 import { createClient } from './client';
-import type { CategoryKey, SessionConfig, CardDrawResult } from '../domain/types';
+import type { CategoryKey, SessionConfig, CardDrawResult, GameMode, ChallengeSettings } from '../domain/types';
 
 export interface CreateSessionParams {
   userId: string;
   config: SessionConfig;
   categoryIdByKey: Record<CategoryKey, string>;
   startedAtIso: string;
+  gameMode?: GameMode;
+  settings?: ChallengeSettings;
 }
 
 export async function createSession(params: CreateSessionParams): Promise<string> {
@@ -19,6 +21,8 @@ export async function createSession(params: CreateSessionParams): Promise<string
       rep_multiplier: params.config.repMultiplier,
       started_at: params.startedAtIso,
       status: 'in_progress',
+      ...(params.gameMode ? { game_mode: params.gameMode } : {}),
+      ...(params.settings ? { settings: params.settings } : {}),
     })
     .select('id')
     .single();
@@ -48,13 +52,15 @@ export async function recordCardDraw(sessionId: string, draw: CardDrawResult): P
     card_value: draw.card.rank,
     reps: draw.reps,
     completed_at: draw.completedAt,
+    beat_quota: draw.beatQuota ?? null,
   });
   if (error) throw error;
 }
 
 export async function completeSession(
   sessionId: string,
-  totalDurationSeconds: number
+  totalDurationSeconds: number,
+  settings?: ChallengeSettings
 ): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase
@@ -63,6 +69,7 @@ export async function completeSession(
       status: 'completed',
       completed_at: new Date().toISOString(),
       total_duration_seconds: totalDurationSeconds,
+      ...(settings ? { settings } : {}),
     })
     .eq('id', sessionId);
   if (error) throw error;
@@ -75,13 +82,17 @@ export interface SessionHistoryEntry {
   totalCards: number;
   status: string;
   difficultyName: string;
+  gameMode: string;
+  score: number | null;
 }
 
 export async function getUserSessions(userId: string): Promise<SessionHistoryEntry[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('sessions')
-    .select('id, started_at, total_duration_seconds, total_cards, status, difficulty_levels(name)')
+    .select(
+      'id, started_at, total_duration_seconds, total_cards, status, difficulty_levels(name), game_mode, settings'
+    )
     .eq('user_id', userId)
     .order('started_at', { ascending: false });
   if (error) throw error;
@@ -93,6 +104,8 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
       total_cards: number;
       status: string;
       difficulty_levels: { name: string };
+      game_mode: string;
+      settings: { score?: number } | null;
     }>
   ).map((row) => ({
     id: row.id,
@@ -101,5 +114,7 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
     totalCards: row.total_cards,
     status: row.status,
     difficultyName: row.difficulty_levels.name,
+    gameMode: row.game_mode,
+    score: row.settings?.score ?? null,
   }));
 }

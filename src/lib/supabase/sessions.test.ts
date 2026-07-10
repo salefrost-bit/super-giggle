@@ -78,6 +78,7 @@ describe('recordCardDraw', () => {
       card_value: 10,
       reps: 10,
       completed_at: '2026-07-08T10:00:05.000Z',
+      beat_quota: null,
     });
   });
 });
@@ -109,6 +110,8 @@ describe('getUserSessions', () => {
           total_cards: 13,
           status: 'completed',
           difficulty_levels: { name: 'Srednji' },
+          game_mode: 'classic',
+          settings: {},
         },
       ],
       error: null,
@@ -128,7 +131,81 @@ describe('getUserSessions', () => {
         totalCards: 13,
         status: 'completed',
         difficultyName: 'Srednji',
+        gameMode: 'classic',
+        score: null,
       },
     ]);
+  });
+});
+
+describe('challenge extensions', () => {
+  it('createSession includes game_mode and settings when provided', async () => {
+    const single = vi.fn().mockResolvedValue({ data: { id: 'session-1' }, error: null });
+    const selectAfterInsert = vi.fn(() => ({ single }));
+    const sessionsInsert = vi.fn(() => ({ select: selectAfterInsert }));
+    const sessionExercisesInsert = vi.fn().mockResolvedValue({ error: null });
+    const from = vi.fn((table: string) =>
+      table === 'sessions' ? { insert: sessionsInsert } : { insert: sessionExercisesInsert }
+    );
+    vi.mocked(createClient).mockReturnValue({ from } as never);
+
+    await createSession({
+      userId: 'user-1',
+      config: {
+        difficultyLevelId: 'd1', repMultiplier: 1, deckSize: 13,
+        exerciseByCategory: {
+          push: { id: 'e1', name: 'A', categoryId: 'c1', difficultyLevelId: 'd1' },
+          pull: { id: 'e2', name: 'B', categoryId: 'c2', difficultyLevelId: 'd1' },
+          legs: { id: 'e3', name: 'C', categoryId: 'c3', difficultyLevelId: 'd1' },
+          core: { id: 'e4', name: 'D', categoryId: 'c4', difficultyLevelId: 'd1' },
+        },
+      },
+      categoryIdByKey: { push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' },
+      startedAtIso: '2026-07-09T10:00:00.000Z',
+      gameMode: 'perfect_deck',
+      settings: { budget_seconds: 1066, par_source: 'par' },
+    });
+
+    expect(sessionsInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        game_mode: 'perfect_deck',
+        settings: { budget_seconds: 1066, par_source: 'par' },
+      })
+    );
+  });
+
+  it('recordCardDraw writes beat_quota', async () => {
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    const from = vi.fn(() => ({ insert }));
+    vi.mocked(createClient).mockReturnValue({ from } as never);
+
+    await recordCardDraw('session-1', {
+      orderIndex: 0,
+      card: { suit: 'hearts', rank: 10 },
+      categoryKey: 'push',
+      exercise: { id: 'e1', name: 'A', categoryId: 'c1', difficultyLevelId: 'd1' },
+      reps: 10,
+      completedAt: '2026-07-09T10:00:05.000Z',
+      beatQuota: true,
+    });
+
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ beat_quota: true }));
+  });
+
+  it('completeSession merges final challenge settings when provided', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null });
+    const update = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ update }));
+    vi.mocked(createClient).mockReturnValue({ from } as never);
+
+    await completeSession('session-1', 990, {
+      budget_seconds: 1066, par_source: 'par', score: 22, won: false,
+    });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settings: { budget_seconds: 1066, par_source: 'par', score: 22, won: false },
+      })
+    );
   });
 });
