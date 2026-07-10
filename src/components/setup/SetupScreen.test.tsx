@@ -19,6 +19,11 @@ vi.mock('@/lib/supabase/queries', async () => {
 
 import { fetchDifficultyLevels, fetchCategories, fetchExercisesByDifficulty } from '@/lib/supabase/queries';
 
+vi.mock('@/lib/supabase/records', () => ({
+  getBestDurationSeconds: vi.fn().mockResolvedValue(null),
+  getBestScore: vi.fn().mockResolvedValue(null),
+}));
+
 const categories: Category[] = [
   { id: 'c1', name: 'Guranje', sortOrder: 1 },
   { id: 'c2', name: 'Povlačenje', sortOrder: 2 },
@@ -47,6 +52,7 @@ describe('SetupScreen', () => {
 
     renderWithIntl(<SetupScreen onStart={onStart} />);
 
+    await user.click(await screen.findByRole('button', { name: /Klasično/ }));
     await user.click(await screen.findByRole('button', { name: 'Srednji' }));
     await user.click(await screen.findByRole('button', { name: 'Sklekovi' }));
     await user.click(screen.getByRole('button', { name: 'Zgibovi' }));
@@ -58,7 +64,34 @@ describe('SetupScreen', () => {
     const [config, draws] = onStart.mock.calls[0];
     expect(config.deckSize).toBe(52);
     expect(config.repMultiplier).toBe(1);
+    expect(config.gameMode).toBe('classic');
     expect(draws).toHaveLength(52);
     expect(draws.every((d: { reps: number }) => d.reps >= 1)).toBe(true);
+  });
+
+  it('challenge mode produces a budget from par when no record exists', async () => {
+    vi.mocked(fetchCategories).mockResolvedValue(categories);
+    vi.mocked(fetchDifficultyLevels).mockResolvedValue([
+      { ...difficultyLevels[0], parSecondsPerRep: 3, parTransitionSeconds: 20 },
+    ]);
+    vi.mocked(fetchExercisesByDifficulty).mockResolvedValue(exercises);
+    const onStart = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithIntl(<SetupScreen onStart={onStart} userId={null} />);
+
+    await user.click(await screen.findByRole('button', { name: /Perfektan špil/ }));
+    await user.click(await screen.findByRole('button', { name: 'Srednji' }));
+    await user.click(await screen.findByRole('button', { name: 'Sklekovi' }));
+    await user.click(screen.getByRole('button', { name: 'Zgibovi' }));
+    await user.click(screen.getByRole('button', { name: 'Čučnjevi' }));
+    await user.click(screen.getByRole('button', { name: 'Trbušnjaci' }));
+    await user.click(await screen.findByRole('button', { name: 'Ceo špil (52 karte)' }));
+
+    const [config, draws] = onStart.mock.calls[0];
+    expect(config.gameMode).toBe('perfect_deck');
+    expect(config.parSource).toBe('par');
+    const totalReps = draws.reduce((s: number, d: { reps: number }) => s + d.reps, 0);
+    expect(config.budgetSeconds).toBe(Math.round(totalReps * 3 + 52 * 20));
   });
 });

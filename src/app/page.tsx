@@ -48,7 +48,13 @@ export default function Home() {
     );
   }
   if (screen === 'setup') {
-    return <SetupScreen onStart={handleSetupStart} onBack={() => setScreen('landing')} />;
+    return (
+      <SetupScreen
+        onStart={handleSetupStart}
+        onBack={() => setScreen('landing')}
+        userId={user?.id ?? null}
+      />
+    );
   }
   if (screen === 'session' && config) {
     return (
