@@ -20,11 +20,14 @@ import type {
 
 type Step = 'difficulty' | 'exercises' | 'length';
 
+const STEP_NUMBER: Record<Step, number> = { difficulty: 1, exercises: 2, length: 3 };
+
 interface SetupScreenProps {
   onStart: (config: SessionConfig, draws: CardDrawResult[]) => void;
+  onBack?: () => void;
 }
 
-export function SetupScreen({ onStart }: SetupScreenProps) {
+export function SetupScreen({ onStart, onBack }: SetupScreenProps) {
   const [step, setStep] = useState<Step>('difficulty');
   const [difficulty, setDifficulty] = useState<DifficultyLevel | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -73,17 +76,43 @@ export function SetupScreen({ onStart }: SetupScreenProps) {
     onStart(config, draws);
   }
 
-  if (step === 'difficulty') {
-    return <DifficultySelector onSelect={handleDifficultySelect} />;
+  function handleBack() {
+    if (step === 'length') setStep('exercises');
+    else if (step === 'exercises') setStep('difficulty');
+    else onBack?.();
   }
-  if (step === 'exercises') {
-    return (
-      <ExercisePicker
-        categories={categories}
-        exercises={exercises}
-        onComplete={handleExercisesComplete}
-      />
-    );
-  }
-  return <SessionLengthSelector onSelect={handleLengthSelect} />;
+
+  const stepNumber = STEP_NUMBER[step];
+
+  return (
+    <div className="min-h-screen flex flex-col px-6 pt-6 pb-8">
+      <div className="flex items-center gap-3.5 mb-2">
+        <button
+          onClick={handleBack}
+          aria-label="Nazad"
+          className="bg-surface text-foreground w-10 h-10 rounded-xl text-lg font-extrabold"
+        >
+          ←
+        </button>
+        <div className="text-sm font-bold text-muted">Korak {stepNumber}/3</div>
+      </div>
+      <div className="flex gap-1.5 mt-3.5 mb-7">
+        {[1, 2, 3].map((n) => (
+          <div
+            key={n}
+            className={`flex-1 h-[5px] rounded-[3px] ${n <= stepNumber ? 'bg-accent' : 'bg-surface'}`}
+          />
+        ))}
+      </div>
+      {step === 'difficulty' && <DifficultySelector onSelect={handleDifficultySelect} />}
+      {step === 'exercises' && (
+        <ExercisePicker
+          categories={categories}
+          exercises={exercises}
+          onComplete={handleExercisesComplete}
+        />
+      )}
+      {step === 'length' && <SessionLengthSelector onSelect={handleLengthSelect} />}
+    </div>
+  );
 }

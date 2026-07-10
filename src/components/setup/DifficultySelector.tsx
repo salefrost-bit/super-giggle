@@ -4,6 +4,12 @@ import { useEffect, useState } from 'react';
 import { fetchDifficultyLevels } from '@/lib/supabase/queries';
 import type { DifficultyLevel } from '@/lib/domain/types';
 
+const DESCRIPTIONS: Record<string, string> = {
+  Početnik: 'Lakše ponavljanja, idealno za start.',
+  Srednji: 'Uravnoteženo opterećenje.',
+  Napredni: 'Maksimalan intenzitet.',
+};
+
 interface DifficultySelectorProps {
   onSelect: (level: DifficultyLevel) => void;
 }
@@ -20,21 +26,27 @@ export function DifficultySelector({ onSelect }: DifficultySelectorProps) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  if (isLoading) return <p>Učitavanje nivoa...</p>;
-  if (error) return <p className="text-red-600">Greška: {error}</p>;
+  if (isLoading) return <p className="text-muted">Učitavanje nivoa...</p>;
+  if (error) return <p className="text-red-500">Greška: {error}</p>;
 
   return (
-    <div className="flex flex-col gap-3">
-      <h2 className="text-xl font-semibold">Izaberi nivo težine</h2>
-      {levels.map((level) => (
-        <button
-          key={level.id}
-          onClick={() => onSelect(level)}
-          className="border rounded px-4 py-3 text-left hover:bg-gray-100"
-        >
-          {level.name}
-        </button>
-      ))}
+    <div className="flex flex-col flex-1">
+      <h2 className="text-[28px] font-extrabold mb-6 leading-tight">Izaberi nivo</h2>
+      <div className="flex flex-col gap-3.5 flex-1">
+        {levels.map((level) => (
+          <button
+            key={level.id}
+            aria-label={level.name}
+            onClick={() => onSelect(level)}
+            className="text-left bg-surface border-2 border-white/5 rounded-[18px] p-5 hover:border-accent/50"
+          >
+            <span className="block text-[19px] font-extrabold mb-1">{level.name}</span>
+            <span className="block text-sm font-semibold text-muted">
+              {DESCRIPTIONS[level.name] ?? ''}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
