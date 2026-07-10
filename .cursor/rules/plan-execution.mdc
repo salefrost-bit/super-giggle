@@ -1,21 +1,26 @@
 ---
-description: Execute the Trening App MVP plan task-by-task, without drifting from it
+description: Execute the Trening App plans task-by-task, in order, without drifting from them
 alwaysApply: true
 ---
 
-# Executing the Trening App MVP plan
+# Executing the Trening App plans
 
-This repo's implementation is fully specified in two documents. Read them before writing any code:
-- Spec: docs/superpowers/specs/2026-07-08-trening-app-design.md
-- Plan: docs/superpowers/plans/2026-07-08-trening-app-mvp-plan.md
+This repo's implementation is fully specified across three plan cycles, each with its own spec + plan. Completed cycles, in order:
+
+1. **MVP** — Spec: `docs/superpowers/specs/2026-07-08-trening-app-design.md` · Plan: `docs/superpowers/plans/2026-07-08-trening-app-mvp-plan.md` — **DONE**, all 28 tasks committed.
+2. **Visual redesign** — Spec: `docs/superpowers/specs/2026-07-09-mvp-visual-redesign-design.md` · Plan: `docs/superpowers/plans/2026-07-09-mvp-visual-redesign-plan.md` — **DONE**, all 13 tasks committed.
+3. **Phase 2 gamification** — Spec: `docs/superpowers/specs/2026-07-09-gamification-phase2-design.md` · Plan: `docs/superpowers/plans/2026-07-09-gamification-phase2-plan.md` — **NEXT UP**. Its Task 1 is a preflight gate that re-verifies cycles 1 and 2 are complete before touching anything — run it first even though this file says they're done.
+
+When starting a new session, read the CURRENT plan (the first one not yet fully committed — right now that's the gamification plan) and its spec in full before writing any code. Ignore completed cycles' plans except as historical reference for file locations and existing interfaces.
 
 ## Rules
 
-1. Work through the plan's tasks IN ORDER, one task at a time. Do not skip ahead and do not batch multiple tasks into one response unless the user explicitly says to.
+1. Work through the current plan's tasks IN ORDER, one task at a time. Do not skip ahead and do not batch multiple tasks into one response unless the user explicitly says to.
 2. After finishing a task's steps, run the exact test/command specified in that task's "Run:" line and confirm the "Expected:" output before considering the task done. Do not mark a task complete if the test fails.
 3. After a task's tests pass, run its listed `git commit` step before moving to the next task.
 4. Stop and wait for the user's review after each task (or each small batch of tasks if the user says to batch them) — do not autonomously run through all remaining tasks unattended.
 5. Follow the plan's exact file paths, function names, and type shapes. Do not rename things "for clarity" — later tasks depend on the exact names given in earlier tasks' "Produces" sections.
-6. Timer invariant: elapsed/remaining time is ALWAYS derived from stored timestamps (`Date.now()` diffs). NEVER accumulate time via `setInterval` counters. This applies to any new timer/countdown code, not just what's already described in the plan.
+6. Timer invariant: elapsed/remaining time is ALWAYS derived from stored timestamps (`Date.now()` diffs). NEVER accumulate time via `setInterval` counters. This applies to any new timer/countdown code, not just what's already described in the plan — including the gamification plan's per-card quota countdown.
 7. Guest sessions never write to Supabase. Only call session persistence functions when a user is authenticated.
 8. If you find a bug or gap in the plan itself while implementing, flag it to the user instead of silently deviating from it.
+9. Documented deviations/simplifications called out explicitly in a plan (e.g. the visual redesign's "Documented Deviations from the Prototype" section, the gamification plan's "Documented simplifications" self-review note) are intentional — do not "fix" them back toward what a referenced design file shows.
