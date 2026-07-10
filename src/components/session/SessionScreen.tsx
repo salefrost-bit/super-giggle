@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useStopwatch } from '@/hooks/useStopwatch';
 import { useCardQuota } from '@/hooks/useCardQuota';
+import { useLocaleSetting } from '@/i18n/LocaleProvider';
+import { localizedName } from '@/i18n/dbName';
 import { calculateCardWeight, calculateQuotaSeconds, computeScore } from '@/lib/domain/challenge';
 import { CardDisplay } from './CardDisplay';
 import { ProgressIndicator } from './ProgressIndicator';
@@ -29,6 +31,7 @@ export function SessionScreen({
   onFinish,
 }: SessionScreenProps) {
   const t = useTranslations();
+  const { locale } = useLocaleSetting();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedDraws, setCompletedDraws] = useState<CardDrawResult[]>(draws);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -150,7 +153,7 @@ export function SessionScreen({
 
       <div className="flex-1 flex flex-col justify-center">
         <CardDisplay
-          exerciseName={current.exercise.name}
+          exerciseName={localizedName(current.exercise, locale)}
           reps={current.reps}
           suit={current.card.suit}
           rank={current.card.rank}

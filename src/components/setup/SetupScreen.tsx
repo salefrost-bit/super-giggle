@@ -125,7 +125,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
       <div className="flex items-center gap-3.5 mb-2">
         <button
           onClick={handleBack}
-          aria-label="Nazad"
+          aria-label={t('common.back')}
           className="bg-surface text-foreground w-10 h-10 rounded-xl text-lg font-extrabold"
         >
           ←

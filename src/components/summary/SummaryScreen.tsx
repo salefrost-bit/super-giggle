@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { summarizeByCategory } from '@/lib/domain/summarize';
 import { computeScore } from '@/lib/domain/challenge';
 import { CATEGORY_KEY_TO_NAME } from '@/lib/domain/types';
+import { useLocaleSetting } from '@/i18n/LocaleProvider';
+import { localizedName } from '@/i18n/dbName';
 import type { CategoryKey, SessionConfig, SessionResult } from '@/lib/domain/types';
 
 // Visual suit chip per category — follows SUIT_TO_CATEGORY in types.ts, NOT the prototype's pairing.
@@ -30,7 +32,11 @@ function formatDuration(totalSeconds: number): string {
 
 export function SummaryScreen({ result, isGuest, config, onDone }: SummaryScreenProps) {
   const t = useTranslations();
+  const { locale } = useLocaleSetting();
   const breakdown = summarizeByCategory(result.draws);
+  const exerciseNameByCategory = new Map(
+    result.draws.map((d) => [d.categoryKey, localizedName(d.exercise, locale)])
+  );
   const challenge = config?.gameMode === 'perfect_deck' ? computeScore(result.draws) : null;
 
   return (
@@ -90,7 +96,9 @@ export function SummaryScreen({ result, isGuest, config, onDone }: SummaryScreen
                 {CATEGORY_TO_SUIT[item.categoryKey]}
               </span>
               <div>
-                <p className="text-[15px] font-extrabold">{item.exerciseName}</p>
+                <p className="text-[15px] font-extrabold">
+                  {exerciseNameByCategory.get(item.categoryKey) ?? item.exerciseName}
+                </p>
                 <p className="text-xs font-semibold text-muted">
                   {CATEGORY_KEY_TO_NAME[item.categoryKey]}
                 </p>

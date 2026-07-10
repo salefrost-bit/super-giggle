@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { LandingScreen } from '@/components/landing/LandingScreen';
 import { SetupScreen } from '@/components/setup/SetupScreen';
@@ -13,6 +14,7 @@ import type { CardDrawResult, CategoryKey, SessionConfig, SessionResult } from '
 type Screen = 'landing' | 'setup' | 'session' | 'summary' | 'history';
 
 export default function Home() {
+  const t = useTranslations();
   const { user, isLoading, signOut } = useAuth();
   const [screen, setScreen] = useState<Screen>('landing');
   const [config, setConfig] = useState<SessionConfig | null>(null);
@@ -20,7 +22,7 @@ export default function Home() {
   const [categoryIdByKey, setCategoryIdByKey] = useState<Record<CategoryKey, string> | null>(null);
   const [result, setResult] = useState<SessionResult | null>(null);
 
-  if (isLoading) return <p className="p-6">Učitavanje...</p>;
+  if (isLoading) return <p className="p-6">{t('common.loading')}</p>;
 
   async function handleSetupStart(sessionConfig: SessionConfig, sessionDraws: CardDrawResult[]) {
     setConfig(sessionConfig);
