@@ -6,7 +6,7 @@ import { LandingScreen } from '@/components/landing/LandingScreen';
 import { SetupScreen } from '@/components/setup/SetupScreen';
 import { SessionScreen } from '@/components/session/SessionScreen';
 import { SummaryScreen } from '@/components/summary/SummaryScreen';
-import { HistoryScreen } from '@/components/history/HistoryScreen';
+import { ProgressScreen } from '@/components/progress/ProgressScreen';
 import { fetchCategories, buildCategoryIdByKey } from '@/lib/supabase/queries';
 import type { CardDrawResult, CategoryKey, SessionConfig, SessionResult } from '@/lib/domain/types';
 
@@ -73,7 +73,7 @@ export default function Home() {
     );
   }
   if (screen === 'history' && user) {
-    return <HistoryScreen userId={user.id} onBack={() => setScreen('landing')} />;
+    return <ProgressScreen userId={user.id} onBack={() => setScreen('landing')} />;
   }
   return null;
 }
