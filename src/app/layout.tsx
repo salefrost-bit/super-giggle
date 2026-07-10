@@ -1,21 +1,26 @@
-import type { Metadata } from "next";
-import { AuthProvider } from "@/lib/auth/AuthContext";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Nunito } from 'next/font/google';
+import { AuthProvider } from '@/lib/auth/AuthContext';
+import './globals.css';
+
+const nunito = Nunito({
+  variable: '--font-nunito',
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '600', '700', '800', '900'],
+});
 
 export const metadata: Metadata = {
-  title: "Trening App",
-  description: "Trening bez opreme, zasnovan na igranju karata",
+  title: 'ŠPIL — Trening bez opreme',
+  description: 'Trening bez opreme, zasnovan na izvlačenju karata. Izvuci kartu, odradi seriju.',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="sr">
-      <body>
-        <AuthProvider>{children}</AuthProvider>
+    <html lang="sr" className={`${nunito.variable} antialiased`}>
+      <body className="min-h-screen bg-outer flex justify-center">
+        <div className="w-full max-w-[440px] min-h-screen bg-background text-foreground shadow-[0_0_60px_rgba(0,0,0,0.5)]">
+          <AuthProvider>{children}</AuthProvider>
+        </div>
       </body>
     </html>
   );
