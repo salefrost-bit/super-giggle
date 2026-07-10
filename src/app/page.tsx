@@ -48,7 +48,7 @@ export default function Home() {
     );
   }
   if (screen === 'setup') {
-    return <SetupScreen onStart={handleSetupStart} />;
+    return <SetupScreen onStart={handleSetupStart} onBack={() => setScreen('landing')} />;
   }
   if (screen === 'session' && config) {
     return (
@@ -65,7 +65,7 @@ export default function Home() {
     return <SummaryScreen result={result} isGuest={!user} onDone={() => setScreen('landing')} />;
   }
   if (screen === 'history' && user) {
-    return <HistoryScreen userId={user.id} />;
+    return <HistoryScreen userId={user.id} onBack={() => setScreen('landing')} />;
   }
   return null;
 }
