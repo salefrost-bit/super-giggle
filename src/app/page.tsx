@@ -68,7 +68,9 @@ export default function Home() {
     );
   }
   if (screen === 'summary' && result) {
-    return <SummaryScreen result={result} isGuest={!user} onDone={() => setScreen('landing')} />;
+    return (
+      <SummaryScreen result={result} isGuest={!user} config={config} onDone={() => setScreen('landing')} />
+    );
   }
   if (screen === 'history' && user) {
     return <HistoryScreen userId={user.id} onBack={() => setScreen('landing')} />;
