@@ -56,7 +56,7 @@ create table card_draws (
   session_id uuid not null references sessions(id) on delete cascade,
   order_index int not null,
   suit text not null check (suit in ('hearts', 'clubs', 'spades', 'diamonds')),
-  card_value int not null check (card_value between 2 and 14),
+  card_value int not null check (card_value between 1 and 13),
   reps int not null,
   completed_at timestamptz not null,
   unique (session_id, order_index)

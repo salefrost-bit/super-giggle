@@ -19,7 +19,7 @@ export const CATEGORY_KEY_TO_NAME: Record<CategoryKey, string> = {
 
 export interface Card {
   suit: Suit;
-  rank: number; // 2-10 = face value, 11=J, 12=Q, 13=K, 14=A
+  rank: number; // 1 = A, 2-10 = face value, 11=J, 12=Q, 13=K
 }
 
 export type DeckSize = 13 | 26 | 52;

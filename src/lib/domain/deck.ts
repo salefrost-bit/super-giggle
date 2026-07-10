@@ -1,7 +1,7 @@
 import type { Card, DeckSize, Suit } from './types';
 
 const SUITS: Suit[] = ['hearts', 'clubs', 'spades', 'diamonds'];
-const RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+const RANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
 
 export function createFullDeck(): Card[] {
   const deck: Card[] = [];
