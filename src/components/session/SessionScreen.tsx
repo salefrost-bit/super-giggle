@@ -93,30 +93,63 @@ export function SessionScreen({
   const nextDisabled = stopwatch.isPaused || isAdvancing || isWaitingForSession;
 
   return (
-    <div className="flex flex-col items-center gap-6 p-6">
-      <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} />
-      <ProgressIndicator current={currentIndex + 1} total={draws.length} />
-      <CardDisplay exerciseName={current.exercise.name} reps={current.reps} />
+    <div className="min-h-screen relative flex flex-col px-6 pt-5 pb-7">
+      <div className="flex items-center justify-between mb-[22px]">
+        <div className="w-10" />
+        <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} />
+        <ProgressIndicator current={currentIndex + 1} total={draws.length} />
+      </div>
+
+      <div className="flex-1 flex flex-col justify-center">
+        <CardDisplay
+          exerciseName={current.exercise.name}
+          reps={current.reps}
+          suit={current.card.suit}
+          rank={current.card.rank}
+          categoryKey={current.categoryKey}
+        />
+        <div className="h-1.5 rounded-[3px] bg-surface/70 mt-5 overflow-hidden">
+          <div
+            className="h-full bg-accent rounded-[3px]"
+            style={{ width: `${Math.round((currentIndex / draws.length) * 100)}%` }}
+          />
+        </div>
+      </div>
+
       {saveState === 'failed' && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-red-500 text-center mt-4">
           Čuvanje treninga trenutno ne radi — rezultat možda neće biti sačuvan u istoriji.
         </p>
       )}
-      <div className="flex gap-3">
+
+      <div className="flex gap-3 mt-6">
         <button
           onClick={stopwatch.isPaused ? stopwatch.resume : stopwatch.pause}
-          className="border rounded px-4 py-2"
+          className="flex-1 bg-surface/60 border-2 border-white/15 text-foreground rounded-[18px] p-5 font-extrabold text-base"
         >
           {stopwatch.isPaused ? 'Nastavi' : 'Pauza'}
         </button>
         <button
           onClick={handleNext}
           disabled={nextDisabled}
-          className="bg-blue-600 text-white rounded px-6 py-2 disabled:opacity-50"
+          className="flex-[2] bg-accent text-background rounded-[18px] p-5 font-extrabold text-lg disabled:opacity-50"
         >
           {isWaitingForSession ? 'Priprema treninga...' : 'Sledeća karta'}
         </button>
       </div>
+
+      {stopwatch.isPaused && (
+        <div className="absolute inset-0 bg-background/90 flex flex-col items-center justify-center gap-6 z-10">
+          <p className="text-[30px] font-black text-accent tracking-widest">PAUZIRANO</p>
+          <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} />
+          <button
+            onClick={stopwatch.resume}
+            className="bg-accent text-background rounded-[18px] px-10 py-[18px] font-extrabold text-base"
+          >
+            Nastavi trening
+          </button>
+        </div>
+      )}
     </div>
   );
 }
