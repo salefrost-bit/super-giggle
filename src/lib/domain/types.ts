@@ -27,19 +27,24 @@ export type DeckSize = 13 | 26 | 52;
 export interface Category {
   id: string;
   name: string;
+  nameEn?: string | null;
   sortOrder: number;
 }
 
 export interface DifficultyLevel {
   id: string;
   name: string;
+  nameEn?: string | null;
   defaultRepMultiplier: number;
+  parSecondsPerRep?: number;
+  parTransitionSeconds?: number;
   sortOrder: number;
 }
 
 export interface Exercise {
   id: string;
   name: string;
+  nameEn?: string | null;
   categoryId: string;
   difficultyLevelId: string;
 }

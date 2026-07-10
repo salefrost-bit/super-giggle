@@ -6,12 +6,15 @@ export async function fetchCategories(): Promise<Category[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('categories')
-    .select('id, name, sort_order')
+    .select('id, name, name_en, sort_order')
     .order('sort_order');
   if (error) throw error;
-  return (data as Array<{ id: string; name: string; sort_order: number }>).map((row) => ({
+  return (
+    data as Array<{ id: string; name: string; name_en: string | null; sort_order: number }>
+  ).map((row) => ({
     id: row.id,
     name: row.name,
+    nameEn: row.name_en,
     sortOrder: row.sort_order,
   }));
 }
@@ -20,15 +23,26 @@ export async function fetchDifficultyLevels(): Promise<DifficultyLevel[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('difficulty_levels')
-    .select('id, name, default_rep_multiplier, sort_order')
+    .select('id, name, name_en, default_rep_multiplier, par_seconds_per_rep, par_transition_seconds, sort_order')
     .order('sort_order');
   if (error) throw error;
   return (
-    data as Array<{ id: string; name: string; default_rep_multiplier: number; sort_order: number }>
+    data as Array<{
+      id: string;
+      name: string;
+      name_en: string | null;
+      default_rep_multiplier: number;
+      par_seconds_per_rep: number;
+      par_transition_seconds: number;
+      sort_order: number;
+    }>
   ).map((row) => ({
     id: row.id,
     name: row.name,
+    nameEn: row.name_en,
     defaultRepMultiplier: row.default_rep_multiplier,
+    parSecondsPerRep: row.par_seconds_per_rep,
+    parTransitionSeconds: row.par_transition_seconds,
     sortOrder: row.sort_order,
   }));
 }
@@ -37,14 +51,21 @@ export async function fetchExercisesByDifficulty(difficultyLevelId: string): Pro
   const supabase = createClient();
   const { data, error } = await supabase
     .from('exercises')
-    .select('id, name, category_id, difficulty_level_id')
+    .select('id, name, name_en, category_id, difficulty_level_id')
     .eq('difficulty_level_id', difficultyLevelId);
   if (error) throw error;
   return (
-    data as Array<{ id: string; name: string; category_id: string; difficulty_level_id: string }>
+    data as Array<{
+      id: string;
+      name: string;
+      name_en: string | null;
+      category_id: string;
+      difficulty_level_id: string;
+    }>
   ).map((row) => ({
     id: row.id,
     name: row.name,
+    nameEn: row.name_en,
     categoryId: row.category_id,
     difficultyLevelId: row.difficulty_level_id,
   }));

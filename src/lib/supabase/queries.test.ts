@@ -22,42 +22,64 @@ function mockSupabaseChain(resolvedValue: { data: unknown; error: null }) {
 describe('fetchCategories', () => {
   it('maps snake_case rows to domain Category objects', async () => {
     const chain = mockSupabaseChain({
-      data: [{ id: '1', name: 'Guranje', sort_order: 1 }],
+      data: [{ id: '1', name: 'Guranje', name_en: 'Push', sort_order: 1 }],
       error: null,
     });
     vi.mocked(createClient).mockReturnValue(chain as never);
 
     const result = await fetchCategories();
 
-    expect(result).toEqual([{ id: '1', name: 'Guranje', sortOrder: 1 }]);
+    expect(result).toEqual([{ id: '1', name: 'Guranje', nameEn: 'Push', sortOrder: 1 }]);
   });
 });
 
 describe('fetchDifficultyLevels', () => {
   it('maps snake_case rows to domain DifficultyLevel objects', async () => {
     const chain = mockSupabaseChain({
-      data: [{ id: '1', name: 'Početnik', default_rep_multiplier: 0.75, sort_order: 1 }],
+      data: [
+        {
+          id: '1',
+          name: 'Početnik',
+          name_en: 'Beginner',
+          default_rep_multiplier: 0.75,
+          par_seconds_per_rep: 3,
+          par_transition_seconds: 20,
+          sort_order: 1,
+        },
+      ],
       error: null,
     });
     vi.mocked(createClient).mockReturnValue(chain as never);
 
     const result = await fetchDifficultyLevels();
 
-    expect(result).toEqual([{ id: '1', name: 'Početnik', defaultRepMultiplier: 0.75, sortOrder: 1 }]);
+    expect(result).toEqual([
+      {
+        id: '1',
+        name: 'Početnik',
+        nameEn: 'Beginner',
+        defaultRepMultiplier: 0.75,
+        parSecondsPerRep: 3,
+        parTransitionSeconds: 20,
+        sortOrder: 1,
+      },
+    ]);
   });
 });
 
 describe('fetchExercisesByDifficulty', () => {
   it('maps snake_case rows to domain Exercise objects', async () => {
     const chain = mockSupabaseChain({
-      data: [{ id: '1', name: 'Čučnjevi', category_id: 'c1', difficulty_level_id: 'd1' }],
+      data: [{ id: '1', name: 'Čučnjevi', name_en: 'Squats', category_id: 'c1', difficulty_level_id: 'd1' }],
       error: null,
     });
     vi.mocked(createClient).mockReturnValue(chain as never);
 
     const result = await fetchExercisesByDifficulty('d1');
 
-    expect(result).toEqual([{ id: '1', name: 'Čučnjevi', categoryId: 'c1', difficultyLevelId: 'd1' }]);
+    expect(result).toEqual([
+      { id: '1', name: 'Čučnjevi', nameEn: 'Squats', categoryId: 'c1', difficultyLevelId: 'd1' },
+    ]);
   });
 });
 
