@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { calculateStreak } from '@/lib/domain/streak';
 import { getPersonalRecords, getCompletedSessionDates, type PersonalRecord } from '@/lib/supabase/records';
 import { getUserSessions, type SessionHistoryEntry } from '@/lib/supabase/sessions';
+import { StreakInfoModal } from '@/components/streak/StreakInfoModal';
 
 interface ProgressScreenProps {
   userId: string;
@@ -24,6 +25,7 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
   const [records, setRecords] = useState<PersonalRecord[]>([]);
   const [streak, setStreak] = useState({ days: 0, freezesLeftThisWeek: 2 });
   const [isLoading, setIsLoading] = useState(true);
+  const [showStreakInfo, setShowStreakInfo] = useState(false);
 
   useEffect(() => {
     Promise.all([getUserSessions(userId), getPersonalRecords(userId), getCompletedSessionDates(userId)])
@@ -55,7 +57,11 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
         <p className="text-muted">{t('common.loading')}</p>
       ) : (
         <>
-          <div className="bg-surface rounded-2xl p-4 flex items-center gap-3 mb-5">
+          <button
+            type="button"
+            onClick={() => setShowStreakInfo(true)}
+            className="bg-surface rounded-2xl p-4 flex items-center gap-3 mb-5 text-left w-full"
+          >
             <span className="text-4xl">🔥</span>
             <div>
               <p className="text-2xl font-black leading-none">
@@ -65,7 +71,7 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
                 {t('progress.streakCaption', { freezes: '❄️'.repeat(streak.freezesLeftThisWeek) || '0' })}
               </p>
             </div>
-          </div>
+          </button>
 
           {records.length > 0 && (
             <>
@@ -129,6 +135,13 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
                 </div>
               ))}
             </div>
+          )}
+          {showStreakInfo && (
+            <StreakInfoModal
+              days={streak.days}
+              freezesLeftThisWeek={streak.freezesLeftThisWeek}
+              onClose={() => setShowStreakInfo(false)}
+            />
           )}
         </>
       )}

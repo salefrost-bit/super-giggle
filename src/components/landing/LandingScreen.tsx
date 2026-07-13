@@ -7,6 +7,7 @@ import type { User } from '@supabase/supabase-js';
 import { useLocaleSetting } from '@/i18n/LocaleProvider';
 import { calculateStreak } from '@/lib/domain/streak';
 import { getCompletedSessionDates } from '@/lib/supabase/records';
+import { StreakInfoModal } from '@/components/streak/StreakInfoModal';
 
 interface LandingScreenProps {
   user: User | null;
@@ -18,13 +19,14 @@ interface LandingScreenProps {
 export function LandingScreen({ user, onStartWorkout, onShowHistory, onSignOut }: LandingScreenProps) {
   const t = useTranslations();
   const { locale, setLocale } = useLocaleSetting();
-  const [streakDays, setStreakDays] = useState<number | null>(null);
+  const [streak, setStreak] = useState<{ days: number; freezesLeftThisWeek: number } | null>(null);
+  const [showStreakInfo, setShowStreakInfo] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     getCompletedSessionDates(user.id)
-      .then((dates) => setStreakDays(calculateStreak(dates, new Date()).days))
-      .catch(() => setStreakDays(null));
+      .then((dates) => setStreak(calculateStreak(dates, new Date())))
+      .catch(() => setStreak(null));
   }, [user]);
 
   return (
@@ -58,10 +60,13 @@ export function LandingScreen({ user, onStartWorkout, onShowHistory, onSignOut }
       <div className="flex flex-col gap-3.5">
         {user ? (
           <>
-            {streakDays !== null && streakDays > 0 && (
-              <p className="text-center text-accent font-extrabold">
-                🔥 {t('landing.streakDays', { days: streakDays })}
-              </p>
+            {streak !== null && streak.days > 0 && (
+              <button
+                onClick={() => setShowStreakInfo(true)}
+                className="text-center text-accent font-extrabold"
+              >
+                🔥 {t('landing.streakDays', { days: streak.days })}
+              </button>
             )}
             <p className="text-center text-[13px] text-muted font-semibold">{t('landing.loggedIn')}</p>
             <button
@@ -102,6 +107,13 @@ export function LandingScreen({ user, onStartWorkout, onShowHistory, onSignOut }
           </>
         )}
       </div>
+      {showStreakInfo && streak !== null && (
+        <StreakInfoModal
+          days={streak.days}
+          freezesLeftThisWeek={streak.freezesLeftThisWeek}
+          onClose={() => setShowStreakInfo(false)}
+        />
+      )}
     </div>
   );
 }
