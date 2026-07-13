@@ -118,7 +118,14 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
                       ? `⚡ ${session.score}/${session.totalCards}`
                       : t('progress.classicTag')}
                   </span>
-                  <span className="text-muted">{formatDuration(session.totalDurationSeconds)}</span>
+                  <span className="text-right">
+                    <span className="block text-muted">{formatDuration(session.totalDurationSeconds)}</span>
+                    {session.totalPauseSeconds != null && session.totalPauseSeconds > 0 && (
+                      <span className="block text-[10px] font-semibold text-muted/70">
+                        {t('pause.historyLabel', { duration: formatDuration(session.totalPauseSeconds) })}
+                      </span>
+                    )}
+                  </span>
                 </div>
               ))}
             </div>

@@ -65,6 +65,14 @@ export function SummaryScreen({ result, isGuest, config, onDone }: SummaryScreen
           {formatDuration(result.totalDurationSeconds)}
         </p>
         <p className="text-sm font-bold text-muted mt-2 uppercase tracking-widest">{t('results.totalTime')}</p>
+        {result.pauseCount != null && result.totalPauseSeconds != null && result.pauseCount > 0 && (
+          <p className="text-xs font-semibold text-muted mt-1.5">
+            {t('pause.summary', {
+              count: result.pauseCount,
+              duration: formatDuration(result.totalPauseSeconds),
+            })}
+          </p>
+        )}
         {challenge && (
           <p className="text-lg font-extrabold text-accent text-center mt-1">
             {t('results.score', { score: challenge.score, total: challenge.total })}
