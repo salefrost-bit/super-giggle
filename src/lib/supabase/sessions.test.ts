@@ -133,6 +133,8 @@ describe('getUserSessions', () => {
         difficultyName: 'Srednji',
         gameMode: 'classic',
         score: null,
+        pauseCount: null,
+        totalPauseSeconds: null,
       },
     ]);
   });
@@ -207,5 +209,46 @@ describe('challenge extensions', () => {
         settings: { budget_seconds: 1066, par_source: 'par', score: 22, won: false },
       })
     );
+  });
+
+  it('completeSession writes pause stats for classic sessions', async () => {
+    const eq = vi.fn().mockResolvedValue({ error: null });
+    const update = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ update }));
+    vi.mocked(createClient).mockReturnValue({ from } as never);
+
+    await completeSession('session-1', 990, { pause_count: 2, total_pause_seconds: 161 });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settings: { pause_count: 2, total_pause_seconds: 161 },
+      })
+    );
+  });
+
+  it('getUserSessions maps pause keys from settings when present', async () => {
+    const order = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 's2',
+          started_at: '2026-07-13T10:00:00.000Z',
+          total_duration_seconds: 900,
+          total_cards: 26,
+          status: 'completed',
+          difficulty_levels: { name: 'Srednji' },
+          game_mode: 'classic',
+          settings: { pause_count: 3, total_pause_seconds: 161 },
+        },
+      ],
+      error: null,
+    });
+    const eq = vi.fn(() => ({ order }));
+    const select = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ select }));
+    vi.mocked(createClient).mockReturnValue({ from } as never);
+
+    const result = await getUserSessions('user-1');
+    expect(result[0].pauseCount).toBe(3);
+    expect(result[0].totalPauseSeconds).toBe(161);
   });
 });

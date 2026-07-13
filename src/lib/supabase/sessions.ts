@@ -1,5 +1,5 @@
 import { createClient } from './client';
-import type { CategoryKey, SessionConfig, CardDrawResult, GameMode, ChallengeSettings } from '../domain/types';
+import type { CategoryKey, SessionConfig, CardDrawResult, GameMode, ChallengeSettings, SessionSettings } from '../domain/types';
 
 export interface CreateSessionParams {
   userId: string;
@@ -60,7 +60,7 @@ export async function recordCardDraw(sessionId: string, draw: CardDrawResult): P
 export async function completeSession(
   sessionId: string,
   totalDurationSeconds: number,
-  settings?: ChallengeSettings
+  settings?: SessionSettings | ChallengeSettings
 ): Promise<void> {
   const supabase = createClient();
   const { error } = await supabase
@@ -84,6 +84,8 @@ export interface SessionHistoryEntry {
   difficultyName: string;
   gameMode: string;
   score: number | null;
+  pauseCount: number | null;
+  totalPauseSeconds: number | null;
 }
 
 export async function getUserSessions(userId: string): Promise<SessionHistoryEntry[]> {
@@ -105,7 +107,7 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
       status: string;
       difficulty_levels: { name: string };
       game_mode: string;
-      settings: { score?: number } | null;
+      settings: { score?: number; pause_count?: number; total_pause_seconds?: number } | null;
     }>
   ).map((row) => ({
     id: row.id,
@@ -116,5 +118,7 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
     difficultyName: row.difficulty_levels.name,
     gameMode: row.game_mode,
     score: row.settings?.score ?? null,
+    pauseCount: row.settings?.pause_count ?? null,
+    totalPauseSeconds: row.settings?.total_pause_seconds ?? null,
   }));
 }

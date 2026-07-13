@@ -86,7 +86,11 @@ describe('SessionScreen — logged in', () => {
 
     expect(createSession).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user-1' }));
     expect(recordCardDraw).toHaveBeenCalledTimes(2);
-    expect(completeSession).toHaveBeenCalledWith('session-1', expect.any(Number));
+    expect(completeSession).toHaveBeenCalledWith(
+      'session-1',
+      expect.any(Number),
+      expect.objectContaining({ pause_count: 0, total_pause_seconds: 0 })
+    );
     expect(onFinish).toHaveBeenCalledTimes(1);
   });
 
@@ -229,5 +233,46 @@ describe('SessionScreen — auto-pause on visibility loss', () => {
     // hidden while already manually paused must not relabel it
     setVisibility('hidden');
     expect(screen.queryByText('Automatski pauzirano')).not.toBeInTheDocument();
+  });
+});
+
+describe('SessionScreen — pause persistence (all modes)', () => {
+  it('completes a classic session with pause stats derived from timestamps', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    renderWithIntl(
+      <SessionScreen
+        config={config}
+        draws={draws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+
+    await user.click(screen.getByRole('button', { name: 'Pauza' }));
+    await vi.advanceTimersByTimeAsync(5_000);
+    await user.click(screen.getByRole('button', { name: 'Nastavi trening' }));
+
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({ pause_count: 1, total_pause_seconds: 5 })
+      )
+    );
+    const result = onFinish.mock.calls[0][0];
+    expect(result.pauseCount).toBe(1);
+    expect(result.totalPauseSeconds).toBe(5);
+    vi.useRealTimers();
   });
 });

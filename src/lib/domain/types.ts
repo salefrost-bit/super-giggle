@@ -51,13 +51,17 @@ export interface Exercise {
 
 export type GameMode = 'classic' | 'perfect_deck';
 
-export interface ChallengeSettings {
+export interface SessionSettings {
+  pause_count?: number;
+  total_pause_seconds?: number;
+}
+
+export interface ChallengeSettings extends SessionSettings {
   budget_seconds: number;
   par_source: 'par' | 'record';
   score?: number;
   won?: boolean;
   best_score?: number | null;
-  pause_count?: number;
 }
 
 export interface SessionConfig {
@@ -88,4 +92,6 @@ export interface CardDrawResult {
 export interface SessionResult {
   totalDurationSeconds: number;
   draws: CardDrawResult[];
+  pauseCount?: number;
+  totalPauseSeconds?: number;
 }

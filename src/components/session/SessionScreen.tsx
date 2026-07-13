@@ -144,29 +144,37 @@ export function SessionScreen({
     const nextIndex = currentIndex + 1;
     if (nextIndex >= draws.length) {
       stopwatch.pause();
+      // Closure reads: totalDurationSeconds and the pause stats come from the
+      // render BEFORE the wrap-up pause() above, so finishing the session is
+      // not itself counted or timed as a pause.
       const totalDurationSeconds = stopwatch.elapsedSeconds;
+      const pauseStats = {
+        pause_count: stopwatch.pauseCount,
+        total_pause_seconds: stopwatch.totalPauseSeconds,
+      };
       const settingsPayload = isChallenge
         ? {
             budget_seconds: config.budgetSeconds as number,
             par_source: config.parSource ?? ('par' as const),
             best_score: config.bestScoreForCombo ?? null,
-            pause_count: stopwatch.pauseCount,
             ...(({ score, won }) => ({ score, won }))(computeScore(nextDraws)),
+            ...pauseStats,
           }
-        : undefined;
+        : pauseStats;
       if (userId && sessionId && saveState === 'ready') {
         try {
-          if (settingsPayload) {
-            await completeSession(sessionId, totalDurationSeconds, settingsPayload);
-          } else {
-            await completeSession(sessionId, totalDurationSeconds);
-          }
+          await completeSession(sessionId, totalDurationSeconds, settingsPayload);
         } catch (err) {
           console.error('Failed to complete session', err);
           setSaveState('failed');
         }
       }
-      onFinish({ totalDurationSeconds, draws: nextDraws });
+      onFinish({
+        totalDurationSeconds,
+        draws: nextDraws,
+        pauseCount: pauseStats.pause_count,
+        totalPauseSeconds: pauseStats.total_pause_seconds,
+      });
       return;
     }
     setCurrentIndex(nextIndex);
