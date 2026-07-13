@@ -557,15 +557,25 @@ export function useStopwatch() {
     return () => clearInterval(interval);
   }, [isPaused]);
 
+  // Capture `now` synchronously at call time, then thread the SAME timestamp
+  // into both deferred updaters. Critical for auto-pause: a visibilitychange
+  // handler calls pause() the instant the tab hides, but React may defer the
+  // updater until the tab is foregrounded again — if the updater called
+  // Date.now() itself, it would record the foreground time and the hidden
+  // interval would leak into elapsed/pause totals. Reading Date.now() here
+  // (in the event turn) instead of inside the updater keeps every duration
+  // anchored to the real pause moment (timer invariant, MVP spec 4.2).
   const pause = useCallback(() => {
-    setState((s) => pauseTimer(s));
-    setPauseLog((l) => logPause(l));
+    const now = Date.now();
+    setState((s) => pauseTimer(s, now));
+    setPauseLog((l) => logPause(l, now));
     setIsPaused(true);
   }, []);
 
   const resume = useCallback(() => {
-    setState((s) => resumeTimer(s));
-    setPauseLog((l) => logResume(l));
+    const now = Date.now();
+    setState((s) => resumeTimer(s, now));
+    setPauseLog((l) => logResume(l, now));
     setIsPaused(false);
   }, []);
 
@@ -705,14 +715,27 @@ In `src/components/session/SessionScreen.tsx`:
   // Guard makes repeated `hidden` events idempotent and keeps a manual
   // pause's origin from being overwritten.
   useEffect(() => {
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'hidden' && !stopwatch.isPaused) {
+    function autoPause() {
+      if (!stopwatch.isPaused) {
         setPauseOrigin('auto');
         stopwatch.pause();
       }
     }
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'hidden') autoPause();
+    }
+    // `pagehide` is the more reliable backgrounding signal on iOS Safari, where
+    // `visibilitychange` is less dependable across app-switch / screen lock
+    // (spec section 11 review point). Pausing is idempotent (Task 4's log +
+    // the isPaused guard), so firing both listeners is harmless. pagehide does
+    // NOT fire on the finish→summary state change (not a page navigation), so
+    // it won't spuriously pause a completing session.
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', autoPause);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', autoPause);
+    };
   }, [stopwatch.isPaused, stopwatch.pause]);
 ```
 
@@ -1537,8 +1560,10 @@ describe('StreakInfoModal', () => {
     renderWithIntl(<StreakInfoModal days={4} freezesLeftThisWeek={1} onClose={() => {}} />);
 
     expect(screen.getByText(/Niz raste za svaki dan/)).toBeInTheDocument();
+    // The state line only — NOT `/❄️/`, which also appears in the explanation
+    // paragraph and would make getByText throw on multiple matches.
     expect(screen.getByText(/4 dana/)).toBeInTheDocument();
-    expect(screen.getByText(/❄️/)).toBeInTheDocument();
+    expect(screen.getByText(/zamrzavanja ove nedelje/)).toBeInTheDocument();
   });
 
   it('closes via the button', async () => {
@@ -1893,3 +1918,14 @@ Ako bilo koji scenario padne, otvoriti nalaz kao bug PRE nastavka na Krug B (pos
 - **Documented deviations (deliberate, do not "fix" silently):** (a) `useWakeLock` u `src/hooks/`, registar lokala u `src/i18n/` — repo konvencije umesto spec-ovih `src/lib/hooks/`/`src/lib/i18n/`. (b) Prvi-put modal je gate u `page.tsx` pre montiranja `SessionScreen`-a, ne unutar njega — tajmeri ne postoje dok modal ne padne, pa je invarijanta očuvana konstrukcijom; ponašanje identično spec-u ("pre prve karte"). (c) Red pauza na rezultatima i ⏸ linija u istoriji prikazuju se samo kad je podataka > 0; spec-ova rečenica o "—" za stare sesije primenjena je kao "bez dodatka" jer isti pasus traži "diskretan dodatak kad podatak postoji" — revizija može da preokrene na eksplicitno "—". (d) Dve errata izmene postojećih assert-a (klasični `completeSession` arity; `getUserSessions` `toEqual`) — spec §5 ih čini neizbežnim; nijedna druga postojeća test linija se ne menja. (e) Završni `stopwatch.pause()` pri kraju sesije prolazi kroz pause log, ali se persisted vrednosti čitaju iz closure-a render-a PRE tog poziva, pa wrap-up pauza ne ulazi u statistiku — pokriveno assertom `pause_count: 0` u errata #1 i komentarom u kodu.
 - **Type consistency check:** `PauseLog { count, accumulatedMs, pausedAt }` i četiri funkcije iz Task 4 tačno odgovaraju pozivima u `useStopwatch` (Task 4) — jedini potrošač; `useStopwatch().pauseCount/totalPauseSeconds` odgovara čitanjima u Tasks 5/6; `SessionSettings | ChallengeSettings` unija u `completeSession` prima i klasični literal i challenge literal bez excess-property greške; `SessionResult.pauseCount/totalPauseSeconds` (Task 6) odgovara čitanjima u `SummaryScreen` (Task 7); `SessionHistoryEntry.pauseCount/totalPauseSeconds` (Task 6) odgovara `ProgressScreen` (Task 7); `InfoModal { title, onClose, closeLabel, children }` (Task 8) odgovara pozivima u Tasks 8/9/10; `ModeDefinition.explanationKey` (Task 8) odgovara ključevima iz Task 2; `LocaleOption { code: AppLocale; label }` (Task 11) odgovara `AppLocale = 'en' | 'sr'` iz postojećeg `LocaleProvider`-a.
 - **Postojeći test kontrakti provereni u kodu, ne pretpostavljeni:** `SetupScreen.test.tsx` traži mode kartice regex-ima `/Klasično/` i `/Perfektan špil/` — ⓘ dugme namerno nosi accessible name "Objašnjenje moda" da ne kolidira; `page.test.tsx` mock-uje SetupScreen/SessionScreen/SummaryScreen pa gate iz Task 9 testira stvarnu `page.tsx` logiku; `useStopwatch.test.ts` i `SessionScreen.test.tsx` dobijaju isključivo APPEND blokove (osim dve errata linije); `renderWithIntl` je pinovan na `sr`, pa svi novi assert-i koriste srpske stringove iz Task 2 kataloga.
+
+## Nezavisna revizija (fresh context) — nalazi i primenjene ispravke
+
+Revizija je proverila svaki kod-blok protiv stvarnog repoa i posebno ocenila tri tačke iz spec §11. Primenjeno pre handoff-a:
+
+1. **[BLOCKER, Task 10] Streak modal test bi pao kako je napisan.** `screen.getByText(/❄️/)` matchuje DVA elementa — i pasus objašnjenja (`streak.explanation` sadrži ❄️) i liniju stanja — pa `getByText` baca grešku o višestrukom matchu. Ispravljeno: assertuje se `/zamrzavanja ove nedelje/`, koji je jedinstven za liniju stanja (objašnjenje ima "svake nedelje", ne "ove nedelje").
+2. **[MAJOR/PLAUSIBLE, Task 4] Tajmer invarijanta na auto-pauzi.** `useStopwatch.pause/resume` su čitali `Date.now()` LENJO, unutar setState updater-a. Za ručnu pauzu je svejedno (korisnik je prisutan), ali auto-pauza se okida iz `visibilitychange` handler-a u trenutku sakrivanja taba; ako browser odloži React flush do vraćanja u foreground (moguće na agresivnim mobilnim browserima), updater bi pročitao foreground vreme i sakriveni interval bi procurio u ukupno vreme i zbir pauza. Ispravljeno: `const now = Date.now()` se hvata sinhrono na početku `pause()`/`resume()` (u event turn-u) i prosleđuje u OBA updater-a (`pauseTimer`/`logPause` već primaju `now`). Ne menja nijedan postojeći test (svi pozivaju `pause()` bez argumenta nakon `vi.setSystemTime`). Napomena: `useCardQuota` i dalje pauzira kroz render-time `isPaused` coupling; ako se isti odloženi-flush scenario materijalizuje, kvota bi mogla da "otkuca" tokom sakrivenog perioda — zato je "kvota zamrznuta" izričito gate u ručnoj telefonskoj verifikaciji (scenario 1).
+3. **[MAJOR, Task 5] iOS Safari `visibilitychange` pouzdanost.** `visibilitychange → hidden` je manje pouzdan na iOS Safari pri app-switch/zaključavanju (bfcache, freeze). Dodat `window 'pagehide'` listener koji poziva isti idempotentni `autoPause()` — belt-and-suspenders bez rizika (pause je idempotentan; pagehide ne okida na finish→summary jer to nije navigacija).
+4. **[Verifikovano OK, ne menja se] Closure-read trik u Task 6.** Čitanje `stopwatch.pauseCount/totalPauseSeconds` iz render closure-a POSLE `stopwatch.pause()` daje pre-pauza vrednosti: `pause()` poziva setState (ne mutira tekući `stopwatch` objekat), pa closure vidi vrednosti tekućeg render-a; `getTotalPauseSeconds` je stabilan kad je `pausedAt === null` (a jeste, jer je dugme "Sledeća" onemogućeno dok je pauzirano). Errata #1 (`pause_count: 0`) to i potvrđuje. Wrap-up pauza se ne broji.
+5. **[Verifikovano OK] Wake Lock ↔ auto-pauza interakcija.** U jsdom `useWakeLock` izlazi pre dodavanja listener-a (`if (!wakeLock) return`), pa ne ometa SessionScreen testove auto-pauze. U realnom app-u dva `visibilitychange` listener-a ne kolidiraju: wake lock re-akvizira samo na `visible`, auto-pauza reaguje samo na `hidden`; re-akvizicija dok je sesija pauzirana je konzistentna sa spec-om (lock vezan za montiranje SessionScreen-a). Bez double-request/leak rizika.
+6. **[Ton tekstova — OK] Predloženi SR/EN stringovi.** Prirodni, konzistentni sa glasom postojećeg kataloga; ICU apostrof-escape (`isn't`/`doesn't`/`can't`/`let's`) je literal jer apostrof nije ispred `{`/`}`/`#` — isti obrazac već radi u `workout.saveFailed`, dokazano u ovom repou.
