@@ -34,6 +34,9 @@ Proces koji se nastavlja (nepromenjen): **brainstorm → spec → nezavisna Fabl
 ## 4. Krugovi — sadržaj, redosled, zavisnosti
 
 ### Krug A — "Ispravke i jasnoća" (mali spec+plan, bez migracija osim settings ključeva)
+
+> **✅ ZAVRŠEN 2026-07-13.** Spec `docs/superpowers/specs/2026-07-13-krug-a-design.md`, plan `docs/superpowers/plans/2026-07-13-krug-a-plan.md` (12 taskova) — implementiran u celosti (commit raspon `ee2e372..77d8e2a`), testovi zeleni, verifikovano i push-ovano. Sledeći korak: brainstorm za Krug B.
+
 1. Wake Lock tokom sesije (graceful fallback gde nije podržan).
 2. Auto-pauza na gubitak vidljivosti, svi modovi; postojeći pauza overlay pri povratku; `pause_count` već postoji, dodaje se `total_pause_seconds` u `settings` + prikaz u istoriji/rezultatima.
 3. Challenge objašnjenja: info na mode karticama + prvi-put modal.
