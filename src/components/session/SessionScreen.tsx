@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useStopwatch } from '@/hooks/useStopwatch';
 import { useCardQuota } from '@/hooks/useCardQuota';
+import { useWakeLock } from '@/hooks/useWakeLock';
 import { useLocaleSetting } from '@/i18n/LocaleProvider';
 import { localizedName } from '@/i18n/dbName';
 import { calculateCardWeight, calculateQuotaSeconds, computeScore } from '@/lib/domain/challenge';
@@ -39,6 +40,8 @@ export function SessionScreen({
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [outcomeFlash, setOutcomeFlash] = useState<'won' | 'lost' | null>(null);
   const stopwatch = useStopwatch();
+  // Screen stays awake for the whole active session (all modes); released on unmount.
+  useWakeLock(true);
   const pauseCountRef = useRef(0);
 
   const isChallenge = config.gameMode === 'perfect_deck' && config.budgetSeconds != null;
