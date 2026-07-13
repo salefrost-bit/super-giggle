@@ -1,3 +1,5 @@
+> **SUPERSEDED** by docs/superpowers/strategy/2026-07-13-strategija-nastavka.md (2026-07-13)
+
 # Faza 3 — Beleške sa brainstorminga (NIJE odobren spec)
 
 Datum: 2026-07-10
