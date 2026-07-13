@@ -8,9 +8,17 @@ import {
   getElapsedSeconds,
   type TimerState,
 } from '@/lib/domain/timer';
+import {
+  createPauseLog,
+  logPause,
+  logResume,
+  getTotalPauseSeconds,
+  type PauseLog,
+} from '@/lib/domain/pauseLog';
 
 export function useStopwatch() {
   const [state, setState] = useState<TimerState>(() => startTimer());
+  const [pauseLog, setPauseLog] = useState<PauseLog>(() => createPauseLog());
   const [isPaused, setIsPaused] = useState(false);
   const [, forceRerender] = useReducer((count: number) => count + 1, 0);
 
@@ -20,13 +28,25 @@ export function useStopwatch() {
     return () => clearInterval(interval);
   }, [isPaused]);
 
+  // Capture `now` synchronously at call time, then thread the SAME timestamp
+  // into both deferred updaters. Critical for auto-pause: a visibilitychange
+  // handler calls pause() the instant the tab hides, but React may defer the
+  // updater until the tab is foregrounded again — if the updater called
+  // Date.now() itself, it would record the foreground time and the hidden
+  // interval would leak into elapsed/pause totals. Reading Date.now() here
+  // (in the event turn) instead of inside the updater keeps every duration
+  // anchored to the real pause moment (timer invariant, MVP spec 4.2).
   const pause = useCallback(() => {
-    setState((s) => pauseTimer(s));
+    const now = Date.now();
+    setState((s) => pauseTimer(s, now));
+    setPauseLog((l) => logPause(l, now));
     setIsPaused(true);
   }, []);
 
   const resume = useCallback(() => {
-    setState((s) => resumeTimer(s));
+    const now = Date.now();
+    setState((s) => resumeTimer(s, now));
+    setPauseLog((l) => logResume(l, now));
     setIsPaused(false);
   }, []);
 
@@ -35,5 +55,7 @@ export function useStopwatch() {
     isPaused,
     pause,
     resume,
+    pauseCount: pauseLog.count,
+    totalPauseSeconds: getTotalPauseSeconds(pauseLog),
   };
 }

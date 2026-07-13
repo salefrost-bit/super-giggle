@@ -59,3 +59,53 @@ describe('useStopwatch', () => {
     expect(result.current.elapsedSeconds).toBe(5);
   });
 });
+
+describe('useStopwatch pause accounting', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-08T10:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('counts pauses and accumulates their duration from timestamps', () => {
+    const { result } = renderHook(() => useStopwatch());
+
+    act(() => {
+      vi.setSystemTime(new Date('2026-07-08T10:00:03.000Z'));
+      result.current.pause();
+    });
+    act(() => {
+      vi.setSystemTime(new Date('2026-07-08T10:00:20.000Z'));
+      result.current.resume();
+    });
+    act(() => {
+      vi.setSystemTime(new Date('2026-07-08T10:00:25.000Z'));
+      result.current.pause();
+    });
+    act(() => {
+      vi.setSystemTime(new Date('2026-07-08T10:00:30.000Z'));
+      result.current.resume();
+    });
+
+    expect(result.current.pauseCount).toBe(2);
+    expect(result.current.totalPauseSeconds).toBe(22); // 17 + 5
+  });
+
+  it('does not double-count a repeated pause', () => {
+    const { result } = renderHook(() => useStopwatch());
+
+    act(() => {
+      vi.setSystemTime(new Date('2026-07-08T10:00:03.000Z'));
+      result.current.pause();
+    });
+    act(() => {
+      vi.setSystemTime(new Date('2026-07-08T10:00:04.000Z'));
+      result.current.pause();
+    });
+
+    expect(result.current.pauseCount).toBe(1);
+  });
+});
