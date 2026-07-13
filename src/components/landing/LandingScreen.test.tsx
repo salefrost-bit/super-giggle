@@ -1,0 +1,43 @@
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { NextIntlClientProvider } from 'next-intl';
+import type { ReactElement } from 'react';
+import sr from '../../../messages/sr.json';
+import { LocaleContext } from '@/i18n/LocaleProvider';
+import { LandingScreen } from './LandingScreen';
+
+vi.mock('@/lib/supabase/records', () => ({
+  getCompletedSessionDates: vi.fn().mockResolvedValue([]),
+}));
+
+// Local render helper: like renderWithIntl but with a spyable setLocale.
+function renderWithLocaleSpy(ui: ReactElement) {
+  const setLocale = vi.fn();
+  render(
+    <LocaleContext.Provider value={{ locale: 'sr', setLocale }}>
+      <NextIntlClientProvider locale="sr" messages={sr} timeZone="Europe/Belgrade">
+        {ui}
+      </NextIntlClientProvider>
+    </LocaleContext.Provider>
+  );
+  return setLocale;
+}
+
+describe('LandingScreen language menu', () => {
+  it('lists every locale from the registry and switches via setLocale', async () => {
+    const user = userEvent.setup();
+    const setLocale = renderWithLocaleSpy(
+      <LandingScreen user={null} onStartWorkout={() => {}} onShowHistory={() => {}} onSignOut={() => {}} />
+    );
+
+    const select = screen.getByRole('combobox', { name: 'Jezik' });
+    expect(select).toHaveValue('sr');
+    expect(screen.getAllByRole('option')).toHaveLength(2);
+    expect(screen.getByRole('option', { name: 'English' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Srpski' })).toBeInTheDocument();
+
+    await user.selectOptions(select, 'en');
+    expect(setLocale).toHaveBeenCalledWith('en');
+  });
+});

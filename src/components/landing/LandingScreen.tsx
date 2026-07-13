@@ -8,6 +8,8 @@ import { useLocaleSetting } from '@/i18n/LocaleProvider';
 import { calculateStreak } from '@/lib/domain/streak';
 import { getCompletedSessionDates } from '@/lib/supabase/records';
 import { StreakInfoModal } from '@/components/streak/StreakInfoModal';
+import { LOCALES } from '@/i18n/locales';
+import type { AppLocale } from '@/i18n/LocaleProvider';
 
 interface LandingScreenProps {
   user: User | null;
@@ -31,19 +33,19 @@ export function LandingScreen({ user, onStartWorkout, onShowHistory, onSignOut }
 
   return (
     <div className="relative min-h-screen flex flex-col justify-between px-7 pt-12 pb-9">
-      <div className="absolute top-4 right-5 flex gap-2 text-sm font-extrabold">
-        <button
-          onClick={() => setLocale('sr')}
-          className={locale === 'sr' ? 'text-accent' : 'text-muted'}
+      <div className="absolute top-4 right-5">
+        <select
+          value={locale}
+          onChange={(e) => setLocale(e.target.value as AppLocale)}
+          aria-label={t('language.label')}
+          className="bg-surface text-foreground text-sm font-bold rounded-xl px-3 py-2 border-2 border-white/15"
         >
-          SR
-        </button>
-        <button
-          onClick={() => setLocale('en')}
-          className={locale === 'en' ? 'text-accent' : 'text-muted'}
-        >
-          EN
-        </button>
+          {LOCALES.map((option) => (
+            <option key={option.code} value={option.code}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div />
       <div className="flex flex-col items-center gap-[18px] text-center">
