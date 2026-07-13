@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithIntl } from '@/test/renderWithIntl';
 import { SessionScreen } from './SessionScreen';
@@ -167,5 +167,67 @@ describe('SessionScreen — perfect_deck challenge', () => {
     const result = onFinish.mock.calls[0][0];
     expect(result.draws.map((d: { beatQuota?: boolean | null }) => d.beatQuota)).toEqual([true, false]);
     vi.useRealTimers();
+  });
+});
+
+function setVisibility(state: 'hidden' | 'visible') {
+  Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
+  fireEvent(document, new Event('visibilitychange'));
+}
+
+describe('SessionScreen — auto-pause on visibility loss', () => {
+  afterEach(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+  });
+
+  it('pauses with the auto label when the tab hides, stays paused on return, resumes only by click', async () => {
+    const onFinish = vi.fn();
+    const user = userEvent.setup();
+    renderWithIntl(
+      <SessionScreen config={config} draws={draws} categoryIdByKey={null} userId={null} onFinish={onFinish} />
+    );
+
+    setVisibility('hidden');
+    expect(await screen.findByText('PAUZIRANO')).toBeInTheDocument();
+    expect(screen.getByText('Automatski pauzirano')).toBeInTheDocument();
+
+    setVisibility('visible');
+    expect(screen.getByText('PAUZIRANO')).toBeInTheDocument(); // no auto-resume
+
+    await user.click(screen.getByRole('button', { name: 'Nastavi trening' }));
+    expect(screen.queryByText('PAUZIRANO')).not.toBeInTheDocument();
+    expect(screen.queryByText('Automatski pauzirano')).not.toBeInTheDocument();
+  });
+
+  it('is idempotent on rapid repeated hidden events', async () => {
+    const onFinish = vi.fn();
+    const user = userEvent.setup();
+    renderWithIntl(
+      <SessionScreen config={config} draws={draws} categoryIdByKey={null} userId={null} onFinish={onFinish} />
+    );
+
+    setVisibility('hidden');
+    setVisibility('visible');
+    setVisibility('hidden');
+    // Still exactly one overlay, still paused.
+    expect(screen.getAllByText('PAUZIRANO')).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'Nastavi trening' }));
+    expect(screen.queryByText('PAUZIRANO')).not.toBeInTheDocument();
+  });
+
+  it('does not label a manual pause as automatic', async () => {
+    const onFinish = vi.fn();
+    const user = userEvent.setup();
+    renderWithIntl(
+      <SessionScreen config={config} draws={draws} categoryIdByKey={null} userId={null} onFinish={onFinish} />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Pauza' }));
+    expect(screen.getByText('PAUZIRANO')).toBeInTheDocument();
+    expect(screen.queryByText('Automatski pauzirano')).not.toBeInTheDocument();
+
+    // hidden while already manually paused must not relabel it
+    setVisibility('hidden');
+    expect(screen.queryByText('Automatski pauzirano')).not.toBeInTheDocument();
   });
 });

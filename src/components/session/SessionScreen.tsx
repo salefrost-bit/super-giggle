@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useStopwatch } from '@/hooks/useStopwatch';
 import { useCardQuota } from '@/hooks/useCardQuota';
@@ -42,7 +42,19 @@ export function SessionScreen({
   const stopwatch = useStopwatch();
   // Screen stays awake for the whole active session (all modes); released on unmount.
   useWakeLock(true);
-  const pauseCountRef = useRef(0);
+
+  const [pauseOrigin, setPauseOrigin] = useState<'manual' | 'auto' | null>(null);
+
+  function handleManualPause() {
+    if (stopwatch.isPaused) return;
+    setPauseOrigin('manual');
+    stopwatch.pause();
+  }
+
+  function handleResume() {
+    setPauseOrigin(null);
+    stopwatch.resume();
+  }
 
   const isChallenge = config.gameMode === 'perfect_deck' && config.budgetSeconds != null;
   const parRates = { parSecondsPerRep: config.parSecondsPerRep, parTransitionSeconds: config.parTransitionSeconds };
@@ -78,6 +90,34 @@ export function SessionScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Auto-pause when the app loses visibility (lock screen, call, tab switch).
+  // Reuses the exact same pause path as the button — timestamp shift only.
+  // Guard makes repeated `hidden` events idempotent and keeps a manual
+  // pause's origin from being overwritten.
+  useEffect(() => {
+    function autoPause() {
+      if (!stopwatch.isPaused) {
+        setPauseOrigin('auto');
+        stopwatch.pause();
+      }
+    }
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'hidden') autoPause();
+    }
+    // `pagehide` is the more reliable backgrounding signal on iOS Safari, where
+    // `visibilitychange` is less dependable across app-switch / screen lock
+    // (spec section 11 review point). Pausing is idempotent (Task 4's log +
+    // the isPaused guard), so firing both listeners is harmless. pagehide does
+    // NOT fire on the finish→summary state change (not a page navigation), so
+    // it won't spuriously pause a completing session.
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', autoPause);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', autoPause);
+    };
+  }, [stopwatch.isPaused, stopwatch.pause]);
+
   async function handleNext() {
     setIsAdvancing(true);
     const completedAt = new Date().toISOString();
@@ -110,7 +150,7 @@ export function SessionScreen({
             budget_seconds: config.budgetSeconds as number,
             par_source: config.parSource ?? ('par' as const),
             best_score: config.bestScoreForCombo ?? null,
-            pause_count: pauseCountRef.current,
+            pause_count: stopwatch.pauseCount,
             ...(({ score, won }) => ({ score, won }))(computeScore(nextDraws)),
           }
         : undefined;
@@ -180,14 +220,7 @@ export function SessionScreen({
 
       <div className="flex gap-3 mt-6">
         <button
-          onClick={
-            stopwatch.isPaused
-              ? stopwatch.resume
-              : () => {
-                  pauseCountRef.current += 1;
-                  stopwatch.pause();
-                }
-          }
+          onClick={stopwatch.isPaused ? handleResume : handleManualPause}
           className="flex-1 bg-surface/60 border-2 border-white/15 text-foreground rounded-[18px] p-5 font-extrabold text-base"
         >
           {stopwatch.isPaused ? t('workout.resume') : t('workout.pause')}
@@ -204,9 +237,12 @@ export function SessionScreen({
       {stopwatch.isPaused && (
         <div className="absolute inset-0 bg-background/90 flex flex-col items-center justify-center gap-6 z-10">
           <p className="text-[30px] font-black text-accent tracking-widest">{t('workout.paused')}</p>
+          {pauseOrigin === 'auto' && (
+            <p className="text-sm font-semibold text-muted -mt-3">{t('pause.autoLabel')}</p>
+          )}
           <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} />
           <button
-            onClick={stopwatch.resume}
+            onClick={handleResume}
             className="bg-accent text-background rounded-[18px] px-10 py-[18px] font-extrabold text-base"
           >
             {t('workout.resumeWorkout')}
