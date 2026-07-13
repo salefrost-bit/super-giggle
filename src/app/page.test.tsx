@@ -10,7 +10,16 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 
 vi.mock('@/components/setup/SetupScreen', () => ({
   SetupScreen: ({ onStart }: { onStart: (c: unknown, d: unknown[]) => void }) => (
-    <button onClick={() => onStart({ deckSize: 13 }, [{ completedAt: null }])}>finish-setup</button>
+    <>
+      <button onClick={() => onStart({ deckSize: 13 }, [{ completedAt: null }])}>finish-setup</button>
+      <button
+        onClick={() =>
+          onStart({ deckSize: 13, gameMode: 'perfect_deck', budgetSeconds: 100 }, [{ completedAt: null }])
+        }
+      >
+        finish-setup-challenge
+      </button>
+    </>
   ),
 }));
 
@@ -35,5 +44,30 @@ describe('Home (top-level state machine)', () => {
     await user.click(await screen.findByRole('button', { name: 'finish-summary' }));
 
     expect(await screen.findByRole('button', { name: 'Nastavi kao gost' })).toBeInTheDocument();
+  });
+
+  it('shows the perfect_deck first-run explanation once, before the session starts', async () => {
+    localStorage.removeItem('explained.perfect_deck');
+    const user = userEvent.setup();
+    const { unmount } = renderWithIntl(<Home />);
+
+    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(await screen.findByRole('button', { name: 'finish-setup-challenge' }));
+
+    // Gate: session has NOT started while the explanation is up.
+    expect(await screen.findByText(/Svaka karta ima svoju vremensku kvotu/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'finish-session' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Jasno, krećemo' }));
+    expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
+    expect(localStorage.getItem('explained.perfect_deck')).toBe('true');
+
+    // Second run on the same device: no modal, straight to the session.
+    unmount();
+    renderWithIntl(<Home />);
+    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(await screen.findByRole('button', { name: 'finish-setup-challenge' }));
+    expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
+    expect(screen.queryByText(/Svaka karta ima svoju vremensku kvotu/)).not.toBeInTheDocument();
   });
 });

@@ -9,6 +9,8 @@ import { SessionScreen } from '@/components/session/SessionScreen';
 import { SummaryScreen } from '@/components/summary/SummaryScreen';
 import { ProgressScreen } from '@/components/progress/ProgressScreen';
 import { fetchCategories, buildCategoryIdByKey } from '@/lib/supabase/queries';
+import { InfoModal } from '@/components/ui/InfoModal';
+import { hasSeenExplanation, markExplained } from '@/lib/modes/explained';
 import type { CardDrawResult, CategoryKey, SessionConfig, SessionResult } from '@/lib/domain/types';
 
 type Screen = 'landing' | 'setup' | 'session' | 'summary' | 'history';
@@ -21,6 +23,7 @@ export default function Home() {
   const [draws, setDraws] = useState<CardDrawResult[]>([]);
   const [categoryIdByKey, setCategoryIdByKey] = useState<Record<CategoryKey, string> | null>(null);
   const [result, setResult] = useState<SessionResult | null>(null);
+  const [showChallengeIntro, setShowChallengeIntro] = useState(false);
 
   if (isLoading) return <p className="p-6">{t('common.loading')}</p>;
 
@@ -30,6 +33,9 @@ export default function Home() {
     if (user) {
       const categories = await fetchCategories();
       setCategoryIdByKey(buildCategoryIdByKey(categories));
+    }
+    if (sessionConfig.gameMode === 'perfect_deck' && !hasSeenExplanation('perfect_deck')) {
+      setShowChallengeIntro(true);
     }
     setScreen('session');
   }
@@ -59,6 +65,22 @@ export default function Home() {
     );
   }
   if (screen === 'session' && config) {
+    if (showChallengeIntro) {
+      // First perfect_deck run on this device: explain the rules BEFORE the
+      // session (and its timers) exist. Dismissal mounts SessionScreen fresh.
+      return (
+        <InfoModal
+          title={t('setup.challengeTitle')}
+          closeLabel={t('modes.firstRunCta')}
+          onClose={() => {
+            markExplained('perfect_deck');
+            setShowChallengeIntro(false);
+          }}
+        >
+          {t('modes.perfect_deck.explanation')}
+        </InfoModal>
+      );
+    }
     return (
       <SessionScreen
         config={config}
