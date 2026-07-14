@@ -5,13 +5,19 @@ alwaysApply: true
 
 # Executing the Trening App plans
 
-This repo's implementation is fully specified across three plan cycles, each with its own spec + plan. Completed cycles, in order:
+This repo's implementation is fully specified across a series of plan cycles, each with its own spec + plan. Completed cycles, in order:
 
 1. **MVP** — Spec: `docs/superpowers/specs/2026-07-08-trening-app-design.md` · Plan: `docs/superpowers/plans/2026-07-08-trening-app-mvp-plan.md` — **DONE**, all 28 tasks committed.
 2. **Visual redesign** — Spec: `docs/superpowers/specs/2026-07-09-mvp-visual-redesign-design.md` · Plan: `docs/superpowers/plans/2026-07-09-mvp-visual-redesign-plan.md` — **DONE**, all 13 tasks committed.
-3. **Phase 2 gamification** — Spec: `docs/superpowers/specs/2026-07-09-gamification-phase2-design.md` · Plan: `docs/superpowers/plans/2026-07-09-gamification-phase2-plan.md` — **NEXT UP**. Its Task 1 is a preflight gate that re-verifies cycles 1 and 2 are complete before touching anything — run it first even though this file says they're done.
+3. **Phase 2 gamification** — Spec: `docs/superpowers/specs/2026-07-09-gamification-phase2-design.md` · Plan: `docs/superpowers/plans/2026-07-09-gamification-phase2-plan.md` — **DONE**, all 15 tasks committed.
+4. **Krug A (fixes & clarity)** — Spec: `docs/superpowers/specs/2026-07-13-krug-a-design.md` · Plan: `docs/superpowers/plans/2026-07-13-krug-a-plan.md` — **DONE**, all 12 tasks committed.
 
-When starting a new session, read the CURRENT plan (the first one not yet fully committed — right now that's the gamification plan) and its spec in full before writing any code. Ignore completed cycles' plans except as historical reference for file locations and existing interfaces.
+There is currently NO active plan. What comes next is defined by
+`docs/superpowers/strategy/2026-07-13-strategija-nastavka.md` — a new spec and
+plan must be written and approved before any implementation starts. Read
+`docs/superpowers/README.md` for the current document index and reading order.
+Ignore completed cycles' plans except as historical reference for file
+locations and existing interfaces.
 
 ## Rules
 

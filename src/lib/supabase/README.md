@@ -15,3 +15,5 @@ All Supabase I/O lives here — nothing outside this module calls
   `session_exercises`, and `card_draws`. Guest sessions never call
   any function here — that branch is decided by the caller
   (`SessionScreen`), not by this module.
+- `records.ts` — read-only personal-records and completed-session-dates
+  queries over `sessions` (best time, best score per combination).

@@ -1,5 +1,9 @@
 # Trening App MVP Implementation Plan
 
+> **ERRATA (2026-07-09):** rank scheme changed to As=1 (ranks 1–13) by the
+> visual redesign spec §5 — the "ranks 2–14" line in Global Constraints below
+> is superseded. See `supabase/migrations/0003_card_value_range.sql`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a working web app where a user (guest or account) selects one exercise per body-part category and a difficulty, draws cards from a shuffled deck that determine exercise + rep count, runs a timestamp-based stopwatch through the session, and (if logged in) saves the result to history.

@@ -16,3 +16,9 @@ by unit tests instead of manual verification.
   See spec section 4.2. Any new timer-like feature (e.g. Phase 2
   challenge countdown) must follow this same pattern.
 - `summarize.ts` — per-category rollup of a finished session's draws.
+- `challenge.ts` — per-card quota split and score/win logic for the
+  "Perfect Deck" mode (budget from par formula or personal record).
+- `streak.ts` — daily streak from completed-session dates; 2 automatic
+  freezes per ISO week, streak must be anchored by a real workout.
+- `pauseLog.ts` — pause accounting from timestamps (count + total
+  seconds); idempotent pause/resume, same timer invariant as `timer.ts`.
