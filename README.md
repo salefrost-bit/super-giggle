@@ -46,3 +46,4 @@ Gost mod radi i bez baze — prijava/istorija zahtevaju Supabase.
 Pročitaj **`AGENTS.md`** (obavezna pravila) i **`docs/superpowers/README.md`**
 (indeks dokumentacije i redosled čitanja) pre bilo kakvog rada. Strategija u
 `docs/superpowers/strategy/` je izvor istine o tome šta se sledeće radi.
+Istorija izdanja i aktuelno "u pripremi": `CHANGELOG.md`.
