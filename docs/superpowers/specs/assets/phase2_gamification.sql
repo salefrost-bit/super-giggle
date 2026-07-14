@@ -1,3 +1,4 @@
+-- SUPERSEDED: model odbačen gamifikacijskim spec-om §5; achievements su backlog. Istorijska referenca — NE primenjivati.
 -- DRAFT — NOT applied. Reference for Phase 2 gamification work only.
 -- Run only after Phase 2 has its own approved spec and plan.
 
