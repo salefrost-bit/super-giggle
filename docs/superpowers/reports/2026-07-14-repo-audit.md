@@ -127,3 +127,13 @@ Proces (brainstorm → spec → Fable revizija → plan → Fable revizija → i
 - **O2 — sudbina `supabase/phase2_gamification.sql`:** obrisati, premestiti u docs kao istorijski nacrt, ili ostaviti uz SUPERSEDED zaglavlje? Nacrt opisuje tabele koje su svesno odbačene, ali achievements jesu u backlogu pa nacrt može još da vredi.
 - **O3 — `<html lang>`:** ostaviti fiksno `sr`, prebaciti na `en` (podrazumevani jezik), ili dinamički pratiti lokal (zahteva mali client-side update u `LocaleProvider`)?
 - **O4 — retroaktivni tagovi:** da li pored budućeg pravila tagovanja želiš i retroaktivne tagove na commit granicama završenih ciklusa (MVP / redizajn / gamifikacija / Krug A), ili samo `v0.3.0-krug-a` na trenutni HEAD?
+
+## 7. Rešenja (2026-07-15)
+
+| Pitanje | Odluka | Akcija |
+|---|---|---|
+| **O1 — ime repoa** | Ostaje `super-giggle` | Nema preimenovanja. Vercel deploy potvrđen (`trening-app-five.vercel.app` radi). |
+| **O1 — vidljivost** | Ostaje javan (public) | Nema izmene. Repo: `salefrost-bit/super-giggle`, 89 commitova, pun kod. |
+| **O2 — `phase2_gamification.sql`** | Već rešeno u higijeni | Fajl je u `docs/superpowers/specs/assets/phase2_gamification.sql` sa SUPERSEDED zaglavljem; nije u `supabase/`. |
+| **O3 — `<html lang>`** | Fiksno `en` | `src/app/layout.tsx` — usklađeno sa `LocaleProvider` defaultom (`en`). |
+| **O4 — retroaktivni tagovi** | Da | `v0.1.0` na `47535b9` (MVP + redizajn), `v0.2.0` na `b6ea41a` (gamifikacija), `v0.3.0` već postoji na `c31b793` (Krug A + higijena). |

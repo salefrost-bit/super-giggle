@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="sr" className={`${nunito.variable} antialiased`}>
+    <html lang="en" className={`${nunito.variable} antialiased`}>
       <body className="min-h-screen bg-outer flex justify-center">
         <div className="w-full max-w-[440px] min-h-screen bg-background text-foreground shadow-[0_0_60px_rgba(0,0,0,0.5)]">
           <LocaleProvider>
