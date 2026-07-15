@@ -12,12 +12,15 @@ import {
   dailyDateString,
   isDailyDoneLocal,
   markDailyDoneLocal,
+  seededRng,
 } from '@/lib/domain/daily';
 import { calculateCardWeight, calculateQuotaSeconds, computeScore } from '@/lib/domain/challenge';
 import { calculateBasePoints, challengeMultiplier, calculatePoints } from '@/lib/domain/score';
+import { JOKER_REST_SECONDS, assignJokerBreaks, isJokerBreak } from '@/lib/domain/jokers';
 import { drawSessionCards } from '@/lib/domain/deck';
 import { buildDraws } from '@/lib/domain/draws';
 import { CardDisplay } from './CardDisplay';
+import { JokerRestScreen } from './JokerRestScreen';
 import { ProgressIndicator } from './ProgressIndicator';
 import { StopwatchDisplay } from './StopwatchDisplay';
 import { createSession, recordCardDraw, completeSession, hasDailyForDate } from '@/lib/supabase/sessions';
@@ -67,6 +70,24 @@ export function SessionScreen({
   const [elapsedAtCardStart, setElapsedAtCardStart] = useState(0);
   const [pauseOrigin, setPauseOrigin] = useState<'manual' | 'auto' | null>(null);
 
+  // Computed once at mount from the INITIAL real-card count. Sprint always
+  // uses a 52-card lap (isJokerBreak wraps positions modulo 52 below) even
+  // though `queue` grows via reshuffle-on-exhaustion. Karta dana gets its own
+  // date-seeded rng stream (separate from the one that draws the cards, so
+  // the sequences don't accidentally correlate) — same raspored for every
+  // player that day, matching daily.ts's existing determinism principle.
+  const [jokerBreaks] = useState(() => {
+    const realCardCount = isSprint ? 52 : queue.length;
+    if (!isDaily) return assignJokerBreaks(realCardCount);
+    const dateString = dailyDateString(new Date(sessionStartedAt));
+    return assignJokerBreaks(realCardCount, seededRng(`${dateString}:jokers`));
+  });
+  const [isResting, setIsResting] = useState(false);
+  const [restKey, setRestKey] = useState(0);
+  const [jokerBreaksTaken, setJokerBreaksTaken] = useState(0);
+  const pendingIndexRef = useRef<number | null>(null);
+  const restQuota = useCardQuota(isResting ? JOKER_REST_SECONDS : null, restKey, stopwatch.isPaused);
+
   function handleManualPause() {
     if (stopwatch.isPaused) return;
     setPauseOrigin('manual');
@@ -91,7 +112,7 @@ export function SessionScreen({
   const sprintQuota = useCardQuota(
     isSprint && config.sprintMinutes != null ? config.sprintMinutes * 60 : null,
     0,
-    stopwatch.isPaused
+    stopwatch.isPaused || isResting
   );
   const quota = isSprint ? sprintQuota : cardQuota;
   const scoreSoFar = computeScore(completedDraws.slice(0, currentIndex));
@@ -157,6 +178,21 @@ export function SessionScreen({
     };
   }, [stopwatch.isPaused, stopwatch.pause]);
 
+  // Rest ends the same way any useCardQuota-driven countdown ends: when
+  // `expired` flips true. Guarded by `pendingIndexRef` so it fires exactly
+  // once per rest even though this effect re-runs on every stopwatch tick.
+  useEffect(() => {
+    if (!isResting || !restQuota.expired) return;
+    const pending = pendingIndexRef.current;
+    if (pending === null) return;
+    pendingIndexRef.current = null;
+    setIsResting(false);
+    setJokerBreaksTaken((n) => n + 1);
+    if (isSurvive) setElapsedAtCardStart(stopwatch.elapsedSeconds);
+    setCurrentIndex(pending);
+    setIsAdvancing(false);
+  }, [isResting, restQuota.expired, isSurvive, stopwatch.elapsedSeconds]);
+
   async function finishSession(
     nextDraws: CardDrawResult[],
     options: {
@@ -172,6 +208,7 @@ export function SessionScreen({
       pause_count: stopwatch.pauseCount,
       total_pause_seconds: stopwatch.totalPauseSeconds,
     };
+    const jokerStats = jokerBreaksTaken > 0 ? { joker_breaks_taken: jokerBreaksTaken } : {};
     const finishedDraws = nextDraws.filter((d) => d.completedAt !== null);
     const scored = finishedDraws.map((d) => ({
       reps: d.reps,
@@ -220,6 +257,7 @@ export function SessionScreen({
       ? {
           survived_cards: options.survivedCards ?? finishedDraws.length,
           ...pauseStats,
+          ...jokerStats,
           ...pointsPayload,
         }
       : isChallenge
@@ -231,6 +269,7 @@ export function SessionScreen({
             won: challengeScore.won,
             ...dailySettings,
             ...pauseStats,
+            ...jokerStats,
             ...pointsPayload,
           }
         : isSprint
@@ -238,9 +277,10 @@ export function SessionScreen({
               sprint_minutes: config.sprintMinutes,
               cards_completed: finishedDraws.length,
               ...pauseStats,
+              ...jokerStats,
               ...pointsPayload,
             }
-          : { ...pauseStats, ...pointsPayload };
+          : { ...pauseStats, ...jokerStats, ...pointsPayload };
 
     if (userId && sessionId && saveState === 'ready') {
       try {
@@ -354,6 +394,12 @@ export function SessionScreen({
       }
 
       setBalanceSeconds(newBalance);
+      if (isJokerBreak(nextIndex, jokerBreaks)) {
+        pendingIndexRef.current = nextIndex;
+        setRestKey((k) => k + 1);
+        setIsResting(true);
+        return;
+      }
       setElapsedAtCardStart(stopwatch.elapsedSeconds);
       setCurrentIndex(nextIndex);
       setIsAdvancing(false);
@@ -398,13 +444,19 @@ export function SessionScreen({
       }
       return;
     }
+    if (isJokerBreak(nextIndex, jokerBreaks, isSprint ? 52 : null)) {
+      pendingIndexRef.current = nextIndex;
+      setRestKey((k) => k + 1);
+      setIsResting(true);
+      return;
+    }
     setCurrentIndex(nextIndex);
     setIsAdvancing(false);
   }
 
   const current = queue[currentIndex];
   const isWaitingForSession = userId !== null && saveState === 'creating';
-  const nextDisabled = stopwatch.isPaused || isAdvancing || isWaitingForSession;
+  const nextDisabled = stopwatch.isPaused || isAdvancing || isWaitingForSession || isResting;
 
   return (
     <div className="min-h-screen relative flex flex-col px-6 pt-5 pb-7">
@@ -436,25 +488,31 @@ export function SessionScreen({
       </div>
 
       <div className="flex-1 flex flex-col justify-center">
-        <CardDisplay
-          exerciseName={localizedName(current.exercise, locale)}
-          reps={current.reps}
-          suit={current.card.suit}
-          rank={current.card.rank}
-          categoryKey={current.categoryKey}
-          categoryLabel={undefined}
-          quotaRemainingSeconds={isChallenge || isSprint ? quota.remainingSeconds : null}
-          quotaFraction={quota.fraction}
-          bankBalanceSeconds={displayBalance}
-          bankQuotaSeconds={cardQuotaSeconds}
-          outcomeFlash={outcomeFlash}
-        />
-        <div className="h-1.5 rounded-[3px] bg-surface/70 mt-5 overflow-hidden">
-          <div
-            className="h-full bg-accent rounded-[3px]"
-            style={{ width: `${Math.round((currentIndex / queue.length) * 100)}%` }}
-          />
-        </div>
+        {isResting ? (
+          <JokerRestScreen remainingSeconds={restQuota.remainingSeconds} />
+        ) : (
+          <>
+            <CardDisplay
+              exerciseName={localizedName(current.exercise, locale)}
+              reps={current.reps}
+              suit={current.card.suit}
+              rank={current.card.rank}
+              categoryKey={current.categoryKey}
+              categoryLabel={undefined}
+              quotaRemainingSeconds={isChallenge || isSprint ? quota.remainingSeconds : null}
+              quotaFraction={quota.fraction}
+              bankBalanceSeconds={displayBalance}
+              bankQuotaSeconds={cardQuotaSeconds}
+              outcomeFlash={outcomeFlash}
+            />
+            <div className="h-1.5 rounded-[3px] bg-surface/70 mt-5 overflow-hidden">
+              <div
+                className="h-full bg-accent rounded-[3px]"
+                style={{ width: `${Math.round((currentIndex / queue.length) * 100)}%` }}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {saveState === 'failed' && (

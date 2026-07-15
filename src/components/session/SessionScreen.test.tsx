@@ -38,6 +38,38 @@ const draws: CardDrawResult[] = [
   { orderIndex: 1, card: { suit: 'clubs', rank: 6 }, categoryKey: 'pull', exercise, reps: 6, completedAt: null },
 ];
 
+function buildDraw(index: number, rank: number, ex = exercise): CardDrawResult {
+  const suits: Array<'hearts' | 'clubs' | 'spades' | 'diamonds'> = [
+    'hearts',
+    'clubs',
+    'spades',
+    'diamonds',
+  ];
+  const categoryKeys: Array<'push' | 'pull' | 'legs' | 'core'> = [
+    'push',
+    'pull',
+    'legs',
+    'core',
+  ];
+  return {
+    orderIndex: index,
+    card: { suit: suits[index % 4], rank },
+    categoryKey: categoryKeys[index % 4],
+    exercise: ex,
+    reps: rank,
+    completedAt: null,
+  };
+}
+
+const restDraws: CardDrawResult[] = [1, 2, 3, 4, 5, 6].map((rank, i) => buildDraw(i, rank));
+
+const restConfig: SessionConfig = {
+  difficultyLevelId: 'd1',
+  repMultiplier: 1,
+  deckSize: 6,
+  exerciseByCategory: { push: exercise, pull: exercise, legs: exercise, core: exercise },
+};
+
 describe('SessionScreen — guest', () => {
   it('never touches Supabase and calls onFinish after the last card', async () => {
     const onFinish = vi.fn();
@@ -707,6 +739,119 @@ describe('SessionScreen — pause persistence (all modes)', () => {
     const result = onFinish.mock.calls[0][0];
     expect(result.pauseCount).toBe(1);
     expect(result.totalPauseSeconds).toBe(5);
+    vi.useRealTimers();
+  });
+});
+
+describe('SessionScreen — joker rest', () => {
+  beforeEach(async () => {
+    const actual = await vi.importActual<typeof import('@/hooks/useCardQuota')>('@/hooks/useCardQuota');
+    vi.mocked(useCardQuota).mockImplementation(actual.useCardQuota);
+  });
+
+  it('shows a rest screen after the warmup card and auto-advances without a click', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const onFinish = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    renderWithIntl(
+      <SessionScreen
+        config={restConfig}
+        draws={restDraws}
+        categoryIdByKey={null}
+        userId={null}
+        onFinish={onFinish}
+      />
+    );
+
+    // 6-card deck → assignJokerBreaks(6, ...) is ALWAYS [5] regardless of rng
+    // (single-slot range), so this is deterministic without mocking Math.random.
+    for (let i = 0; i < 5; i++) {
+      await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    }
+
+    expect(await screen.findByText('ODMOR')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sledeća karta' })).toBeDisabled();
+
+    await vi.advanceTimersByTimeAsync(30_000);
+
+    await waitFor(() => expect(screen.queryByText('ODMOR')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'Sledeća karta' })).not.toBeDisabled();
+    vi.useRealTimers();
+  });
+
+  it('pauses the rest countdown like any other pause, and resuming continues it (not restart)', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const onFinish = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    renderWithIntl(
+      <SessionScreen
+        config={restConfig}
+        draws={restDraws}
+        categoryIdByKey={null}
+        userId={null}
+        onFinish={onFinish}
+      />
+    );
+
+    for (let i = 0; i < 5; i++) {
+      await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    }
+    await screen.findByText('ODMOR');
+
+    await vi.advanceTimersByTimeAsync(10_000);
+    await user.click(screen.getByRole('button', { name: 'Pauza' }));
+    expect(screen.getByText('PAUZIRANO')).toBeInTheDocument();
+
+    // Well past 30s total if the rest countdown were still running unpaused.
+    await vi.advanceTimersByTimeAsync(60_000);
+    await user.click(screen.getByRole('button', { name: 'Nastavi trening' }));
+    // Still resting — pause froze the rest countdown, it did not silently expire.
+    expect(await screen.findByText('ODMOR')).toBeInTheDocument();
+
+    await vi.advanceTimersByTimeAsync(20_000); // ~20s remained when paused
+    await waitFor(() => expect(screen.queryByText('ODMOR')).not.toBeInTheDocument());
+    vi.useRealTimers();
+  });
+
+  it('includes rest time in total_duration_seconds, keeps pause stats at zero, and reports joker_breaks_taken', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    renderWithIntl(
+      <SessionScreen
+        config={restConfig}
+        draws={restDraws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+
+    for (let i = 0; i < 5; i++) {
+      await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    }
+    await screen.findByText('ODMOR');
+    await vi.advanceTimersByTimeAsync(30_000);
+    await waitFor(() => expect(screen.queryByText('ODMOR')).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({ pause_count: 0, total_pause_seconds: 0, joker_breaks_taken: 1 })
+      )
+    );
+    const totalDuration = vi.mocked(completeSession).mock.calls[0][1] as number;
+    expect(totalDuration).toBeGreaterThanOrEqual(30);
     vi.useRealTimers();
   });
 });

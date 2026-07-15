@@ -76,6 +76,7 @@ export interface SessionSettings {
   survived_cards?: number;
   daily_date?: string;
   daily_replay?: boolean;
+  joker_breaks_taken?: number;
 }
 
 export interface ChallengeSettings extends SessionSettings {
