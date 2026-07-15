@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { LandingScreen } from '@/components/landing/LandingScreen';
@@ -8,10 +8,21 @@ import { SetupScreen } from '@/components/setup/SetupScreen';
 import { SessionScreen } from '@/components/session/SessionScreen';
 import { SummaryScreen } from '@/components/summary/SummaryScreen';
 import { ProgressScreen } from '@/components/progress/ProgressScreen';
-import { fetchCategories, buildCategoryIdByKey } from '@/lib/supabase/queries';
+import {
+  fetchCategories,
+  buildCategoryIdByKey,
+  fetchAllExercises,
+  fetchDifficultyLevels,
+} from '@/lib/supabase/queries';
+import { getBestDurationSeconds, getBestScore } from '@/lib/supabase/records';
 import { InfoModal } from '@/components/ui/InfoModal';
 import { hasSeenExplanation, markExplained } from '@/lib/modes/explained';
-import type { CardDrawResult, CategoryKey, SessionConfig, SessionResult } from '@/lib/domain/types';
+import { loadLastConfig, validateLastConfig } from '@/lib/domain/lastConfig';
+import { drawSessionCards } from '@/lib/domain/deck';
+import { calculateReps } from '@/lib/domain/reps';
+import { calculateParSeconds, resolveBudget } from '@/lib/domain/challenge';
+import { SUIT_TO_CATEGORY } from '@/lib/domain/types';
+import type { CardDrawResult, CategoryKey, Exercise, SessionConfig, SessionResult } from '@/lib/domain/types';
 
 type Screen = 'landing' | 'setup' | 'session' | 'summary' | 'history';
 
@@ -24,6 +35,21 @@ export default function Home() {
   const [categoryIdByKey, setCategoryIdByKey] = useState<Record<CategoryKey, string> | null>(null);
   const [result, setResult] = useState<SessionResult | null>(null);
   const [showChallengeIntro, setShowChallengeIntro] = useState(false);
+  const [canRepeatLast, setCanRepeatLast] = useState(false);
+
+  useEffect(() => {
+    if (screen !== 'landing') return;
+    const last = loadLastConfig();
+    if (!last || (last.gameMode !== 'classic' && last.gameMode !== 'perfect_deck')) {
+      setCanRepeatLast(false);
+      return;
+    }
+    Promise.all([fetchAllExercises(), fetchDifficultyLevels()])
+      .then(([exercises]) => {
+        setCanRepeatLast(validateLastConfig(last, exercises));
+      })
+      .catch(() => setCanRepeatLast(false));
+  }, [screen]);
 
   if (isLoading) return <p className="p-6">{t('common.loading')}</p>;
 
@@ -45,11 +71,92 @@ export default function Home() {
     setScreen('summary');
   }
 
+  async function handleRepeatLast() {
+    const last = loadLastConfig();
+    if (!last || (last.gameMode !== 'classic' && last.gameMode !== 'perfect_deck')) return;
+
+    const [allExercises, levels] = await Promise.all([
+      fetchAllExercises(),
+      fetchDifficultyLevels(),
+    ]);
+    if (!validateLastConfig(last, allExercises)) {
+      setCanRepeatLast(false);
+      return;
+    }
+
+    const difficulty = levels.find((level) => level.id === last.difficultyLevelId);
+    if (!difficulty) {
+      setCanRepeatLast(false);
+      return;
+    }
+
+    const categoryKeys: CategoryKey[] = ['push', 'pull', 'legs', 'core'];
+    const exerciseByCategory = {} as Record<CategoryKey, Exercise>;
+    for (const key of categoryKeys) {
+      const exercise = allExercises.find((item) => item.id === last.exerciseIds[key]);
+      if (!exercise) {
+        setCanRepeatLast(false);
+        return;
+      }
+      exerciseByCategory[key] = exercise;
+    }
+
+    const cards = drawSessionCards(last.deckSize);
+    const mode = last.gameMode;
+    const draws: CardDrawResult[] = cards.map((card, index) => {
+      const categoryKey = SUIT_TO_CATEGORY[card.suit];
+      return {
+        orderIndex: index,
+        card,
+        categoryKey,
+        exercise: exerciseByCategory[categoryKey],
+        reps: calculateReps(card, last.repMultiplier),
+        completedAt: null,
+        beatQuota: mode === 'perfect_deck' ? null : undefined,
+      };
+    });
+
+    const sessionConfig: SessionConfig = {
+      difficultyLevelId: last.difficultyLevelId,
+      repMultiplier: last.repMultiplier,
+      deckSize: last.deckSize,
+      exerciseByCategory,
+      entry: last.entry,
+      gameMode: mode,
+    };
+
+    if (mode === 'perfect_deck') {
+      const totalReps = draws.reduce((sum, draw) => sum + draw.reps, 0);
+      const par = calculateParSeconds(totalReps, last.deckSize, difficulty);
+      let record: number | null = null;
+      let bestScore: number | null = null;
+      if (user?.id) {
+        try {
+          [record, bestScore] = await Promise.all([
+            getBestDurationSeconds(user.id, last.difficultyLevelId, last.deckSize),
+            getBestScore(user.id, last.difficultyLevelId, last.deckSize),
+          ]);
+        } catch (err) {
+          console.error('Failed to fetch record/best score, falling back to par', err);
+        }
+      }
+      const { budgetSeconds, parSource } = resolveBudget(par, record);
+      sessionConfig.budgetSeconds = budgetSeconds;
+      sessionConfig.parSource = parSource;
+      sessionConfig.bestScoreForCombo = bestScore;
+      sessionConfig.parSecondsPerRep = difficulty.parSecondsPerRep;
+      sessionConfig.parTransitionSeconds = difficulty.parTransitionSeconds;
+    }
+
+    await handleSetupStart(sessionConfig, draws);
+  }
+
   if (screen === 'landing') {
     return (
       <LandingScreen
         user={user}
         onStartWorkout={() => setScreen('setup')}
+        onRepeatLast={canRepeatLast ? handleRepeatLast : undefined}
         onShowHistory={() => setScreen('history')}
         onSignOut={signOut}
       />

@@ -41,3 +41,25 @@ describe('LandingScreen language menu', () => {
     expect(setLocale).toHaveBeenCalledWith('en');
   });
 });
+
+describe('LandingScreen repeat last', () => {
+  it('prikazuje dugme kad je onRepeatLast prosleđen', () => {
+    renderWithLocaleSpy(
+      <LandingScreen
+        user={null}
+        onStartWorkout={() => {}}
+        onRepeatLast={() => {}}
+        onShowHistory={() => {}}
+        onSignOut={() => {}}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Ponovi poslednji trening' })).toBeInTheDocument();
+  });
+
+  it('sakriva dugme kad onRepeatLast nije prosleđen', () => {
+    renderWithLocaleSpy(
+      <LandingScreen user={null} onStartWorkout={() => {}} onShowHistory={() => {}} onSignOut={() => {}} />
+    );
+    expect(screen.queryByRole('button', { name: 'Ponovi poslednji trening' })).not.toBeInTheDocument();
+  });
+});

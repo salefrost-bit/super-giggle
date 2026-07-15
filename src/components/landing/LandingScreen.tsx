@@ -14,11 +14,18 @@ import type { AppLocale } from '@/i18n/LocaleProvider';
 interface LandingScreenProps {
   user: User | null;
   onStartWorkout: () => void;
+  onRepeatLast?: () => void;
   onShowHistory: () => void;
   onSignOut: () => void;
 }
 
-export function LandingScreen({ user, onStartWorkout, onShowHistory, onSignOut }: LandingScreenProps) {
+export function LandingScreen({
+  user,
+  onStartWorkout,
+  onRepeatLast,
+  onShowHistory,
+  onSignOut,
+}: LandingScreenProps) {
   const t = useTranslations();
   const { locale, setLocale } = useLocaleSetting();
   const [streak, setStreak] = useState<{ days: number; freezesLeftThisWeek: number } | null>(null);
@@ -77,6 +84,14 @@ export function LandingScreen({ user, onStartWorkout, onShowHistory, onSignOut }
             >
               {t('landing.newWorkout')}
             </button>
+            {onRepeatLast && (
+              <button
+                onClick={onRepeatLast}
+                className="border-2 border-white/15 text-foreground rounded-[18px] p-5 font-extrabold text-lg"
+              >
+                {t('landing.repeatLast')}
+              </button>
+            )}
             <button onClick={onShowHistory} className="text-accent font-bold text-[15px] p-1.5">
               {t('landing.viewProgress')}
             </button>
@@ -92,6 +107,14 @@ export function LandingScreen({ user, onStartWorkout, onShowHistory, onSignOut }
             >
               {t('landing.continueGuest')}
             </button>
+            {onRepeatLast && (
+              <button
+                onClick={onRepeatLast}
+                className="border-2 border-white/15 text-foreground rounded-[18px] p-5 font-extrabold text-lg"
+              >
+                {t('landing.repeatLast')}
+              </button>
+            )}
             <div className="flex gap-3">
               <Link
                 href="/login"

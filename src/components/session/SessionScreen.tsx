@@ -13,6 +13,7 @@ import { CardDisplay } from './CardDisplay';
 import { ProgressIndicator } from './ProgressIndicator';
 import { StopwatchDisplay } from './StopwatchDisplay';
 import { createSession, recordCardDraw, completeSession } from '@/lib/supabase/sessions';
+import { saveLastConfig } from '@/lib/domain/lastConfig';
 import type { CardDrawResult, CategoryKey, SessionConfig, SessionResult } from '@/lib/domain/types';
 
 interface SessionScreenProps {
@@ -194,6 +195,21 @@ export function SessionScreen({
           console.error('Failed to complete session', err);
           setSaveState('failed');
         }
+      }
+      if (config.gameMode === 'classic' || config.gameMode === 'perfect_deck') {
+        saveLastConfig({
+          entry: config.entry ?? 'quick',
+          gameMode: config.gameMode,
+          difficultyLevelId: config.difficultyLevelId,
+          repMultiplier: config.repMultiplier,
+          deckSize: config.deckSize,
+          exerciseIds: {
+            push: config.exerciseByCategory.push.id,
+            pull: config.exerciseByCategory.pull.id,
+            legs: config.exerciseByCategory.legs.id,
+            core: config.exerciseByCategory.core.id,
+          },
+        });
       }
       onFinish({
         totalDurationSeconds,
