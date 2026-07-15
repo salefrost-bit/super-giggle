@@ -2,13 +2,16 @@ import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithIntl } from '@/test/renderWithIntl';
+import { MODES } from '@/lib/modes/registry';
 import { ModeSelector } from './ModeSelector';
+
+const classicAndPerfectModes = [MODES[0], MODES[1]];
 
 describe('ModeSelector info buttons', () => {
   it('opens the explanation modal from ⓘ without selecting the mode, and closes it', async () => {
     const onSelect = vi.fn();
     const user = userEvent.setup();
-    renderWithIntl(<ModeSelector onSelect={onSelect} />);
+    renderWithIntl(<ModeSelector modes={classicAndPerfectModes} onSelect={onSelect} />);
 
     const infoButtons = screen.getAllByRole('button', { name: 'Objašnjenje moda' });
     expect(infoButtons).toHaveLength(2);
@@ -24,7 +27,7 @@ describe('ModeSelector info buttons', () => {
 
   it('shows the classic explanation for the classic card', async () => {
     const user = userEvent.setup();
-    renderWithIntl(<ModeSelector onSelect={vi.fn()} />);
+    renderWithIntl(<ModeSelector modes={classicAndPerfectModes} onSelect={vi.fn()} />);
 
     await user.click(screen.getAllByRole('button', { name: 'Objašnjenje moda' })[0]);
     expect(screen.getByText(/Svojim tempom, bez pritiska/)).toBeInTheDocument();
@@ -33,7 +36,7 @@ describe('ModeSelector info buttons', () => {
   it('still selects a mode when the card itself is clicked', async () => {
     const onSelect = vi.fn();
     const user = userEvent.setup();
-    renderWithIntl(<ModeSelector onSelect={onSelect} />);
+    renderWithIntl(<ModeSelector modes={classicAndPerfectModes} onSelect={onSelect} />);
 
     await user.click(screen.getByRole('button', { name: /Klasično/ }));
     expect(onSelect).toHaveBeenCalledWith('classic');

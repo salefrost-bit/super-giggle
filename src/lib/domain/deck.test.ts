@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createFullDeck, shuffleDeck, drawSessionCards } from './deck';
+import { createFullDeck, shuffleDeck, drawSessionCards, createCourtDeck } from './deck';
 import type { Suit } from './types';
 
 function seededRng(seed: number) {
@@ -79,5 +79,23 @@ describe('drawSessionCards (balansirano, spec §2.4)', () => {
   it('baca za nevalidnu veličinu', () => {
     expect(() => drawSessionCards(13)).toThrow();
     expect(() => drawSessionCards(15)).toThrow();
+  });
+});
+
+describe('createCourtDeck', () => {
+  const courtRanks = new Set([1, 11, 12, 13]);
+
+  it('vraća 16 karata sa po 4 iz svake boje', () => {
+    const cards = createCourtDeck();
+    expect(cards).toHaveLength(16);
+    const counts = countBySuit(cards);
+    expect(Object.values(counts)).toEqual([4, 4, 4, 4]);
+  });
+
+  it('rankovi su samo J, Q, K i A bez duplikata', () => {
+    const cards = createCourtDeck();
+    expect(cards.every((c) => courtRanks.has(c.rank))).toBe(true);
+    const keys = new Set(cards.map((c) => `${c.suit}-${c.rank}`));
+    expect(keys.size).toBe(16);
   });
 });

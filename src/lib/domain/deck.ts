@@ -3,6 +3,7 @@ import { isValidDeckSize } from './types';
 
 const SUITS: Suit[] = ['hearts', 'clubs', 'spades', 'diamonds'];
 const RANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+const COURT_RANKS = [11, 12, 13, 1];
 
 export function createFullDeck(): Card[] {
   const deck: Card[] = [];
@@ -34,4 +35,14 @@ export function drawSessionCards(deckSize: DeckSize, rng: () => number = Math.ra
     picked.push(...suitCards.slice(0, perSuit));
   }
   return shuffleDeck(picked, rng);
+}
+
+export function createCourtDeck(rng: () => number = Math.random): Card[] {
+  const deck: Card[] = [];
+  for (const suit of SUITS) {
+    for (const rank of COURT_RANKS) {
+      deck.push({ suit, rank });
+    }
+  }
+  return shuffleDeck(deck, rng);
 }

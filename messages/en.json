@@ -104,6 +104,17 @@
     },
     "perfect_deck": {
       "explanation": "Every card has its own time quota. Move to the next card before the quota runs out and the card is beaten ✓. Quota expired? The card is lost ✗ — but the workout never stops: finish your reps at your own pace and carry on. Unused time doesn't carry over. Beat every card for a PERFECT DECK. Your first run is against our estimate; once you set a record, you race your best time +5%."
+    },
+    "sprint": {
+      "title": "🏃 Sprint",
+      "desc": "How many cards in 3, 5, or 10 minutes.",
+      "explanation": "Fixed time — shuffle the deck and flip cards until the clock runs out. A card started before time expires still counts.",
+      "duration": "{minutes} min"
+    },
+    "court": {
+      "title": "👑 Court",
+      "desc": "16 hardest cards: J, Q, K and A.",
+      "explanation": "Per-card deadline like Perfect Deck, but you always play against our estimate — not your record. ×1.25 bonus on points. Aces are deliberately included as \"rest\" cards — Ace = 1 rep."
     }
   },
   "streak": {

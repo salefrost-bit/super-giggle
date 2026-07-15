@@ -26,4 +26,18 @@ export const MODES: ModeDefinition[] = [
     explanationKey: 'modes.perfect_deck.explanation',
     isChallenge: true,
   },
+  {
+    id: 'sprint',
+    titleKey: 'modes.sprint.title',
+    descKey: 'modes.sprint.desc',
+    explanationKey: 'modes.sprint.explanation',
+    isChallenge: true,
+  },
+  {
+    id: 'court',
+    titleKey: 'modes.court.title',
+    descKey: 'modes.court.desc',
+    explanationKey: 'modes.court.explanation',
+    isChallenge: true,
+  },
 ];

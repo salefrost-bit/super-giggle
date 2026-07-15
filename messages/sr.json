@@ -104,6 +104,17 @@
     },
     "perfect_deck": {
       "explanation": "Svaka karta ima svoju vremensku kvotu. Pređi na sledeću kartu pre isteka kvote i karta je oborena ✓. Kvota istekla? Karta je izgubljena ✗ — ali trening se ne prekida: završi ponavljanja svojim tempom i nastavi. Neiskorišćeno vreme propada, ne prenosi se. Obori sve karte za PERFEKTAN ŠPIL. Prvi put igraš protiv naše procene; kad postaviš rekord, igraš protiv svog najboljeg vremena +5%."
+    },
+    "sprint": {
+      "title": "🏃 Sprint",
+      "desc": "Što više karata za 3, 5 ili 10 minuta.",
+      "explanation": "Fiksno vreme — remeš špil i vrtiš karte dok ne istekne sat. Karta započeta pre isteka se i dalje računa.",
+      "duration": "{minutes} min"
+    },
+    "court": {
+      "title": "👑 Dvor",
+      "desc": "16 najtežih karata: J, Q, K i A.",
+      "explanation": "Rok po karti kao Perfektan špil, ali uvek igraš protiv naše procene — bez tvog rekorda. Bonus ×1.25 na poene. Asovi su namerno unutra kao predah karte — As=1 ponavljanje."
     }
   },
   "streak": {
