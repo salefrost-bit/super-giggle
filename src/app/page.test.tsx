@@ -35,6 +35,7 @@ vi.mock('@/components/summary/SummaryScreen', () => ({
 
 describe('Home (top-level state machine)', () => {
   it('walks a guest through landing -> setup -> session -> summary -> back to landing', async () => {
+    localStorage.setItem('explained.jokers', 'true');
     const user = userEvent.setup();
     renderWithIntl(<Home />);
 
@@ -48,6 +49,7 @@ describe('Home (top-level state machine)', () => {
 
   it('shows the perfect_deck first-run explanation once, before the session starts', async () => {
     localStorage.removeItem('explained.perfect_deck');
+    localStorage.setItem('explained.jokers', 'true');
     const user = userEvent.setup();
     const { unmount } = renderWithIntl(<Home />);
 
@@ -69,5 +71,46 @@ describe('Home (top-level state machine)', () => {
     await user.click(await screen.findByRole('button', { name: 'finish-setup-challenge' }));
     expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
     expect(screen.queryByText(/Svaka karta ima svoju vremensku kvotu/)).not.toBeInTheDocument();
+  });
+
+  it('shows the jokers first-run explanation once, before the very first session of any mode', async () => {
+    localStorage.removeItem('explained.jokers');
+    const user = userEvent.setup();
+    const { unmount } = renderWithIntl(<Home />);
+
+    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(await screen.findByRole('button', { name: 'finish-setup' }));
+
+    expect(await screen.findByText(/Ako izvučeš džoker/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'finish-session' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Jasno, krećemo' }));
+    expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
+    expect(localStorage.getItem('explained.jokers')).toBe('true');
+
+    unmount();
+    renderWithIntl(<Home />);
+    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(await screen.findByRole('button', { name: 'finish-setup' }));
+    expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
+    expect(screen.queryByText(/Ako izvučeš džoker/)).not.toBeInTheDocument();
+  });
+
+  it('chains jokers intro then challenge intro when both are unseen', async () => {
+    localStorage.removeItem('explained.jokers');
+    localStorage.removeItem('explained.perfect_deck');
+    const user = userEvent.setup();
+    renderWithIntl(<Home />);
+
+    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(await screen.findByRole('button', { name: 'finish-setup-challenge' }));
+
+    expect(await screen.findByText(/Ako izvučeš džoker/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Jasno, krećemo' }));
+
+    expect(await screen.findByText(/Svaka karta ima svoju vremensku kvotu/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Jasno, krećemo' }));
+
+    expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
   });
 });

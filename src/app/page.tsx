@@ -38,7 +38,8 @@ export default function Home() {
   const [draws, setDraws] = useState<CardDrawResult[]>([]);
   const [categoryIdByKey, setCategoryIdByKey] = useState<Record<CategoryKey, string> | null>(null);
   const [result, setResult] = useState<SessionResult | null>(null);
-  const [showChallengeIntro, setShowChallengeIntro] = useState(false);
+  const [introStep, setIntroStep] = useState<'jokers' | 'challenge' | null>(null);
+  const [pendingChallengeIntro, setPendingChallengeIntro] = useState(false);
   const [canRepeatLast, setCanRepeatLast] = useState(false);
   const [dailyDone, setDailyDone] = useState(false);
 
@@ -100,8 +101,17 @@ export default function Home() {
       setCategoryIdByKey(buildCategoryIdByKey(categories));
     }
     const modeDef = MODES.find((m) => m.id === sessionConfig.gameMode);
-    if (modeDef?.isChallenge && sessionConfig.gameMode && !hasSeenExplanation(sessionConfig.gameMode)) {
-      setShowChallengeIntro(true);
+    const needsChallengeIntro = !!(
+      modeDef?.isChallenge &&
+      sessionConfig.gameMode &&
+      !hasSeenExplanation(sessionConfig.gameMode)
+    );
+    const needsJokersIntro = !hasSeenExplanation('jokers');
+    if (needsJokersIntro) {
+      setPendingChallengeIntro(needsChallengeIntro);
+      setIntroStep('jokers');
+    } else if (needsChallengeIntro) {
+      setIntroStep('challenge');
     }
     setScreen('session');
   }
@@ -286,7 +296,21 @@ export default function Home() {
     );
   }
   if (screen === 'session' && config) {
-    if (showChallengeIntro) {
+    if (introStep === 'jokers') {
+      return (
+        <InfoModal
+          title={t('jokers.title')}
+          closeLabel={t('modes.firstRunCta')}
+          onClose={() => {
+            markExplained('jokers');
+            setIntroStep(pendingChallengeIntro ? 'challenge' : null);
+          }}
+        >
+          {t('jokers.explanation')}
+        </InfoModal>
+      );
+    }
+    if (introStep === 'challenge') {
       const modeDef = MODES.find((m) => m.id === config.gameMode);
       return (
         <InfoModal
@@ -294,7 +318,7 @@ export default function Home() {
           closeLabel={t('modes.firstRunCta')}
           onClose={() => {
             if (config.gameMode) markExplained(config.gameMode);
-            setShowChallengeIntro(false);
+            setIntroStep(null);
           }}
         >
           {t(modeDef?.explanationKey ?? 'modes.perfect_deck.explanation')}
