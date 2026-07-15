@@ -10,7 +10,8 @@
     "newWorkout": "Novi trening",
     "viewProgress": "Vidi napredak →",
     "signOut": "Odjavi se",
-    "streakDays": "{days, plural, one {# dan} few {# dana} other {# dana}}"
+    "streakDays": "{days, plural, one {# dan} few {# dana} other {# dana}}",
+    "repeatLast": "Ponovi poslednji trening"
   },
   "setup": {
     "step": "Korak {current}/{total}",
@@ -24,12 +25,15 @@
     "levelsLoading": "Učitavanje nivoa...",
     "chooseExercises": "Izaberi vežbu za svaku kategoriju",
     "chooseLength": "Izaberi dužinu treninga",
-    "quarterLabel": "¼ špila",
-    "quarterSub": "13 karata · ~10 min",
-    "halfLabel": "½ špila",
-    "halfSub": "26 karata · ~20 min",
+    "quarterLabel": "Kratak",
+    "quarterSub": "12 karata · ~10 min",
+    "halfLabel": "Srednji",
+    "halfSub": "24 karte · ~20 min",
     "fullLabel": "Ceo špil",
     "fullSub": "52 karte · ~35 min",
+    "quarterAria": "Kratak (12 karata)",
+    "halfAria": "Srednji (24 karte)",
+    "fullAria": "Ceo špil (52 karte)",
     "diffDescBeginner": "Lakše ponavljanja, idealno za start.",
     "diffDescIntermediate": "Uravnoteženo opterećenje.",
     "diffDescAdvanced": "Maksimalan intenzitet."
@@ -68,7 +72,9 @@
     "classicTag": "🃏 klasično",
     "durationLine": "{duration} trajanje",
     "cardsLine": "{count, plural, one {# karta} few {# karte} other {# karata}}",
-    "empty": "Još nema treninga.\nZavrši jedan da se pojavi ovde."
+    "empty": "Još nema treninga.\nZavrši jedan da se pojavi ovde.",
+    "pointsRecordsTitle": "Rekordi (poeni)",
+    "sprintDim": "{minutes} min"
   },
   "auth": {
     "loginTitle": "Prijava",
@@ -103,6 +109,43 @@
   "streak": {
     "title": "Niz treninga",
     "explanation": "🔥 Niz raste za svaki dan sa bar jednim završenim treningom. ❄️ Ako preskočiš dan, do 2 dana nedeljno se automatski zamrznu i niz preživi — treći propušten dan u istoj nedelji prekida niz. Zamrzavanja se obnavljaju svake nedelje i ne štede se."
+  },
+  "entry": {
+    "title": "Kako danas treniraš?",
+    "quickTitle": "🏃 Brzi trening",
+    "quickDesc": "Izaberi nivo i kreni — vežbe biramo mi.",
+    "customTitle": "🎛 Po meri",
+    "customDesc": "Svaka vežba i slajderi po tvom.",
+    "challengeTitle": "⚡ Challenge",
+    "challengeDesc": "Modovi sa satom, rekordima i poenima."
+  },
+  "custom": {
+    "repMultiplier": "Množilac ponavljanja",
+    "cardCount": "Broj karata",
+    "cardsPerCategory": "{count} po kategoriji",
+    "start": "Kreni",
+    "tierBadge": "Nivo {tier}"
+  },
+  "points": {
+    "label": "Poeni",
+    "base": "baza {base}",
+    "multiplierLabel": "množilac ×{multiplier}",
+    "total": "{points} poena",
+    "guestKeep": "Osvojeno {points} poena — napravi nalog da ih zadržiš.",
+    "formulaTitle": "Kako se računaju poeni",
+    "formula": "Poeni = zbir (ponavljanja × faktor vežbe) za svaku završenu kartu. Faktor: nivo Ⅰ ×1, nivo Ⅱ ×1.5, nivo Ⅲ ×2. U challenge modovima množilac na kraju uvećava zbir — do ×2."
+  },
+  "xp": {
+    "label": "XP",
+    "rankTitle": "Zvanje",
+    "explanation": "XP je zbir poena svih završenih treninga — samo raste. Zvanja: 2 (0), J (5.000), Q (15.000), K (40.000), A (100.000), 🃏 (250.000).",
+    "rankUp": "NOVO ZVANJE: {symbol}"
+  },
+  "history": {
+    "exercises": "Vežbe",
+    "totalReps": "{count} ponavljanja",
+    "beaten": "{score}/{total} oborenih",
+    "breakdown": "baza {base} × {multiplier}"
   },
   "language": {
     "label": "Jezik"

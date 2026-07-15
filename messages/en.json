@@ -10,7 +10,8 @@
     "newWorkout": "New workout",
     "viewProgress": "View progress →",
     "signOut": "Sign out",
-    "streakDays": "{days, plural, one {# day} other {# days}}"
+    "streakDays": "{days, plural, one {# day} other {# days}}",
+    "repeatLast": "Repeat last workout"
   },
   "setup": {
     "step": "Step {current}/{total}",
@@ -24,12 +25,15 @@
     "levelsLoading": "Loading levels...",
     "chooseExercises": "Pick an exercise for each category",
     "chooseLength": "Choose workout length",
-    "quarterLabel": "¼ deck",
-    "quarterSub": "13 cards · ~10 min",
-    "halfLabel": "½ deck",
-    "halfSub": "26 cards · ~20 min",
+    "quarterLabel": "Short",
+    "quarterSub": "12 cards · ~10 min",
+    "halfLabel": "Medium",
+    "halfSub": "24 cards · ~20 min",
     "fullLabel": "Full deck",
     "fullSub": "52 cards · ~35 min",
+    "quarterAria": "Short (12 cards)",
+    "halfAria": "Medium (24 cards)",
+    "fullAria": "Full deck (52 cards)",
     "diffDescBeginner": "Easier reps, ideal to start.",
     "diffDescIntermediate": "Balanced load.",
     "diffDescAdvanced": "Maximum intensity."
@@ -68,7 +72,9 @@
     "classicTag": "🃏 classic",
     "durationLine": "{duration} duration",
     "cardsLine": "{count, plural, one {# card} other {# cards}}",
-    "empty": "No workouts yet.\nFinish one and it shows up here."
+    "empty": "No workouts yet.\nFinish one and it shows up here.",
+    "pointsRecordsTitle": "Records (points)",
+    "sprintDim": "{minutes} min"
   },
   "auth": {
     "loginTitle": "Log in",
@@ -103,6 +109,43 @@
   "streak": {
     "title": "Workout streak",
     "explanation": "🔥 Your streak grows for every day with at least one finished workout. ❄️ Miss a day? Up to 2 days per week freeze automatically and your streak survives — a third missed day in the same week breaks it. Freezes reset weekly and can't be saved up."
+  },
+  "entry": {
+    "title": "How are you training today?",
+    "quickTitle": "🏃 Quick workout",
+    "quickDesc": "Pick a level and go — we pick the exercises.",
+    "customTitle": "🎛 Custom",
+    "customDesc": "Every exercise and slider your way.",
+    "challengeTitle": "⚡ Challenge",
+    "challengeDesc": "Modes with a clock, records and points."
+  },
+  "custom": {
+    "repMultiplier": "Rep multiplier",
+    "cardCount": "Card count",
+    "cardsPerCategory": "{count} per category",
+    "start": "Start",
+    "tierBadge": "Tier {tier}"
+  },
+  "points": {
+    "label": "Points",
+    "base": "base {base}",
+    "multiplierLabel": "multiplier ×{multiplier}",
+    "total": "{points} points",
+    "guestKeep": "You earned {points} points — create an account to keep them.",
+    "formulaTitle": "How points are calculated",
+    "formula": "Points = sum of (reps × exercise factor) for every finished card. Factor: tier Ⅰ ×1, tier Ⅱ ×1.5, tier Ⅲ ×2. In challenge modes a final multiplier boosts the total — up to ×2."
+  },
+  "xp": {
+    "label": "XP",
+    "rankTitle": "Rank",
+    "explanation": "XP is the sum of points from all finished workouts — it only grows. Ranks: 2 (0), J (5,000), Q (15,000), K (40,000), A (100,000), 🃏 (250,000).",
+    "rankUp": "NEW RANK: {symbol}"
+  },
+  "history": {
+    "exercises": "Exercises",
+    "totalReps": "{count} reps",
+    "beaten": "{score}/{total} beaten",
+    "breakdown": "base {base} × {multiplier}"
   },
   "language": {
     "label": "Language"
