@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createSession, recordCardDraw, completeSession, getUserSessions } from './sessions';
+import { createSession, recordCardDraw, completeSession, getUserSessions, backfillPoints } from './sessions';
 import type { SessionConfig } from '../domain/types';
 
 vi.mock('./client', () => ({ createClient: vi.fn() }));
@@ -24,10 +24,10 @@ describe('createSession', () => {
       repMultiplier: 1,
       deckSize: 13,
       exerciseByCategory: {
-        push: { id: 'e1', name: 'Sklekovi', categoryId: 'c1', difficultyLevelId: 'd1' },
-        pull: { id: 'e2', name: 'Zgibovi', categoryId: 'c2', difficultyLevelId: 'd1' },
-        legs: { id: 'e3', name: 'Čučnjevi', categoryId: 'c3', difficultyLevelId: 'd1' },
-        core: { id: 'e4', name: 'Trbušnjaci', categoryId: 'c4', difficultyLevelId: 'd1' },
+        push: { id: 'e1', name: 'Sklekovi', categoryId: 'c1', difficultyLevelId: 'd1', tier: 2, isDefault: true },
+        pull: { id: 'e2', name: 'Zgibovi', categoryId: 'c2', difficultyLevelId: 'd1', tier: 2, isDefault: true },
+        legs: { id: 'e3', name: 'Čučnjevi', categoryId: 'c3', difficultyLevelId: 'd1', tier: 2, isDefault: true },
+        core: { id: 'e4', name: 'Trbušnjaci', categoryId: 'c4', difficultyLevelId: 'd1', tier: 2, isDefault: true },
       },
     };
 
@@ -66,7 +66,7 @@ describe('recordCardDraw', () => {
       orderIndex: 0,
       card: { suit: 'hearts', rank: 10 },
       categoryKey: 'push',
-      exercise: { id: 'e1', name: 'Sklekovi', categoryId: 'c1', difficultyLevelId: 'd1' },
+      exercise: { id: 'e1', name: 'Sklekovi', categoryId: 'c1', difficultyLevelId: 'd1', tier: 2, isDefault: true },
       reps: 10,
       completedAt: '2026-07-08T10:00:05.000Z',
     });
@@ -135,6 +135,12 @@ describe('getUserSessions', () => {
         score: null,
         pauseCount: null,
         totalPauseSeconds: null,
+        points: null,
+        basePoints: null,
+        multiplier: null,
+        entry: null,
+        sprintMinutes: null,
+        cardCount: null,
       },
     ]);
   });
@@ -156,10 +162,10 @@ describe('challenge extensions', () => {
       config: {
         difficultyLevelId: 'd1', repMultiplier: 1, deckSize: 13,
         exerciseByCategory: {
-          push: { id: 'e1', name: 'A', categoryId: 'c1', difficultyLevelId: 'd1' },
-          pull: { id: 'e2', name: 'B', categoryId: 'c2', difficultyLevelId: 'd1' },
-          legs: { id: 'e3', name: 'C', categoryId: 'c3', difficultyLevelId: 'd1' },
-          core: { id: 'e4', name: 'D', categoryId: 'c4', difficultyLevelId: 'd1' },
+          push: { id: 'e1', name: 'A', categoryId: 'c1', difficultyLevelId: 'd1', tier: 2, isDefault: true },
+          pull: { id: 'e2', name: 'B', categoryId: 'c2', difficultyLevelId: 'd1', tier: 2, isDefault: true },
+          legs: { id: 'e3', name: 'C', categoryId: 'c3', difficultyLevelId: 'd1', tier: 2, isDefault: true },
+          core: { id: 'e4', name: 'D', categoryId: 'c4', difficultyLevelId: 'd1', tier: 2, isDefault: true },
         },
       },
       categoryIdByKey: { push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' },
@@ -185,7 +191,7 @@ describe('challenge extensions', () => {
       orderIndex: 0,
       card: { suit: 'hearts', rank: 10 },
       categoryKey: 'push',
-      exercise: { id: 'e1', name: 'A', categoryId: 'c1', difficultyLevelId: 'd1' },
+      exercise: { id: 'e1', name: 'A', categoryId: 'c1', difficultyLevelId: 'd1', tier: 2, isDefault: true },
       reps: 10,
       completedAt: '2026-07-09T10:00:05.000Z',
       beatQuota: true,
@@ -250,5 +256,99 @@ describe('challenge extensions', () => {
     const result = await getUserSessions('user-1');
     expect(result[0].pauseCount).toBe(3);
     expect(result[0].totalPauseSeconds).toBe(161);
+  });
+
+  it('maps points/basePoints/multiplier/entry from settings', async () => {
+    const order = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 's3',
+          started_at: '2026-07-15T10:00:00.000Z',
+          total_duration_seconds: 600,
+          total_cards: 24,
+          status: 'completed',
+          difficulty_levels: { name: 'Srednji' },
+          game_mode: 'classic',
+          settings: {
+            points: 300,
+            base_points: 200,
+            multiplier: 1.5,
+            entry: 'quick',
+            card_count: 24,
+            sprint_minutes: 5,
+            score: 22,
+          },
+        },
+      ],
+      error: null,
+    });
+    const eq = vi.fn(() => ({ order }));
+    const select = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ select }));
+    vi.mocked(createClient).mockReturnValue({ from } as never);
+
+    const result = await getUserSessions('user-1');
+
+    expect(result[0]).toMatchObject({
+      points: 300,
+      basePoints: 200,
+      multiplier: 1.5,
+      entry: 'quick',
+      cardCount: 24,
+      sprintMinutes: 5,
+      score: 22,
+    });
+  });
+});
+
+describe('backfillPoints', () => {
+  it('upisuje points za classic sesiju i zadržava postojeći score', async () => {
+    const eqUpdate = vi.fn().mockResolvedValue({ error: null });
+    const update = vi.fn(() => ({ eq: eqUpdate }));
+
+    const from = vi.fn((table: string) => {
+      if (table === 'sessions') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn().mockResolvedValue({
+                data: { settings: { score: 24 }, total_cards: 52 },
+                error: null,
+              }),
+            })),
+          })),
+          update,
+        };
+      }
+      if (table === 'card_draws') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn().mockResolvedValue({
+              data: [{ suit: 'hearts', reps: 10, completed_at: '2026-07-15T10:00:00Z' }],
+              error: null,
+            }),
+          })),
+        };
+      }
+      if (table === 'session_exercises') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn().mockResolvedValue({
+              data: [{ categories: { name: 'Guranje' }, exercises: { tier: 2 } }],
+              error: null,
+            }),
+          })),
+        };
+      }
+      throw new Error(`unexpected table ${table}`);
+    });
+    vi.mocked(createClient).mockReturnValue({ from } as never);
+
+    const points = await backfillPoints('session-1', 'classic');
+
+    expect(points).toBe(15);
+    expect(update).toHaveBeenCalledWith({
+      settings: { score: 24, points: 15, base_points: 15, multiplier: 1 },
+    });
   });
 });

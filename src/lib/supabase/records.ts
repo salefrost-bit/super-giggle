@@ -125,3 +125,17 @@ export async function getCompletedSessionDates(userId: string): Promise<string[]
   if (error) throw error;
   return (data as Array<{ completed_at: string }>).map((r) => r.completed_at);
 }
+
+export async function getTotalXp(userId: string): Promise<number> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('settings')
+    .eq('user_id', userId)
+    .eq('status', 'completed');
+  if (error) throw error;
+  return (data as Array<{ settings: Record<string, unknown> | null }>).reduce((sum, row) => {
+    const points = row.settings?.points;
+    return sum + (typeof points === 'number' ? points : 0);
+  }, 0);
+}

@@ -53,7 +53,7 @@ export const XP_RANKS = [
 ] as const;
 
 export function rankForXp(xp: number): { symbol: string; threshold: number } {
-  let current = XP_RANKS[0];
+  let current: { symbol: string; threshold: number } = XP_RANKS[0];
   for (const rank of XP_RANKS) {
     if (xp >= rank.threshold) current = rank;
   }

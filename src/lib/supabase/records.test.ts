@@ -1,5 +1,19 @@
-import { describe, it, expect } from 'vitest';
-import { aggregateRecords } from './records';
+import { describe, it, expect, vi } from 'vitest';
+import { aggregateRecords, getTotalXp } from './records';
+import { createClient } from './client';
+
+vi.mock('./client', () => ({ createClient: vi.fn() }));
+
+function mockSessionsSelect(rows: Array<{ settings: Record<string, unknown> | null }>) {
+  const chain = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    then: (resolve: (v: { data: unknown; error: null }) => void) =>
+      resolve({ data: rows, error: null }),
+  };
+  (createClient as ReturnType<typeof vi.fn>).mockReturnValue({ from: vi.fn(() => chain) });
+  return chain;
+}
 
 const rows = [
   { difficultyName: 'Srednji', totalCards: 26, durationSeconds: 1112, gameMode: 'classic', score: null },
@@ -25,5 +39,18 @@ describe('aggregateRecords', () => {
 
   it('returns empty for no rows', () => {
     expect(aggregateRecords([])).toEqual([]);
+  });
+});
+
+describe('getTotalXp', () => {
+  it('sabira points preko sesija, ignoriše sesije bez points', async () => {
+    const chain = mockSessionsSelect([
+      { settings: { points: 300 } },
+      { settings: {} },
+      { settings: { points: 200, score: 24 } },
+    ]);
+    expect(await getTotalXp('u1')).toBe(500);
+    expect(chain.eq).toHaveBeenCalledWith('user_id', 'u1');
+    expect(chain.eq).toHaveBeenCalledWith('status', 'completed');
   });
 });

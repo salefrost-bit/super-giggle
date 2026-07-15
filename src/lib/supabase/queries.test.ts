@@ -3,6 +3,7 @@ import {
   fetchCategories,
   fetchDifficultyLevels,
   fetchExercisesByDifficulty,
+  fetchAllExercises,
   buildCategoryIdByKey,
   categoryKeyForName,
 } from './queries';
@@ -70,7 +71,15 @@ describe('fetchDifficultyLevels', () => {
 describe('fetchExercisesByDifficulty', () => {
   it('maps snake_case rows to domain Exercise objects', async () => {
     const chain = mockSupabaseChain({
-      data: [{ id: '1', name: 'Čučnjevi', name_en: 'Squats', category_id: 'c1', difficulty_level_id: 'd1' }],
+      data: [{
+        id: '1',
+        name: 'Čučnjevi',
+        name_en: 'Squats',
+        category_id: 'c1',
+        difficulty_level_id: 'd1',
+        tier: 1,
+        is_default: true,
+      }],
       error: null,
     });
     vi.mocked(createClient).mockReturnValue(chain as never);
@@ -78,7 +87,47 @@ describe('fetchExercisesByDifficulty', () => {
     const result = await fetchExercisesByDifficulty('d1');
 
     expect(result).toEqual([
-      { id: '1', name: 'Čučnjevi', nameEn: 'Squats', categoryId: 'c1', difficultyLevelId: 'd1' },
+      {
+        id: '1',
+        name: 'Čučnjevi',
+        nameEn: 'Squats',
+        categoryId: 'c1',
+        difficultyLevelId: 'd1',
+        tier: 1,
+        isDefault: true,
+      },
+    ]);
+  });
+});
+
+describe('fetchAllExercises', () => {
+  it('maps all exercises with tier and isDefault', async () => {
+    const chain = mockSupabaseChain({
+      data: [{
+        id: '2',
+        name: 'Sklekovi',
+        name_en: 'Push-ups',
+        category_id: 'c1',
+        difficulty_level_id: 'd1',
+        tier: 2,
+        is_default: false,
+      }],
+      error: null,
+    });
+    vi.mocked(createClient).mockReturnValue(chain as never);
+
+    const result = await fetchAllExercises();
+
+    expect(result).toEqual([
+      {
+        id: '2',
+        name: 'Sklekovi',
+        nameEn: 'Push-ups',
+        categoryId: 'c1',
+        difficultyLevelId: 'd1',
+        tier: 2,
+        isDefault: false,
+      },
     ]);
   });
 });

@@ -1,6 +1,28 @@
 import { createClient } from './client';
-import type { Category, DifficultyLevel, Exercise, CategoryKey } from '../domain/types';
+import type { Category, DifficultyLevel, Exercise, ExerciseTier, CategoryKey } from '../domain/types';
 import { CATEGORY_KEY_TO_NAME } from '../domain/types';
+
+type ExerciseRow = {
+  id: string;
+  name: string;
+  name_en: string | null;
+  category_id: string;
+  difficulty_level_id: string;
+  tier: number;
+  is_default: boolean;
+};
+
+function mapExerciseRow(row: ExerciseRow): Exercise {
+  return {
+    id: row.id,
+    name: row.name,
+    nameEn: row.name_en,
+    categoryId: row.category_id,
+    difficultyLevelId: row.difficulty_level_id,
+    tier: row.tier as ExerciseTier,
+    isDefault: row.is_default,
+  };
+}
 
 export async function fetchCategories(): Promise<Category[]> {
   const supabase = createClient();
@@ -51,24 +73,20 @@ export async function fetchExercisesByDifficulty(difficultyLevelId: string): Pro
   const supabase = createClient();
   const { data, error } = await supabase
     .from('exercises')
-    .select('id, name, name_en, category_id, difficulty_level_id')
+    .select('id, name, name_en, category_id, difficulty_level_id, tier, is_default')
     .eq('difficulty_level_id', difficultyLevelId);
   if (error) throw error;
-  return (
-    data as Array<{
-      id: string;
-      name: string;
-      name_en: string | null;
-      category_id: string;
-      difficulty_level_id: string;
-    }>
-  ).map((row) => ({
-    id: row.id,
-    name: row.name,
-    nameEn: row.name_en,
-    categoryId: row.category_id,
-    difficultyLevelId: row.difficulty_level_id,
-  }));
+  return (data as ExerciseRow[]).map(mapExerciseRow);
+}
+
+export async function fetchAllExercises(): Promise<Exercise[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('exercises')
+    .select('id, name, name_en, category_id, difficulty_level_id, tier, is_default')
+    .order('tier');
+  if (error) throw error;
+  return (data as ExerciseRow[]).map(mapExerciseRow);
 }
 
 export function buildCategoryIdByKey(categories: Category[]): Record<CategoryKey, string> {

@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { summarizeByCategory } from './summarize';
 import type { CardDrawResult } from './types';
 
-const exercise = { id: 'e1', name: 'Sklekovi', categoryId: 'c1', difficultyLevelId: 'd1' };
-const exercise2 = { id: 'e2', name: 'Čučnjevi', categoryId: 'c3', difficultyLevelId: 'd1' };
+const exercise = { id: 'e1', name: 'Sklekovi', categoryId: 'c1', difficultyLevelId: 'd1', tier: 2 as const, isDefault: true };
+const exercise2 = { id: 'e2', name: 'Čučnjevi', categoryId: 'c3', difficultyLevelId: 'd1', tier: 2 as const, isDefault: true };
 
 describe('summarizeByCategory', () => {
   it('sums reps and counts cards per category', () => {

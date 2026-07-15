@@ -1,5 +1,16 @@
 import { createClient } from './client';
-import type { CategoryKey, SessionConfig, CardDrawResult, GameMode, ChallengeSettings, SessionSettings } from '../domain/types';
+import type {
+  CategoryKey,
+  SessionConfig,
+  CardDrawResult,
+  GameMode,
+  ChallengeSettings,
+  SessionSettings,
+  Suit,
+  ExerciseTier,
+} from '../domain/types';
+import { CATEGORY_KEY_TO_NAME, SUIT_TO_CATEGORY } from '../domain/types';
+import { calculateBasePoints, challengeMultiplier, calculatePoints } from '../domain/score';
 
 export interface CreateSessionParams {
   userId: string;
@@ -86,7 +97,25 @@ export interface SessionHistoryEntry {
   score: number | null;
   pauseCount: number | null;
   totalPauseSeconds: number | null;
+  points: number | null;
+  basePoints: number | null;
+  multiplier: number | null;
+  entry: string | null;
+  sprintMinutes: number | null;
+  cardCount: number | null;
 }
+
+type SessionSettingsRow = {
+  score?: number;
+  pause_count?: number;
+  total_pause_seconds?: number;
+  points?: number;
+  base_points?: number;
+  multiplier?: number;
+  entry?: string;
+  sprint_minutes?: number;
+  card_count?: number;
+};
 
 export async function getUserSessions(userId: string): Promise<SessionHistoryEntry[]> {
   const supabase = createClient();
@@ -107,7 +136,7 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
       status: string;
       difficulty_levels: { name: string };
       game_mode: string;
-      settings: { score?: number; pause_count?: number; total_pause_seconds?: number } | null;
+      settings: SessionSettingsRow | null;
     }>
   ).map((row) => ({
     id: row.id,
@@ -120,5 +149,86 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
     score: row.settings?.score ?? null,
     pauseCount: row.settings?.pause_count ?? null,
     totalPauseSeconds: row.settings?.total_pause_seconds ?? null,
+    points: row.settings?.points ?? null,
+    basePoints: row.settings?.base_points ?? null,
+    multiplier: row.settings?.multiplier ?? null,
+    entry: row.settings?.entry ?? null,
+    sprintMinutes: row.settings?.sprint_minutes ?? null,
+    cardCount: row.settings?.card_count ?? null,
   }));
+}
+
+export interface SessionDetails {
+  exercises: { categoryName: string; name: string; nameEn: string | null; tier: number }[];
+  totalReps: number;
+}
+
+export async function getSessionDetails(sessionId: string): Promise<SessionDetails> {
+  const supabase = createClient();
+  const [{ data: exRows, error: exError }, { data: drawRows, error: drawError }] =
+    await Promise.all([
+      supabase
+        .from('session_exercises')
+        .select('categories(name), exercises(name, name_en, tier)')
+        .eq('session_id', sessionId),
+      supabase.from('card_draws').select('reps').eq('session_id', sessionId),
+    ]);
+  if (exError) throw exError;
+  if (drawError) throw drawError;
+
+  const exercises = (
+    exRows as unknown as Array<{
+      categories: { name: string };
+      exercises: { name: string; name_en: string | null; tier: number };
+    }>
+  ).map((row) => ({
+    categoryName: row.categories.name,
+    name: row.exercises.name,
+    nameEn: row.exercises.name_en,
+    tier: row.exercises.tier,
+  }));
+
+  const totalReps = (drawRows as Array<{ reps: number }>).reduce((sum, d) => sum + d.reps, 0);
+
+  return { exercises, totalReps };
+}
+
+export async function backfillPoints(sessionId: string, gameMode: string): Promise<number | null> {
+  const supabase = createClient();
+  const [{ data: session }, { data: drawRows }, { data: exRows }] = await Promise.all([
+    supabase.from('sessions').select('settings, total_cards').eq('id', sessionId).single(),
+    supabase.from('card_draws').select('suit, reps, completed_at').eq('session_id', sessionId),
+    supabase
+      .from('session_exercises')
+      .select('category_id, exercises(tier), categories(name)')
+      .eq('session_id', sessionId),
+  ]);
+  if (!drawRows || drawRows.length === 0) return null;
+  const tierByCategoryName = new Map(
+    (
+      exRows as unknown as Array<{ categories: { name: string }; exercises: { tier: number } }>
+    ).map((r) => [r.categories.name, r.exercises.tier as ExerciseTier])
+  );
+  const scored = (
+    drawRows as Array<{ suit: Suit; reps: number; completed_at: string | null }>
+  ).map((d) => ({
+    reps: d.reps,
+    completedAt: d.completed_at,
+    tier: tierByCategoryName.get(CATEGORY_KEY_TO_NAME[SUIT_TO_CATEGORY[d.suit]]) ?? 2,
+  }));
+  const base = calculateBasePoints(scored);
+  const oldSettings = (session as { settings: Record<string, unknown> | null }).settings ?? {};
+  const totalCards = (session as { total_cards: number }).total_cards;
+  const beaten = typeof oldSettings.score === 'number' ? (oldSettings.score as number) : 0;
+  const multiplier =
+    gameMode === 'perfect_deck'
+      ? challengeMultiplier({ mode: 'perfect_deck', beaten, total: totalCards })
+      : challengeMultiplier({ mode: 'classic' });
+  const points = calculatePoints(base, multiplier);
+  const { error } = await supabase
+    .from('sessions')
+    .update({ settings: { ...oldSettings, points, base_points: base, multiplier } })
+    .eq('id', sessionId);
+  if (error) throw error;
+  return points;
 }
