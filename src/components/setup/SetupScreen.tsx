@@ -7,9 +7,12 @@ import { ModeSelector } from './ModeSelector';
 import { DifficultySelector } from './DifficultySelector';
 import { ExercisePicker } from './ExercisePicker';
 import { SessionLengthSelector } from './SessionLengthSelector';
+import { CustomSetup } from './CustomSetup';
 import {
   fetchCategories,
   fetchExercisesByDifficulty,
+  fetchAllExercises,
+  fetchDifficultyLevels,
   categoryKeyForName,
 } from '@/lib/supabase/queries';
 import { MODES } from '@/lib/modes/registry';
@@ -89,6 +92,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
   const [difficulty, setDifficulty] = useState<DifficultyLevel | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [allExercises, setAllExercises] = useState<Exercise[]>([]);
   const [exerciseByCategory, setExerciseByCategory] = useState<Record<
     CategoryKey,
     Exercise
@@ -98,11 +102,17 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
     fetchCategories().then(setCategories);
   }, []);
 
-  function handleEntrySelect(path: EntryPath) {
+  async function handleEntrySelect(path: EntryPath) {
     setEntry(path);
-    if (path === 'quick') setStep('quick-difficulty');
-    else if (path === 'custom') setStep('custom-exercises');
-    else setStep('challenge-menu');
+    if (path === 'quick') {
+      setStep('quick-difficulty');
+    } else if (path === 'custom') {
+      const fetched = await fetchAllExercises();
+      setAllExercises(fetched);
+      setStep('custom-exercises');
+    } else {
+      setStep('challenge-menu');
+    }
   }
 
   async function handleQuickDifficultySelect(level: DifficultyLevel) {
@@ -122,6 +132,44 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
   function handleExercisesComplete(selection: Record<CategoryKey, Exercise>) {
     setExerciseByCategory(selection);
     setStep('mode-length');
+  }
+
+  async function handleCustomStart(
+    selection: Record<CategoryKey, Exercise>,
+    repMultiplier: number,
+    cardCount: number
+  ) {
+    const levels = await fetchDifficultyLevels();
+    const difficulty = levels.reduce((best, level) =>
+      Math.abs(level.defaultRepMultiplier - repMultiplier) <
+      Math.abs(best.defaultRepMultiplier - repMultiplier)
+        ? level
+        : best
+    );
+    const cards = drawSessionCards(cardCount);
+    const draws: CardDrawResult[] = cards.map((card, index) => {
+      const categoryKey = SUIT_TO_CATEGORY[card.suit];
+      return {
+        orderIndex: index,
+        card,
+        categoryKey,
+        exercise: selection[categoryKey],
+        reps: calculateReps(card, repMultiplier),
+        completedAt: null,
+      };
+    });
+
+    onStart(
+      {
+        difficultyLevelId: difficulty.id,
+        repMultiplier,
+        deckSize: cardCount,
+        exerciseByCategory: selection,
+        entry: 'custom',
+        gameMode: 'classic',
+      },
+      draws
+    );
   }
 
   async function handleLengthSelect(deckSize: DeckSize) {
@@ -236,6 +284,13 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
         <DifficultySelector onSelect={handleQuickDifficultySelect} />
       )}
       {step === 'quick-length' && <SessionLengthSelector onSelect={handleLengthSelect} />}
+      {step === 'custom-exercises' && (
+        <CustomSetup
+          categories={categories}
+          exercises={allExercises}
+          onStart={handleCustomStart}
+        />
+      )}
       {step === 'challenge-menu' && (
         <ModeSelector
           modes={MODES.filter((m) => m.isChallenge)}

@@ -14,6 +14,7 @@ vi.mock('@/lib/supabase/queries', async () => {
     fetchDifficultyLevels: vi.fn(),
     fetchCategories: vi.fn(),
     fetchExercisesByDifficulty: vi.fn(),
+    fetchAllExercises: vi.fn(),
   };
 });
 
