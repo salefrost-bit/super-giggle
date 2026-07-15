@@ -16,7 +16,7 @@ import {
   categoryKeyForName,
 } from '@/lib/supabase/queries';
 import { MODES } from '@/lib/modes/registry';
-import { drawSessionCards } from '@/lib/domain/deck';
+import { drawSessionCards, createCourtDeck } from '@/lib/domain/deck';
 import { calculateReps } from '@/lib/domain/reps';
 import { calculateParSeconds, resolveBudget } from '@/lib/domain/challenge';
 import { getBestDurationSeconds, getBestScore } from '@/lib/supabase/records';
@@ -55,7 +55,7 @@ function pickDefaults(exercises: Exercise[], categories: Category[]): Record<Cat
   return result;
 }
 
-function stepNumberFor(step: Step): number {
+function stepNumberFor(step: Step, gameMode: GameMode): number {
   const map: Record<Step, number> = {
     entry: 1,
     'quick-difficulty': 2,
@@ -64,17 +64,17 @@ function stepNumberFor(step: Step): number {
     'custom-sliders': 2,
     'challenge-menu': 2,
     'mode-difficulty': 3,
-    'mode-exercises': 4,
+    'mode-exercises': gameMode === 'court' ? 4 : 4,
     'mode-length': 5,
   };
   return map[step];
 }
 
-function totalStepsFor(step: Step, entry: EntryPath | null): number {
+function totalStepsFor(step: Step, entry: EntryPath | null, gameMode: GameMode): number {
   if (step === 'entry') return 3;
   if (entry === 'quick') return 3;
   if (entry === 'custom') return 2;
-  if (entry === 'challenge') return 5;
+  if (entry === 'challenge') return gameMode === 'court' || gameMode === 'survive' ? 4 : 5;
   return 3;
 }
 
@@ -130,8 +130,83 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
   }
 
   function handleExercisesComplete(selection: Record<CategoryKey, Exercise>) {
+    if (gameMode === 'court') {
+      handleCourtStart(selection);
+      return;
+    }
+    if (gameMode === 'survive') {
+      handleSurviveStart(selection);
+      return;
+    }
     setExerciseByCategory(selection);
     setStep('mode-length');
+  }
+
+  function handleSurviveStart(selection: Record<CategoryKey, Exercise>) {
+    if (!difficulty) return;
+    const deckSize = 52;
+    const cards = drawSessionCards(deckSize);
+    const draws: CardDrawResult[] = cards.map((card, index) => {
+      const categoryKey = SUIT_TO_CATEGORY[card.suit];
+      return {
+        orderIndex: index,
+        card,
+        categoryKey,
+        exercise: selection[categoryKey],
+        reps: calculateReps(card, difficulty.defaultRepMultiplier),
+        completedAt: null,
+      };
+    });
+
+    onStart(
+      {
+        difficultyLevelId: difficulty.id,
+        repMultiplier: difficulty.defaultRepMultiplier,
+        deckSize,
+        exerciseByCategory: selection,
+        entry: 'challenge',
+        gameMode: 'survive',
+        parSecondsPerRep: difficulty.parSecondsPerRep,
+        parTransitionSeconds: difficulty.parTransitionSeconds,
+      },
+      draws
+    );
+  }
+
+  function handleCourtStart(selection: Record<CategoryKey, Exercise>) {
+    if (!difficulty) return;
+    const cards = createCourtDeck();
+    const draws: CardDrawResult[] = cards.map((card, index) => {
+      const categoryKey = SUIT_TO_CATEGORY[card.suit];
+      return {
+        orderIndex: index,
+        card,
+        categoryKey,
+        exercise: selection[categoryKey],
+        reps: calculateReps(card, difficulty.defaultRepMultiplier),
+        completedAt: null,
+        beatQuota: null,
+      };
+    });
+
+    const totalReps = draws.reduce((sum, d) => sum + d.reps, 0);
+    const par = calculateParSeconds(totalReps, 16, difficulty);
+
+    onStart(
+      {
+        difficultyLevelId: difficulty.id,
+        repMultiplier: difficulty.defaultRepMultiplier,
+        deckSize: 16,
+        exerciseByCategory: selection,
+        entry: 'challenge',
+        gameMode: 'court',
+        budgetSeconds: par,
+        parSource: 'par',
+        parSecondsPerRep: difficulty.parSecondsPerRep,
+        parTransitionSeconds: difficulty.parTransitionSeconds,
+      },
+      draws
+    );
   }
 
   async function handleCustomStart(
@@ -185,7 +260,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
         exercise: exerciseByCategory[categoryKey],
         reps: calculateReps(card, difficulty.defaultRepMultiplier),
         completedAt: null,
-        beatQuota: mode === 'perfect_deck' ? null : undefined,
+        beatQuota: mode === 'perfect_deck' || mode === 'court' ? null : undefined,
       };
     });
 
@@ -254,8 +329,8 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
     }
   }
 
-  const stepNumber = stepNumberFor(step);
-  const totalSteps = totalStepsFor(step, entry);
+  const stepNumber = stepNumberFor(step, gameMode);
+  const totalSteps = totalStepsFor(step, entry, gameMode);
 
   return (
     <div className="min-h-screen flex flex-col px-6 pt-6 pb-8">

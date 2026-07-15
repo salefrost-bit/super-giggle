@@ -17,8 +17,9 @@ import {
 import { getBestDurationSeconds, getBestScore } from '@/lib/supabase/records';
 import { InfoModal } from '@/components/ui/InfoModal';
 import { hasSeenExplanation, markExplained } from '@/lib/modes/explained';
+import { MODES } from '@/lib/modes/registry';
 import { loadLastConfig, validateLastConfig } from '@/lib/domain/lastConfig';
-import { drawSessionCards } from '@/lib/domain/deck';
+import { drawSessionCards, createCourtDeck } from '@/lib/domain/deck';
 import { calculateReps } from '@/lib/domain/reps';
 import { calculateParSeconds, resolveBudget } from '@/lib/domain/challenge';
 import { SUIT_TO_CATEGORY } from '@/lib/domain/types';
@@ -39,16 +40,31 @@ export default function Home() {
 
   useEffect(() => {
     if (screen !== 'landing') return;
-    const last = loadLastConfig();
-    if (!last || (last.gameMode !== 'classic' && last.gameMode !== 'perfect_deck')) {
-      setCanRepeatLast(false);
-      return;
+    let cancelled = false;
+
+    async function checkRepeatAvailable() {
+      const last = loadLastConfig();
+      if (
+        !last ||
+        (last.gameMode !== 'classic' &&
+          last.gameMode !== 'perfect_deck' &&
+          last.gameMode !== 'court')
+      ) {
+        if (!cancelled) setCanRepeatLast(false);
+        return;
+      }
+      try {
+        const [exercises] = await Promise.all([fetchAllExercises(), fetchDifficultyLevels()]);
+        if (!cancelled) setCanRepeatLast(validateLastConfig(last, exercises));
+      } catch {
+        if (!cancelled) setCanRepeatLast(false);
+      }
     }
-    Promise.all([fetchAllExercises(), fetchDifficultyLevels()])
-      .then(([exercises]) => {
-        setCanRepeatLast(validateLastConfig(last, exercises));
-      })
-      .catch(() => setCanRepeatLast(false));
+
+    void checkRepeatAvailable();
+    return () => {
+      cancelled = true;
+    };
   }, [screen]);
 
   if (isLoading) return <p className="p-6">{t('common.loading')}</p>;
@@ -60,7 +76,8 @@ export default function Home() {
       const categories = await fetchCategories();
       setCategoryIdByKey(buildCategoryIdByKey(categories));
     }
-    if (sessionConfig.gameMode === 'perfect_deck' && !hasSeenExplanation('perfect_deck')) {
+    const modeDef = MODES.find((m) => m.id === sessionConfig.gameMode);
+    if (modeDef?.isChallenge && !hasSeenExplanation(sessionConfig.gameMode)) {
       setShowChallengeIntro(true);
     }
     setScreen('session');
@@ -73,7 +90,14 @@ export default function Home() {
 
   async function handleRepeatLast() {
     const last = loadLastConfig();
-    if (!last || (last.gameMode !== 'classic' && last.gameMode !== 'perfect_deck')) return;
+    if (
+      !last ||
+      (last.gameMode !== 'classic' &&
+        last.gameMode !== 'perfect_deck' &&
+        last.gameMode !== 'court')
+    ) {
+      return;
+    }
 
     const [allExercises, levels] = await Promise.all([
       fetchAllExercises(),
@@ -101,7 +125,7 @@ export default function Home() {
       exerciseByCategory[key] = exercise;
     }
 
-    const cards = drawSessionCards(last.deckSize);
+    const cards = last.gameMode === 'court' ? createCourtDeck() : drawSessionCards(last.deckSize);
     const mode = last.gameMode;
     const draws: CardDrawResult[] = cards.map((card, index) => {
       const categoryKey = SUIT_TO_CATEGORY[card.suit];
@@ -112,7 +136,7 @@ export default function Home() {
         exercise: exerciseByCategory[categoryKey],
         reps: calculateReps(card, last.repMultiplier),
         completedAt: null,
-        beatQuota: mode === 'perfect_deck' ? null : undefined,
+        beatQuota: mode === 'perfect_deck' || mode === 'court' ? null : undefined,
       };
     });
 
@@ -146,6 +170,13 @@ export default function Home() {
       sessionConfig.bestScoreForCombo = bestScore;
       sessionConfig.parSecondsPerRep = difficulty.parSecondsPerRep;
       sessionConfig.parTransitionSeconds = difficulty.parTransitionSeconds;
+    } else if (mode === 'court') {
+      const totalReps = draws.reduce((sum, draw) => sum + draw.reps, 0);
+      const par = calculateParSeconds(totalReps, 16, difficulty);
+      sessionConfig.budgetSeconds = par;
+      sessionConfig.parSource = 'par';
+      sessionConfig.parSecondsPerRep = difficulty.parSecondsPerRep;
+      sessionConfig.parTransitionSeconds = difficulty.parTransitionSeconds;
     }
 
     await handleSetupStart(sessionConfig, draws);
@@ -173,18 +204,17 @@ export default function Home() {
   }
   if (screen === 'session' && config) {
     if (showChallengeIntro) {
-      // First perfect_deck run on this device: explain the rules BEFORE the
-      // session (and its timers) exist. Dismissal mounts SessionScreen fresh.
+      const modeDef = MODES.find((m) => m.id === config.gameMode);
       return (
         <InfoModal
-          title={t('setup.challengeTitle')}
+          title={t(modeDef?.titleKey ?? 'setup.challengeTitle')}
           closeLabel={t('modes.firstRunCta')}
           onClose={() => {
-            markExplained('perfect_deck');
+            markExplained(config.gameMode);
             setShowChallengeIntro(false);
           }}
         >
-          {t('modes.perfect_deck.explanation')}
+          {t(modeDef?.explanationKey ?? 'modes.perfect_deck.explanation')}
         </InfoModal>
       );
     }

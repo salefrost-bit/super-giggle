@@ -256,6 +256,49 @@ describe('SessionScreen — points payload', () => {
     );
     vi.useRealTimers();
   });
+
+  it('court sesija koristi court multiplier u settings', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    renderWithIntl(
+      <SessionScreen
+        config={{
+          ...config,
+          gameMode: 'court',
+          deckSize: 2,
+          budgetSeconds: 110,
+          parSource: 'par',
+          parSecondsPerRep: 3,
+          parTransitionSeconds: 20,
+        }}
+        draws={draws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({
+          score: 2,
+          multiplier: 2.5,
+        })
+      )
+    );
+    vi.useRealTimers();
+  });
 });
 
 function setVisibility(state: 'hidden' | 'visible') {

@@ -58,7 +58,9 @@ export function SessionScreen({
     stopwatch.resume();
   }
 
-  const isChallenge = config.gameMode === 'perfect_deck' && config.budgetSeconds != null;
+  const isChallenge =
+    (config.gameMode === 'perfect_deck' || config.gameMode === 'court') &&
+    config.budgetSeconds != null;
   const parRates = { parSecondsPerRep: config.parSecondsPerRep, parTransitionSeconds: config.parTransitionSeconds };
   const cardWeights = draws.map((d) => calculateCardWeight(d.reps, parRates));
   const totalWeight = cardWeights.reduce((sum, w) => sum + w, 0);
@@ -163,7 +165,7 @@ export function SessionScreen({
       const challengeScore = computeScore(nextDraws);
       const multiplier = isChallenge
         ? challengeMultiplier({
-            mode: 'perfect_deck',
+            mode: config.gameMode === 'court' ? 'court' : 'perfect_deck',
             beaten: challengeScore.score,
             total: nextDraws.length,
           })
@@ -196,7 +198,11 @@ export function SessionScreen({
           setSaveState('failed');
         }
       }
-      if (config.gameMode === 'classic' || config.gameMode === 'perfect_deck') {
+      if (
+        config.gameMode === 'classic' ||
+        config.gameMode === 'perfect_deck' ||
+        config.gameMode === 'court'
+      ) {
         saveLastConfig({
           entry: config.entry ?? 'quick',
           gameMode: config.gameMode,

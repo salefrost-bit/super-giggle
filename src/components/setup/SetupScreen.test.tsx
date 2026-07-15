@@ -112,4 +112,37 @@ describe('SetupScreen', () => {
     const totalReps = draws.reduce((s: number, d: { reps: number }) => s + d.reps, 0);
     expect(config.budgetSeconds).toBe(Math.round(totalReps * 3 + 52 * 20));
   });
+
+  it('court staza preskače dužinu i pravi 16 draws iz court špila', async () => {
+    vi.mocked(fetchCategories).mockResolvedValue(categories);
+    vi.mocked(fetchDifficultyLevels).mockResolvedValue([
+      { ...difficultyLevels[0], parSecondsPerRep: 3, parTransitionSeconds: 20 },
+    ]);
+    vi.mocked(fetchExercisesByDifficulty).mockResolvedValue(exercises);
+    const onStart = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithIntl(<SetupScreen onStart={onStart} userId={null} />);
+
+    await user.click(await screen.findByText(/Challenge/));
+    await user.click(await screen.findByRole('button', { name: /Dvor/ }));
+    await user.click(await screen.findByRole('button', { name: 'Srednji' }));
+    await user.click(await screen.findByRole('button', { name: 'Sklekovi' }));
+    await user.click(screen.getByRole('button', { name: 'Zgibovi' }));
+    await user.click(screen.getByRole('button', { name: 'Čučnjevi' }));
+    await user.click(screen.getByRole('button', { name: 'Trbušnjaci' }));
+
+    expect(screen.queryByRole('button', { name: 'Ceo špil (52 karte)' })).not.toBeInTheDocument();
+    expect(onStart).toHaveBeenCalledTimes(1);
+    const [config, draws] = onStart.mock.calls[0];
+    expect(config.gameMode).toBe('court');
+    expect(config.deckSize).toBe(16);
+    expect(config.parSource).toBe('par');
+    expect(draws).toHaveLength(16);
+    expect(draws.every((d: { card: { rank: number } }) => [1, 11, 12, 13].includes(d.card.rank))).toBe(
+      true
+    );
+    const totalReps = draws.reduce((s: number, d: { reps: number }) => s + d.reps, 0);
+    expect(config.budgetSeconds).toBe(Math.round(totalReps * 3 + 16 * 20));
+  });
 });
