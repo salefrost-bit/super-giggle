@@ -9,6 +9,7 @@ vi.mock('@/lib/supabase/sessions', () => ({
   createSession: vi.fn(),
   recordCardDraw: vi.fn(),
   completeSession: vi.fn(),
+  hasDailyForDate: vi.fn(),
 }));
 
 vi.mock('@/hooks/useCardQuota', async () => {
@@ -16,7 +17,7 @@ vi.mock('@/hooks/useCardQuota', async () => {
   return { useCardQuota: vi.fn(actual.useCardQuota) };
 });
 
-import { createSession, recordCardDraw, completeSession } from '@/lib/supabase/sessions';
+import { createSession, recordCardDraw, completeSession, hasDailyForDate } from '@/lib/supabase/sessions';
 import { useCardQuota } from '@/hooks/useCardQuota';
 
 beforeEach(() => {
@@ -440,6 +441,50 @@ describe('SessionScreen — survive', () => {
 
     await waitFor(() => expect(onFinish).toHaveBeenCalledTimes(1));
     vi.useRealTimers();
+  });
+});
+
+describe('SessionScreen — daily', () => {
+  const dailyConfig = {
+    ...config,
+    gameMode: 'daily' as const,
+    deckSize: 1,
+    budgetSeconds: 50,
+    parSource: 'par' as const,
+    parSecondsPerRep: 3,
+    parTransitionSeconds: 20,
+  };
+
+  it('replay: postojeća današnja sesija → daily_replay bez daily_date', async () => {
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    vi.mocked(hasDailyForDate).mockResolvedValue(true);
+    const onFinish = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithIntl(
+      <SessionScreen
+        config={dailyConfig}
+        draws={[draws[0]]}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({ daily_replay: true })
+      )
+    );
+    const payload = vi.mocked(completeSession).mock.calls[0][2] as Record<string, unknown>;
+    expect(payload.daily_date).toBeUndefined();
   });
 });
 

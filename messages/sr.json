@@ -11,7 +11,9 @@
     "viewProgress": "Vidi napredak →",
     "signOut": "Odjavi se",
     "streakDays": "{days, plural, one {# dan} few {# dana} other {# dana}}",
-    "repeatLast": "Ponovi poslednji trening"
+    "repeatLast": "Ponovi poslednji trening",
+    "dailyDone": "🎴 ✓",
+    "dailyPending": "🎴 Karta dana"
   },
   "setup": {
     "step": "Korak {current}/{total}",
@@ -123,6 +125,11 @@
       "title": "🛡 Preživi špil",
       "desc": "Banka od 90 sekundi — dopuni je sa svakom kartom.",
       "explanation": "Krećeš sa bankom od 90 sekundi. Svaka završena karta dopunjuje banku svojom kvotom (procena vremena za tu kartu). Dokle ćeš stići kroz 52 karte? Pauza ne troši banku. Pređi sve karte za bonus ×1.5."
+    },
+    "daily": {
+      "title": "🎴 Karta dana",
+      "desc": "Današnji izazov — isti špil za sve.",
+      "explanation": "Svaki dan novi špil od 20 karata, isti za sve igrače. Vežbe i nivo određeni su danom — bez izbora. Rok po karti kao Perfektan špil, uvek protiv naše procene. Prvi pokušaj dana se računa za čip i rekord; ponovno igranje istog dana je replay."
     }
   },
   "streak": {

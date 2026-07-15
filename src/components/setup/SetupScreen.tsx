@@ -21,6 +21,7 @@ import { localizedName } from '@/i18n/dbName';
 import { MODES } from '@/lib/modes/registry';
 import { drawSessionCards, createCourtDeck } from '@/lib/domain/deck';
 import { buildDraws } from '@/lib/domain/draws';
+import { buildDailySession } from '@/lib/domain/daily';
 import { calculateParSeconds, resolveBudget } from '@/lib/domain/challenge';
 import { getBestDurationSeconds, getBestScore } from '@/lib/supabase/records';
 import type {
@@ -91,6 +92,7 @@ function totalStepsFor(step: Step, entry: EntryPath | null, gameMode: GameMode):
   if (entry === 'custom') return 2;
   if (entry === 'challenge') {
     if (gameMode === 'sprint' || gameMode === 'court' || gameMode === 'survive') return 4;
+    if (gameMode === 'daily') return 2;
     return 5;
   }
   return 3;
@@ -207,6 +209,16 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
       },
       sessionDraws
     );
+  }
+
+  async function handleDailyStart() {
+    const [allEx, levels] = await Promise.all([fetchAllExercises(), fetchDifficultyLevels()]);
+    const { config, draws } = buildDailySession({
+      exercises: allEx,
+      categories,
+      levels,
+    });
+    onStart(config, draws);
   }
 
   async function handleSprintMinutesSelect(minutes: number) {
@@ -397,6 +409,8 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
             setGameMode(m);
             if (m === 'sprint') {
               setStep('sprint');
+            } else if (m === 'daily') {
+              void handleDailyStart();
             } else {
               setStep('mode-difficulty');
             }

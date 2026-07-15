@@ -232,3 +232,15 @@ export async function backfillPoints(sessionId: string, gameMode: string): Promi
   if (error) throw error;
   return points;
 }
+
+export async function hasDailyForDate(userId: string, dateString: string): Promise<boolean> {
+  const supabase = createClient();
+  const { count, error } = await supabase
+    .from('sessions')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('game_mode', 'daily')
+    .filter('settings->>daily_date', 'eq', dateString);
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}

@@ -23,6 +23,8 @@ import { drawSessionCards, createCourtDeck } from '@/lib/domain/deck';
 import { buildDraws } from '@/lib/domain/draws';
 import { calculateReps } from '@/lib/domain/reps';
 import { calculateParSeconds, resolveBudget } from '@/lib/domain/challenge';
+import { buildDailySession, dailyDateString, isDailyDoneLocal } from '@/lib/domain/daily';
+import { hasDailyForDate } from '@/lib/supabase/sessions';
 import { SUIT_TO_CATEGORY } from '@/lib/domain/types';
 import type { CardDrawResult, CategoryKey, Exercise, SessionConfig, SessionResult } from '@/lib/domain/types';
 
@@ -38,12 +40,25 @@ export default function Home() {
   const [result, setResult] = useState<SessionResult | null>(null);
   const [showChallengeIntro, setShowChallengeIntro] = useState(false);
   const [canRepeatLast, setCanRepeatLast] = useState(false);
+  const [dailyDone, setDailyDone] = useState(false);
 
   useEffect(() => {
     if (screen !== 'landing') return;
     let cancelled = false;
 
-    async function checkRepeatAvailable() {
+    async function checkLandingState() {
+      const dateString = dailyDateString(new Date());
+      if (user?.id) {
+        try {
+          const done = await hasDailyForDate(user.id, dateString);
+          if (!cancelled) setDailyDone(done);
+        } catch {
+          if (!cancelled) setDailyDone(false);
+        }
+      } else {
+        if (!cancelled) setDailyDone(isDailyDoneLocal(dateString));
+      }
+
       const last = loadLastConfig();
       if (
         !last ||
@@ -51,9 +66,14 @@ export default function Home() {
           last.gameMode !== 'perfect_deck' &&
           last.gameMode !== 'sprint' &&
           last.gameMode !== 'court' &&
-          last.gameMode !== 'survive')
+          last.gameMode !== 'survive' &&
+          last.gameMode !== 'daily')
       ) {
         if (!cancelled) setCanRepeatLast(false);
+        return;
+      }
+      if (last.gameMode === 'daily') {
+        if (!cancelled) setCanRepeatLast(true);
         return;
       }
       try {
@@ -64,11 +84,11 @@ export default function Home() {
       }
     }
 
-    void checkRepeatAvailable();
+    void checkLandingState();
     return () => {
       cancelled = true;
     };
-  }, [screen]);
+  }, [screen, user?.id]);
 
   if (isLoading) return <p className="p-6">{t('common.loading')}</p>;
 
@@ -91,6 +111,20 @@ export default function Home() {
     setScreen('summary');
   }
 
+  async function handleStartDaily() {
+    const [allExercises, levels, categories] = await Promise.all([
+      fetchAllExercises(),
+      fetchDifficultyLevels(),
+      fetchCategories(),
+    ]);
+    const { config: dailyConfig, draws: dailyDraws } = buildDailySession({
+      exercises: allExercises,
+      categories,
+      levels,
+    });
+    await handleSetupStart(dailyConfig, dailyDraws);
+  }
+
   async function handleRepeatLast() {
     const last = loadLastConfig();
     if (
@@ -99,8 +133,14 @@ export default function Home() {
         last.gameMode !== 'perfect_deck' &&
         last.gameMode !== 'sprint' &&
         last.gameMode !== 'court' &&
-        last.gameMode !== 'survive')
+        last.gameMode !== 'survive' &&
+        last.gameMode !== 'daily')
     ) {
+      return;
+    }
+
+    if (last.gameMode === 'daily') {
+      await handleStartDaily();
       return;
     }
 
@@ -227,6 +267,8 @@ export default function Home() {
     return (
       <LandingScreen
         user={user}
+        dailyDone={dailyDone}
+        onStartDaily={handleStartDaily}
         onStartWorkout={() => setScreen('setup')}
         onRepeatLast={canRepeatLast ? handleRepeatLast : undefined}
         onShowHistory={() => setScreen('history')}

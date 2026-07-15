@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createSession, recordCardDraw, completeSession, getUserSessions, backfillPoints } from './sessions';
+import { createSession, recordCardDraw, completeSession, getUserSessions, backfillPoints, hasDailyForDate } from './sessions';
 import type { SessionConfig } from '../domain/types';
 
 vi.mock('./client', () => ({ createClient: vi.fn() }));
@@ -350,5 +350,21 @@ describe('backfillPoints', () => {
     expect(update).toHaveBeenCalledWith({
       settings: { score: 24, points: 15, base_points: 15, multiplier: 1 },
     });
+  });
+});
+
+describe('hasDailyForDate', () => {
+  it('vraća true kad postoji daily sesija sa daily_date', async () => {
+    const filter = vi.fn().mockResolvedValue({ count: 1, error: null });
+    const eqGameMode = vi.fn(() => ({ filter }));
+    const eqUser = vi.fn(() => ({ eq: eqGameMode }));
+    const select = vi.fn(() => ({ eq: eqUser }));
+    const from = vi.fn(() => ({ select }));
+    vi.mocked(createClient).mockReturnValue({ from } as never);
+
+    const result = await hasDailyForDate('user-1', '2026-07-15');
+
+    expect(result).toBe(true);
+    expect(from).toHaveBeenCalledWith('sessions');
   });
 });

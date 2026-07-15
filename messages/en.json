@@ -11,7 +11,9 @@
     "viewProgress": "View progress →",
     "signOut": "Sign out",
     "streakDays": "{days, plural, one {# day} other {# days}}",
-    "repeatLast": "Repeat last workout"
+    "repeatLast": "Repeat last workout",
+    "dailyDone": "🎴 ✓",
+    "dailyPending": "🎴 Daily card"
   },
   "setup": {
     "step": "Step {current}/{total}",
@@ -123,6 +125,11 @@
       "title": "🛡 Survive the deck",
       "desc": "90-second bank — refill it with every card.",
       "explanation": "You start with a 90-second bank. Every finished card refills the bank with that card's quota (estimated time for the card). How far can you get through 52 cards? Pausing doesn't drain the bank. Beat every card for a ×1.5 bonus."
+    },
+    "daily": {
+      "title": "🎴 Daily card",
+      "desc": "Today's challenge — same deck for everyone.",
+      "explanation": "Every day a new 20-card deck, the same for all players. Exercises and level are set by the day — no choices. Per-card deadline like Perfect Deck, always against our estimate. Your first attempt of the day counts for the chip and record; replaying the same day is a replay."
     }
   },
   "streak": {

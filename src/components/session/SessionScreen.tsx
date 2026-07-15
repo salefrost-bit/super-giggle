@@ -8,6 +8,11 @@ import { useWakeLock } from '@/hooks/useWakeLock';
 import { useLocaleSetting } from '@/i18n/LocaleProvider';
 import { localizedName } from '@/i18n/dbName';
 import { BANK_START_SECONDS, applyCompletedCard, isBankrupt } from '@/lib/domain/bank';
+import {
+  dailyDateString,
+  isDailyDoneLocal,
+  markDailyDoneLocal,
+} from '@/lib/domain/daily';
 import { calculateCardWeight, calculateQuotaSeconds, computeScore } from '@/lib/domain/challenge';
 import { calculateBasePoints, challengeMultiplier, calculatePoints } from '@/lib/domain/score';
 import { drawSessionCards } from '@/lib/domain/deck';
@@ -15,7 +20,7 @@ import { buildDraws } from '@/lib/domain/draws';
 import { CardDisplay } from './CardDisplay';
 import { ProgressIndicator } from './ProgressIndicator';
 import { StopwatchDisplay } from './StopwatchDisplay';
-import { createSession, recordCardDraw, completeSession } from '@/lib/supabase/sessions';
+import { createSession, recordCardDraw, completeSession, hasDailyForDate } from '@/lib/supabase/sessions';
 import { saveLastConfig } from '@/lib/domain/lastConfig';
 import type { CardDrawResult, CategoryKey, SessionConfig, SessionResult } from '@/lib/domain/types';
 
@@ -41,8 +46,10 @@ export function SessionScreen({
   const isSprint = config.gameMode === 'sprint';
   const isCourt = config.gameMode === 'court';
   const isSurvive = config.gameMode === 'survive';
+  const isDaily = config.gameMode === 'daily';
   const isChallenge =
-    (config.gameMode === 'perfect_deck' || isCourt) && config.budgetSeconds != null;
+    (config.gameMode === 'perfect_deck' || isCourt || isDaily) &&
+    config.budgetSeconds != null;
 
   const [queue, setQueue] = useState<CardDrawResult[]>(draws);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -53,6 +60,7 @@ export function SessionScreen({
   const [outcomeFlash, setOutcomeFlash] = useState<'won' | 'lost' | null>(null);
   const stopwatch = useStopwatch();
   const lastAppendedAtRef = useRef(-1);
+  const [sessionStartedAt] = useState(() => new Date().toISOString());
   useWakeLock(true);
 
   const [balanceSeconds, setBalanceSeconds] = useState(BANK_START_SECONDS);
@@ -151,7 +159,12 @@ export function SessionScreen({
 
   async function finishSession(
     nextDraws: CardDrawResult[],
-    options: { survivedCards?: number; survivedAll?: boolean } = {}
+    options: {
+      survivedCards?: number;
+      survivedAll?: boolean;
+      dailyDate?: string;
+      dailyReplay?: boolean;
+    } = {}
   ) {
     stopwatch.pause();
     const totalDurationSeconds = stopwatch.elapsedSeconds;
@@ -175,8 +188,9 @@ export function SessionScreen({
         survivedAll: options.survivedAll ?? false,
       });
     } else if (isChallenge) {
+      const mode = isCourt ? 'court' : isDaily ? 'daily' : 'perfect_deck';
       multiplier = challengeMultiplier({
-        mode: isCourt ? 'court' : 'perfect_deck',
+        mode,
         beaten: challengeScore.score,
         total: nextDraws.length,
       });
@@ -196,6 +210,12 @@ export function SessionScreen({
       rep_multiplier: config.repMultiplier,
     };
 
+    const dailySettings = options.dailyReplay
+      ? { daily_replay: true as const }
+      : options.dailyDate
+        ? { daily_date: options.dailyDate }
+        : {};
+
     const settingsPayload = isSurvive
       ? {
           survived_cards: options.survivedCards ?? finishedDraws.length,
@@ -209,6 +229,7 @@ export function SessionScreen({
             best_score: config.bestScoreForCombo ?? null,
             score: challengeScore.score,
             won: challengeScore.won,
+            ...dailySettings,
             ...pauseStats,
             ...pointsPayload,
           }
@@ -264,6 +285,25 @@ export function SessionScreen({
           core: config.exerciseByCategory.core.id,
         },
       });
+    } else if (isDaily) {
+      saveLastConfig({
+        entry: 'challenge',
+        gameMode: 'daily',
+        difficultyLevelId: config.difficultyLevelId,
+        repMultiplier: config.repMultiplier,
+        deckSize: 20,
+        exerciseIds: {
+          push: config.exerciseByCategory.push.id,
+          pull: config.exerciseByCategory.pull.id,
+          legs: config.exerciseByCategory.legs.id,
+          core: config.exerciseByCategory.core.id,
+        },
+      });
+    }
+
+    if (isDaily) {
+      const dateString = options.dailyDate ?? dailyDateString(new Date(sessionStartedAt));
+      markDailyDoneLocal(dateString);
     }
 
     onFinish({
@@ -347,7 +387,15 @@ export function SessionScreen({
       return;
     }
     if (nextIndex >= queue.length) {
-      await finishSession(nextDraws);
+      if (isDaily) {
+        const dateString = dailyDateString(new Date(sessionStartedAt));
+        const isReplay = userId
+          ? await hasDailyForDate(userId, dateString)
+          : isDailyDoneLocal(dateString);
+        await finishSession(nextDraws, isReplay ? { dailyReplay: true } : { dailyDate: dateString });
+      } else {
+        await finishSession(nextDraws);
+      }
       return;
     }
     setCurrentIndex(nextIndex);
@@ -375,6 +423,10 @@ export function SessionScreen({
         ) : isSurvive ? (
           <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">
             🛡 {currentIndex}/{queue.length}
+          </p>
+        ) : isDaily ? (
+          <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">
+            🎴 {scoreSoFar.score}/{currentIndex}
           </p>
         ) : (
           <div className="w-10" />
