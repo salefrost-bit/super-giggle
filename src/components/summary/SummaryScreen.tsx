@@ -1,15 +1,18 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { summarizeByCategory } from '@/lib/domain/summarize';
 import { computeScore } from '@/lib/domain/challenge';
+import { rankForXp } from '@/lib/domain/score';
+import { getTotalXp } from '@/lib/supabase/records';
 import { CATEGORY_KEY_TO_NAME } from '@/lib/domain/types';
 import { useLocaleSetting } from '@/i18n/LocaleProvider';
 import { localizedName } from '@/i18n/dbName';
+import { InfoModal } from '@/components/ui/InfoModal';
 import type { CategoryKey, SessionConfig, SessionResult } from '@/lib/domain/types';
 
-// Visual suit chip per category — follows SUIT_TO_CATEGORY in types.ts, NOT the prototype's pairing.
 const CATEGORY_TO_SUIT: Record<CategoryKey, string> = {
   push: '♥',
   pull: '♣',
@@ -21,6 +24,7 @@ interface SummaryScreenProps {
   result: SessionResult;
   isGuest: boolean;
   config?: SessionConfig | null;
+  userId?: string | null;
   onDone: () => void;
 }
 
@@ -30,14 +34,32 @@ function formatDuration(totalSeconds: number): string {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
-export function SummaryScreen({ result, isGuest, config, onDone }: SummaryScreenProps) {
+function formatMultiplier(multiplier: number): string {
+  return Number.isInteger(multiplier) ? String(multiplier) : multiplier.toFixed(2);
+}
+
+export function SummaryScreen({ result, isGuest, config, userId, onDone }: SummaryScreenProps) {
   const t = useTranslations();
   const { locale } = useLocaleSetting();
+  const [showFormula, setShowFormula] = useState(false);
+  const [rankUpSymbol, setRankUpSymbol] = useState<string | null>(null);
   const breakdown = summarizeByCategory(result.draws);
   const exerciseNameByCategory = new Map(
     result.draws.map((d) => [d.categoryKey, localizedName(d.exercise, locale)])
   );
   const challenge = config?.gameMode === 'perfect_deck' ? computeScore(result.draws) : null;
+  const multiplierLabel = formatMultiplier(result.multiplier);
+
+  useEffect(() => {
+    if (!userId) return;
+    getTotalXp(userId).then((xp) => {
+      const rankBefore = rankForXp(xp - result.points);
+      const rankAfter = rankForXp(xp);
+      if (rankBefore.symbol !== rankAfter.symbol) {
+        setRankUpSymbol(rankAfter.symbol);
+      }
+    });
+  }, [userId, result.points]);
 
   return (
     <div className="min-h-screen flex flex-col px-6 pt-9 pb-8">
@@ -48,6 +70,22 @@ export function SummaryScreen({ result, isGuest, config, onDone }: SummaryScreen
         <div className="relative text-center mt-3">
           <p className="text-2xl font-black text-accent tracking-widest animate-bounce">
             {t('results.perfectDeck')}
+          </p>
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <span
+                key={i}
+                className={`confetti-piece ${['bg-accent', 'bg-orange-400', 'bg-red-500'][i % 3]}`}
+                style={{ left: `${(i * 8.3) % 100}%`, animationDelay: `${(i % 6) * 0.12}s` }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+      {rankUpSymbol && (
+        <div className="relative text-center mt-3">
+          <p className="text-2xl font-black text-accent tracking-widest animate-bounce">
+            {t('xp.rankUp', { symbol: rankUpSymbol })}
           </p>
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             {Array.from({ length: 12 }).map((_, i) => (
@@ -73,6 +111,23 @@ export function SummaryScreen({ result, isGuest, config, onDone }: SummaryScreen
             })}
           </p>
         )}
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <p className="text-[40px] font-black text-accent tabular-nums leading-none">
+            {t('points.total', { points: result.points })}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowFormula(true)}
+            aria-label={t('points.formulaTitle')}
+            className="w-8 h-8 rounded-full bg-surface text-muted font-extrabold text-sm"
+          >
+            ⓘ
+          </button>
+        </div>
+        <p className="text-xs font-semibold text-muted mt-1">
+          {t('points.base', { base: result.basePoints })} ·{' '}
+          {t('points.multiplierLabel', { multiplier: multiplierLabel })}
+        </p>
         {challenge && (
           <p className="text-lg font-extrabold text-accent text-center mt-1">
             {t('results.score', { score: challenge.score, total: challenge.total })}
@@ -119,6 +174,9 @@ export function SummaryScreen({ result, isGuest, config, onDone }: SummaryScreen
 
       {isGuest && (
         <div className="bg-surface border-2 border-accent/30 rounded-[18px] p-5 mt-6 text-center">
+          <p className="text-sm font-semibold text-accent mb-2 leading-snug">
+            {t('points.guestKeep', { points: result.points })}
+          </p>
           <p className="text-sm font-semibold text-muted mb-3.5 leading-snug">
             {t('results.guestNote')}
           </p>
@@ -137,6 +195,16 @@ export function SummaryScreen({ result, isGuest, config, onDone }: SummaryScreen
       >
         {t('results.backHome')}
       </button>
+
+      {showFormula && (
+        <InfoModal
+          title={t('points.formulaTitle')}
+          closeLabel={t('common.close')}
+          onClose={() => setShowFormula(false)}
+        >
+          {t('points.formula')}
+        </InfoModal>
+      )}
     </div>
   );
 }

@@ -112,4 +112,7 @@ export interface SessionResult {
   draws: CardDrawResult[];
   pauseCount?: number;
   totalPauseSeconds?: number;
+  points: number;
+  basePoints: number;
+  multiplier: number;
 }

@@ -174,6 +174,90 @@ describe('SessionScreen — perfect_deck challenge', () => {
   });
 });
 
+describe('SessionScreen — points payload', () => {
+  it('classic sesija šalje points u settings i onFinish', async () => {
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithIntl(
+      <SessionScreen
+        config={{ ...config, entry: 'quick', deckSize: 12 }}
+        draws={draws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({
+          points: 17,
+          base_points: 16.5,
+          multiplier: 1,
+        })
+      )
+    );
+    expect(onFinish).toHaveBeenCalledWith(
+      expect.objectContaining({ points: 17, basePoints: 16.5, multiplier: 1 })
+    );
+  });
+
+  it('perfect_deck zadržava score pored points u settings', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    renderWithIntl(
+      <SessionScreen
+        config={{
+          ...config,
+          gameMode: 'perfect_deck',
+          budgetSeconds: 110,
+          parSource: 'par',
+          parSecondsPerRep: 3,
+          parTransitionSeconds: 20,
+        }}
+        draws={draws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    await vi.advanceTimersByTimeAsync(58_000);
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({
+          score: 1,
+          points: 25,
+          base_points: 16.5,
+          multiplier: 1.5,
+        })
+      )
+    );
+    vi.useRealTimers();
+  });
+});
+
 function setVisibility(state: 'hidden' | 'visible') {
   Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
   fireEvent(document, new Event('visibilitychange'));

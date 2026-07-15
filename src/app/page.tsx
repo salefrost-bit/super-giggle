@@ -93,7 +93,13 @@ export default function Home() {
   }
   if (screen === 'summary' && result) {
     return (
-      <SummaryScreen result={result} isGuest={!user} config={config} onDone={() => setScreen('landing')} />
+      <SummaryScreen
+        result={result}
+        isGuest={!user}
+        config={config}
+        userId={user?.id ?? null}
+        onDone={() => setScreen('landing')}
+      />
     );
   }
   if (screen === 'history' && user) {

@@ -8,6 +8,7 @@ import { useWakeLock } from '@/hooks/useWakeLock';
 import { useLocaleSetting } from '@/i18n/LocaleProvider';
 import { localizedName } from '@/i18n/dbName';
 import { calculateCardWeight, calculateQuotaSeconds, computeScore } from '@/lib/domain/challenge';
+import { calculateBasePoints, challengeMultiplier, calculatePoints } from '@/lib/domain/score';
 import { CardDisplay } from './CardDisplay';
 import { ProgressIndicator } from './ProgressIndicator';
 import { StopwatchDisplay } from './StopwatchDisplay';
@@ -152,15 +153,40 @@ export function SessionScreen({
         pause_count: stopwatch.pauseCount,
         total_pause_seconds: stopwatch.totalPauseSeconds,
       };
+      const scored = nextDraws.map((d) => ({
+        reps: d.reps,
+        completedAt: d.completedAt,
+        tier: d.exercise.tier,
+      }));
+      const basePoints = calculateBasePoints(scored);
+      const challengeScore = computeScore(nextDraws);
+      const multiplier = isChallenge
+        ? challengeMultiplier({
+            mode: 'perfect_deck',
+            beaten: challengeScore.score,
+            total: nextDraws.length,
+          })
+        : challengeMultiplier({ mode: 'classic' });
+      const points = calculatePoints(basePoints, multiplier);
+      const pointsPayload = {
+        points,
+        base_points: basePoints,
+        multiplier,
+        entry: config.entry,
+        card_count: config.deckSize,
+        rep_multiplier: config.repMultiplier,
+      };
       const settingsPayload = isChallenge
         ? {
             budget_seconds: config.budgetSeconds as number,
             par_source: config.parSource ?? ('par' as const),
             best_score: config.bestScoreForCombo ?? null,
-            ...(({ score, won }) => ({ score, won }))(computeScore(nextDraws)),
+            score: challengeScore.score,
+            won: challengeScore.won,
             ...pauseStats,
+            ...pointsPayload,
           }
-        : pauseStats;
+        : { ...pauseStats, ...pointsPayload };
       if (userId && sessionId && saveState === 'ready') {
         try {
           await completeSession(sessionId, totalDurationSeconds, settingsPayload);
@@ -174,6 +200,9 @@ export function SessionScreen({
         draws: nextDraws,
         pauseCount: pauseStats.pause_count,
         totalPauseSeconds: pauseStats.total_pause_seconds,
+        points,
+        basePoints,
+        multiplier,
       });
       return;
     }
