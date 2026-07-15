@@ -43,22 +43,27 @@ Odluke koje su pale u brainstormu (izvor istine za buduće rasprave):
 | v0.4.1 | Temelj igrivosti | tri vrata, 24 vežbe + tier, balansirano izvlačenje, score/XP/zvanja/rekordi po modu, istorija sa detaljima, Ponovi poslednji |
 | v0.4.2 | Sprint i Dvor | dva nova challenge moda |
 | v0.4.3 | Preživi i Karta dana | dva nova challenge moda + dnevna petlja |
-| v0.4.4 | Animacije vežbi | pilot → stilska pravila → sve 24 (kratak sopstveni spec) |
-| v0.4.5 | Napredak | kalendar, grafikoni, XP/zvanja (kratak sopstveni spec) |
-| v0.4.6 | Zvuk i ritam | zvuk + vibracija + score ritual (kratak sopstveni spec) |
+| v0.4.4 | Džokeri | odmor kao karta, svi modovi (kratak sopstveni spec) |
+| v0.4.5 | Animacije vežbi | pilot → stilska pravila → sve 24 (kratak sopstveni spec) |
+| v0.4.6 | Napredak | kalendar, grafikoni, XP/zvanja + predlog progresije (kratak sopstveni spec) |
+| v0.4.7 | Zvuk i ritam | zvuk + vibracija + score ritual (kratak sopstveni spec) |
+| v0.4.8 | PWA | manifest, SW, offline; poslednja — asset lista konačna; verzionisan keš obavezan (kratak sopstveni spec) |
 
 Proces: jedan implementacioni plan za v0.4.1–v0.4.3 (paket za Cursor, faze
-redom, tag + CHANGELOG + ručna verifikacija po fazi); v0.4.4–v0.4.6 dobijaju
+redom, tag + CHANGELOG + ručna verifikacija po fazi); v0.4.4–v0.4.8 dobijaju
 kratke spec-ove pre svojih faza, obim im je fiksiran glavnim spec-om.
 
-### Krug C — preostalo (posle Kruga B)
+### Krug C — ugašen (odluka 2026-07-15)
 
-1. **Džokeri kao odmor** (sopstveni spec, dira `deck.ts`/`Card`).
-2. **PWA** (manifest, service worker, offline; posle stabilizacije sadržaja).
-3. **Predlog progresije** (posle slajdera — sada postoji u Custom).
+Sve tri preostale stavke Kruga C povučene su u Krug B kao faze v0.4.4
+(džokeri), v0.4.6 (predlog progresije, unutar Napretka) i v0.4.8 (PWA).
+Krug C više ne postoji; posle v0.4.8 sledi **testiranje uživo**, pa se
+**v0.5 planira iz nalaza tog testiranja** (očekuje se i izmena asseta —
+zato PWA keš mora biti verzionisan sa update mehanizmom od prvog dana).
 
-Backlog nepromenjen + dodato iz brainstorma: Poker ruka, combo množilac,
-nedeljni izazovi + zarađivanje ❄️, leaderboard za Kartu dana.
+Backlog (bez kruga, bez redosleda): Poker ruka, combo množilac, nedeljni
+izazovi + zarađivanje ❄️, leaderboard za Kartu dana, novi jezici, prenos
+gost→nalog, push podsetnici, deljenje rezultata.
 
 ## 3. Otvorena pitanja zatvorena ovim aneksom
 

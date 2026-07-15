@@ -17,7 +17,7 @@ Ne čita se cela istorija — strategija + poslednji dokumenti su dovoljni.
 | Dokument | Jedna rečenica | Status |
 |---|---|---|
 | `strategy/2026-07-13-strategija-nastavka.md` | Klasifikacija nalaza ručnog testiranja u krugove A (jasnoća), B (sadržaj/Napredak), C (slajder/modovi/PWA) + backlog i principi. | **AKTUELAN** — krugovi B/C revidirani aneksom 2026-07-15 |
-| `strategy/2026-07-15-krug-b-revizija.md` | Krug B postaje "Igrivost": tri vrata, score/XP, pet challenge modova; Sprint/Preživi/slajder povučeni iz C u B. | **AKTUELAN — izvor istine za Krugove B i C** |
+| `strategy/2026-07-15-krug-b-revizija.md` | Krug B postaje "Igrivost" (v0.4.1–v0.4.8): tri vrata, score/XP, pet modova, džokeri, animacije, Napredak, zvuk, PWA; Krug C ugašen, v0.5 posle testiranja uživo. | **AKTUELAN — izvor istine za plan razvoja** |
 
 ## Spec-ovi
 

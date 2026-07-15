@@ -47,8 +47,8 @@ Karakter: sve aditivno, ne dira domenski model ni postojeće testove (osim novih
 
 > **⚠ REVIDIRANO 2026-07-15.** Obim i sadržaj Krugova B i C menja aneks
 > `2026-07-15-krug-b-revizija.md` (tri vrata, score sistem, pet challenge
-> modova; Sprint/Preživi/slajder povučeni iz C u B). Sekcije ispod su
-> istorijske; principi §5 i backlog ostaju na snazi.
+> modova; CEO Krug C povučen u Krug B kao faze v0.4.4–v0.4.8 — Krug C je
+> ugašen). Sekcije ispod su istorijske; principi §5 ostaju na snazi.
 
 ### Krug B — "Sadržaj i Napredak" (spec+plan, seed izmene + frontend)
 1. Biblioteka vežbi ≥4 po kategoriji. **Zavisnost:** vežbe dobijaju tier oznake usklađene sa budućim slajderom (Krug C) — dizajnirati šemu tier-ova SADA u spec-u ovog kruga, da se seed ne radi dvaput.

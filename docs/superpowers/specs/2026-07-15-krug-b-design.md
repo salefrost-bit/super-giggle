@@ -253,7 +253,7 @@ karta=ponavljanja). Nazivi se koriguju u reviziji spec-a po potrebi.
 
 Jedan implementacioni plan pokriva v0.4.1–v0.4.3; faze se izvršavaju redom,
 svaka faza = tag + CHANGELOG stavka + ručna verifikacija pre sledeće.
-v0.4.4–v0.4.6 dobijaju sopstvene kratke spec-ove i planove kad na njih dođe
+v0.4.4–v0.4.8 dobijaju sopstvene kratke spec-ove i planove kad na njih dođe
 red — ovaj dokument im fiksira obim i redosled:
 
 | Verzija | Ime | Sadržaj |
@@ -261,14 +261,15 @@ red — ovaj dokument im fiksira obim i redosled:
 | v0.4.1 | Temelj igrivosti | tri vrata, migracija 0005 + 24 vežbe, balansirano izvlačenje, score/XP/zvanja/rekordi po modu, istorija sa detaljima, Ponovi poslednji, score za goste |
 | v0.4.2 | Sprint i Dvor | dva moda + rekordi + i18n |
 | v0.4.3 | Preživi i Karta dana | dva moda + landing čip + banka vremena |
-| v0.4.4 | Animacije vežbi | pilot (čučanj) → stilska pravila → sve 24 |
-| v0.4.5 | Napredak | kalendar treniranih/zamrznutih dana, grafikoni, XP/zvanja prikaz |
-| v0.4.6 | Zvuk i ritam | zvuk + vibracija (nova karta, rok ističe, oborena/izgubljena), score ritual animacija |
+| v0.4.4 | Džokeri | odmor kao karta, važi u svim modovima (dira `Card`/`deck.ts` — sopstveni spec) |
+| v0.4.5 | Animacije vežbi | pilot (čučanj) → stilska pravila → sve 24 |
+| v0.4.6 | Napredak | kalendar treniranih/zamrznutih dana, grafikoni, XP/zvanja prikaz, predlog progresije (veći multiplikator posle N čistih sesija) |
+| v0.4.7 | Zvuk i ritam | zvuk + vibracija (nova karta, rok ističe, oborena/izgubljena), score ritual animacija |
+| v0.4.8 | PWA | manifest, service worker, offline; POSLEDNJA faza — asset lista je tada konačna; obavezno verzionisan keš + update mehanizam (v0.5 će menjati assete) + iOS Safari provera |
 
-Telefonska verifikacija obavezna za v0.4.2–v0.4.6 (tajmeri, vibracija,
-animacije). v0.4.4–v0.4.6 dobijaju sopstvene kratke spec-ove pre svojih faza
-(animacije stilska pravila; Napredak layout; zvučni dizajn) — ovaj dokument im
-fiksira obim i redosled.
+Telefonska verifikacija obavezna za v0.4.2–v0.4.8 (tajmeri, vibracija,
+animacije, offline). Kraj v0.4.8 = kraj Kruga B → testiranje uživo → v0.5
+(sadržaj v0.5 se planira POSLE nalaza testiranja).
 
 ## 9. Errata postojećih ugovora
 
@@ -304,4 +305,6 @@ Poker ruka (5 karata odjednom + poker kombinacije — jedini mod koji menja
 session ekran; dizajn skiciran u brainstormu 2026-07-15), combo množilac za
 uzastopno oborene karte, nedeljni izazovi + zarađivanje ❄️, leaderboard za
 Kartu dana (prirodan kandidat — svi igraju isti špil; traži server-side
-validaciju), predlog progresije, PWA, džokeri kao odmor.
+validaciju), novi jezici, prenos gost→nalog sesije, push podsetnici,
+deljenje rezultata. (Džokeri, progresija i PWA su povučeni u faze
+v0.4.4/v0.4.6/v0.4.8 — v. §8.)

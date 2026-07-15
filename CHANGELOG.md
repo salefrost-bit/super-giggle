@@ -2,7 +2,7 @@
 
 ## U pripremi — Igrivost
 
-Tri načina treninga (brzi, po meri sa slajderima, challenge), poeni i rekordi za svaki trening, XP sa kartaškim zvanjima, više vežbi po kategoriji, novi challenge modovi (Sprint, Dvor, Preživi špil, Karta dana), pa zatim animacije vežbi, redizajn Napretka i zvuk/vibracija.
+Tri načina treninga (brzi, po meri sa slajderima, challenge), poeni i rekordi za svaki trening, XP sa kartaškim zvanjima, više vežbi po kategoriji, novi challenge modovi (Sprint, Dvor, Preživi špil, Karta dana), pa zatim džokeri kao odmor, animacije vežbi, redizajn Napretka, zvuk/vibracija i instalacija na telefon (PWA).
 
 ## v0.3 — Pošteno vreme (2026-07-14) — ranije zvano: Krug A
 
