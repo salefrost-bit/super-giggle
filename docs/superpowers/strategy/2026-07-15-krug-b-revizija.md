@@ -43,7 +43,7 @@ Odluke koje su pale u brainstormu (izvor istine za buduće rasprave):
 | v0.4.1 | Temelj igrivosti | tri vrata, 24 vežbe + tier, balansirano izvlačenje, score/XP/zvanja/rekordi po modu, istorija sa detaljima, Ponovi poslednji |
 | v0.4.2 | Sprint i Dvor | dva nova challenge moda |
 | v0.4.3 | Preživi i Karta dana | dva nova challenge moda + dnevna petlja |
-| v0.4.4 | Džokeri | odmor kao karta, svi modovi (kratak sopstveni spec) |
+| v0.4.4 | Džokeri | odmor kao karta, svi modovi (kratak sopstveni spec) — ✅ Završen 2026-07-15 |
 | v0.4.5 | Animacije vežbi | pilot → stilska pravila → sve 24 (kratak sopstveni spec) |
 | v0.4.6 | Napredak | kalendar, grafikoni, XP/zvanja + predlog progresije (kratak sopstveni spec) |
 | v0.4.7 | Zvuk i ritam | zvuk + vibracija + score ritual (kratak sopstveni spec) |
