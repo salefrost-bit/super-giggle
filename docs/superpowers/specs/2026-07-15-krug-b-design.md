@@ -348,6 +348,22 @@ Constraint `total_cards in (13, 26, 52)` iz migracije 0001 zamenjuje se
 migracijom 0006 (v. §7) da propusti sve veličine iz §2.4 uz očuvanje starih
 redova. Ovo je drop+add constraint po presedanu migracije 0003 (As=1).
 
+### 9.4 Setup testovi i Exercise mock-ovi (menja postojeće testove —
+eksplicitna errata)
+Redizajn koraka 0 (§2) i tier polja (§5) neizbežno diraju postojeće testove,
+i SAMO u ovom obimu je to autorizovano:
+1. `SetupScreen.test.tsx`: test starog toka mode→difficulty→exercises→length
+   se prepisuje kao Quick odn. Custom staza (stari tok više ne postoji);
+   perfect_deck test dobija prefiks entry→challenge-menu.
+2. `ModeSelector.test.tsx`: komponenta dobija `modes` prop (registar raste sa
+   novim modovima); test se parametrizuje eksplicitnom listom umesto oslanjanja
+   na veličinu registra.
+3. Mock `Exercise` objekti u postojećim testovima (`ExercisePicker.test.tsx`,
+   `SetupScreen.test.tsx`, `SessionScreen.test.tsx`, `sessions.test.ts`,
+   `queries.test.ts`) se DOPUNJUJU novim obaveznim poljima `tier`/`isDefault`
+   (i `tier`/`is_default` u mock redovima baze), a očekivani objekti u
+   `queries.test.ts` proširuju za nova polja — bez izmene ponašajnih asserta.
+
 Nijedan drugi postojeći test niti postojeća kolona se ne menja.
 
 ## 10. Testiranje
