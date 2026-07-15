@@ -13,6 +13,8 @@ import type { AppLocale } from '@/i18n/LocaleProvider';
 
 interface LandingScreenProps {
   user: User | null;
+  dailyDone?: boolean;
+  onStartDaily?: () => void;
   onStartWorkout: () => void;
   onRepeatLast?: () => void;
   onShowHistory: () => void;
@@ -21,6 +23,8 @@ interface LandingScreenProps {
 
 export function LandingScreen({
   user,
+  dailyDone = false,
+  onStartDaily,
   onStartWorkout,
   onRepeatLast,
   onShowHistory,
@@ -67,6 +71,14 @@ export function LandingScreen({
         </div>
       </div>
       <div className="flex flex-col gap-3.5">
+        {onStartDaily && (
+          <button
+            onClick={onStartDaily}
+            className="text-center text-accent font-extrabold"
+          >
+            {dailyDone ? t('landing.dailyDone') : t('landing.dailyPending')}
+          </button>
+        )}
         {user ? (
           <>
             {streak !== null && streak.days > 0 && (

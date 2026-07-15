@@ -42,6 +42,53 @@ describe('LandingScreen language menu', () => {
   });
 });
 
+describe('LandingScreen daily chip', () => {
+  it('prikazuje ✓ čip kad je dailyDone', () => {
+    renderWithLocaleSpy(
+      <LandingScreen
+        user={null}
+        dailyDone
+        onStartDaily={() => {}}
+        onStartWorkout={() => {}}
+        onShowHistory={() => {}}
+        onSignOut={() => {}}
+      />
+    );
+    expect(screen.getByRole('button', { name: '🎴 ✓' })).toBeInTheDocument();
+  });
+
+  it('prikazuje pending čip bez današnje sesije', () => {
+    renderWithLocaleSpy(
+      <LandingScreen
+        user={null}
+        dailyDone={false}
+        onStartDaily={() => {}}
+        onStartWorkout={() => {}}
+        onShowHistory={() => {}}
+        onSignOut={() => {}}
+      />
+    );
+    expect(screen.getByRole('button', { name: '🎴 Karta dana' })).toBeInTheDocument();
+  });
+
+  it('tap poziva onStartDaily', async () => {
+    const user = userEvent.setup();
+    const onStartDaily = vi.fn();
+    renderWithLocaleSpy(
+      <LandingScreen
+        user={null}
+        dailyDone={false}
+        onStartDaily={onStartDaily}
+        onStartWorkout={() => {}}
+        onShowHistory={() => {}}
+        onSignOut={() => {}}
+      />
+    );
+    await user.click(screen.getByRole('button', { name: '🎴 Karta dana' }));
+    expect(onStartDaily).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('LandingScreen repeat last', () => {
   it('prikazuje dugme kad je onRepeatLast prosleđen', () => {
     renderWithLocaleSpy(
