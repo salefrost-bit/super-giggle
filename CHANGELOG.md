@@ -1,8 +1,8 @@
 # Šta je novo u ŠPIL-u
 
-## U pripremi — Vežbe i napredak
+## U pripremi — Igrivost
 
-Više vežbi po kategoriji, animacije vežbi, kalendar i grafikoni napretka, zvuk i vibracija.
+Tri načina treninga (brzi, po meri sa slajderima, challenge), poeni i rekordi za svaki trening, XP sa kartaškim zvanjima, više vežbi po kategoriji, novi challenge modovi (Sprint, Dvor, Preživi špil, Karta dana), pa zatim animacije vežbi, redizajn Napretka i zvuk/vibracija.
 
 ## v0.3 — Pošteno vreme (2026-07-14) — ranije zvano: Krug A
 

@@ -16,7 +16,8 @@ Ne čita se cela istorija — strategija + poslednji dokumenti su dovoljni.
 
 | Dokument | Jedna rečenica | Status |
 |---|---|---|
-| `strategy/2026-07-13-strategija-nastavka.md` | Klasifikacija nalaza ručnog testiranja u krugove A (jasnoća), B (sadržaj/Napredak), C (slajder/modovi/PWA) + backlog i principi. | **AKTUELAN — izvor istine** |
+| `strategy/2026-07-13-strategija-nastavka.md` | Klasifikacija nalaza ručnog testiranja u krugove A (jasnoća), B (sadržaj/Napredak), C (slajder/modovi/PWA) + backlog i principi. | **AKTUELAN** — krugovi B/C revidirani aneksom 2026-07-15 |
+| `strategy/2026-07-15-krug-b-revizija.md` | Krug B postaje "Igrivost": tri vrata, score/XP, pet challenge modova; Sprint/Preživi/slajder povučeni iz C u B. | **AKTUELAN — izvor istine za Krugove B i C** |
 
 ## Spec-ovi
 
@@ -27,6 +28,7 @@ Ne čita se cela istorija — strategija + poslednji dokumenti su dovoljni.
 | `specs/2026-07-09-gamification-phase2-design.md` | Perfektan špil, registar modova, rekordi, streak, Napredak, i18n SR/EN. | Završen (implementiran) |
 | `specs/2026-07-10-phase3-brainstorm-notes.md` | Brainstorm beleške za Fazu 3 (fiksan špil, Preživi špil, Sprint, džokeri). | **SUPERSEDED** strategijom od 2026-07-13 |
 | `specs/2026-07-13-krug-a-design.md` | Krug A: Wake Lock, auto-pauza, zbir pauza, objašnjenja modova/streaka, meni jezika. | Završen (implementiran) |
+| `specs/2026-07-15-krug-b-design.md` | Krug B "Igrivost": tri vrata (Quick/Custom/Challenge), score/XP/zvanja, 24 vežbe + tier, 5 challenge modova, isporuka v0.4.1–v0.4.6. | **Na reviziji** |
 | `specs/assets/` | HTML prototipovi (Claude Design) za redizajn i gamifikaciju + istorijski SQL nacrt (`phase2_gamification.sql`, superseded). | Istorijska referenca |
 
 ## Planovi
