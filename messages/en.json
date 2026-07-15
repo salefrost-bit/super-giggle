@@ -175,5 +175,11 @@
   },
   "language": {
     "label": "Language"
+  },
+  "jokers": {
+    "title": "🃏 Joker",
+    "restLabel": "REST",
+    "restCaption": "Breathe. Next card comes automatically.",
+    "explanation": "Draw a joker and you get 30 seconds of rest instead of an exercise — it moves on to the next card automatically. It never costs your per-card time or budget — rest is always free."
   }
 }

@@ -175,5 +175,11 @@
   },
   "language": {
     "label": "Jezik"
+  },
+  "jokers": {
+    "title": "🃏 Džoker",
+    "restLabel": "ODMOR",
+    "restCaption": "Diši. Sledeća karta stiže automatski.",
+    "explanation": "Ako izvučeš džoker, dobijaš 30 sekundi odmora umesto vežbe — automatski se nastavlja na sledeću kartu. Ne brine se tvoje vreme po karti niti budžet — odmor je uvek besplatan."
   }
 }
