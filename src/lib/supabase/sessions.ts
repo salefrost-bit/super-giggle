@@ -18,7 +18,7 @@ export interface CreateSessionParams {
   categoryIdByKey: Record<CategoryKey, string>;
   startedAtIso: string;
   gameMode?: GameMode;
-  settings?: ChallengeSettings;
+  settings?: SessionSettings | ChallengeSettings;
 }
 
 export async function createSession(params: CreateSessionParams): Promise<string> {

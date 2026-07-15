@@ -126,6 +126,34 @@ export async function getCompletedSessionDates(userId: string): Promise<string[]
   return (data as Array<{ completed_at: string }>).map((r) => r.completed_at);
 }
 
+export async function getBestPoints(
+  userId: string,
+  gameMode: string,
+  dimension: { cardCount?: number; sprintMinutes?: number }
+): Promise<number | null> {
+  const supabase = createClient();
+  let query = supabase
+    .from('sessions')
+    .select('settings')
+    .eq('user_id', userId)
+    .eq('game_mode', gameMode)
+    .eq('status', 'completed');
+
+  if (dimension.cardCount != null) {
+    query = query.eq('total_cards', dimension.cardCount);
+  }
+  if (dimension.sprintMinutes != null) {
+    query = query.filter('settings->>sprint_minutes', 'eq', String(dimension.sprintMinutes));
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  const points = (data as Array<{ settings: { points?: number } | null }>)
+    .map((row) => row.settings?.points)
+    .filter((p): p is number => typeof p === 'number');
+  return points.length > 0 ? Math.max(...points) : null;
+}
+
 export async function getTotalXp(userId: string): Promise<number> {
   const supabase = createClient();
   const { data, error } = await supabase
