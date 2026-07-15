@@ -1,7 +1,8 @@
 # Krug B — "Igrivost" — design spec
 
 Datum: 2026-07-15
-Status: Na reviziji (nezavisna revizija sledi pre plana)
+Status: Revidiran — nalazi nezavisne revizije (N1–N13, svež kontekst,
+2026-07-15) primenjeni; čeka potvrdu korisnika pre plana
 Nastao iz: brainstorm sesije 2026-07-15 (tri vrata, score sistem, challenge modovi)
 Zamenjuje obim Kruga B iz `strategy/2026-07-13-strategija-nastavka.md` — v. aneks
 `strategy/2026-07-15-krug-b-revizija.md`.
@@ -59,7 +60,9 @@ celog špila. Važi za sve modove; zato su sve veličine špila deljive sa 4
 Dugme na landing ekranu (ispod "Novi trening") koje ponavlja poslednju
 konfiguraciju (tip ulaza + svi parametri + vežbe). Konfiguracija se čuva u
 `localStorage` (radi i za gosta); dugme se ne prikazuje dok ne postoji bar
-jedna završena sesija na uređaju.
+jedna završena sesija na uređaju. Sačuvana konfiguracija se validira pri
+učitavanju (vežbe postoje, veličina špila važeća po §2.4) — nevažeća
+konfiguracija sakriva dugme (štiti od zastarelih 13/26 zapisa posle errate).
 
 ## 3. Score sistem
 
@@ -81,32 +84,42 @@ tierFaktor: tier 1 = 1.0, tier 2 = 1.5, tier 3 = 2.0
 | Preživi špil | ×1.5 ako se pređe svih 52 karte, inače ×1 |
 | Karta dana | ×(1 + oborene/ukupno) |
 
-`score = round(baza × množilac)`.
+`points = round(baza × množilac)`. (Termin "points" je namerno različit od
+postojećeg `settings.score` koji za Perfektan špil znači BROJ OBORENIH karata
+— v. §3.5 i N2 revizije.)
 
-### 3.3 Rekordi — po modu
-- Najbolji score po `game_mode`; za Sprint posebno po trajanju (3/5/10).
-- Postojeći rekordi Perfektnog špila (najbolje vreme + najbolji skor oborenih
-  po kombinaciji težina×dužina) OSTAJU — score rekord se dodaje pored njih.
-- Ekran Napredak prikazuje score rekorde po modu; postojeće vremenske rekorde
-  zadržava u sekciji Perfektnog špila.
+### 3.3 Rekordi — dimenzije po modu
+Score rekord nije jedan broj po modu — definisane dimenzije (da rekord ne bi
+prosto značio "najduža odigrana sesija"):
+- **Quick/Custom (classic):** najbolji points po broju karata (`card_count`).
+- **Perfektan špil:** najbolji points po dužini špila (12/24/52).
+- **Sprint:** po trajanju (3/5/10 min) — tri odvojene kategorije rekorda.
+- **Dvor / Preživi / Karta dana:** jedna kategorija po modu (špil je fiksan).
+- Postojeći rekordi (najbolje vreme po kombinaciji težina×dužina — računa se
+  iz svih sesija bez obzira na mod, i najbolji skor oborenih za Perfektan
+  špil) OSTAJU neizmenjeni — points rekordi se dodaju pored njih.
 
 ### 3.4 XP i zvanja
-- **XP = Σ score svih sačuvanih sesija.** Izvodi se upitom, bez nove tabele i
-  bez kolone-brojača (izvedena vrednost, uvek konzistentna).
+- **XP = Σ points svih ZAVRŠENIH sesija** (`status = 'completed'`; napuštene
+  se ne broje). Izvedena vrednost — bez nove tabele i bez kolone-brojača.
 - Zvanja su univerzalni kartaški SIMBOLI (bez reči, bez prevoda): prag u XP →
   simbol: 0 → `2`, 5.000 → `J`, 15.000 → `Q`, 40.000 → `K`, 100.000 → `A`,
-  250.000 → `🃏`. (Baždareno na ~500 poena po treningu: J posle ~10 treninga,
-  Q posle ~mesec redovnog treniranja.)
+  250.000 → `🃏`. (Baždareno na ~350 poena po prosečnom treningu: J posle
+  ~2 nedelje redovnog treniranja, Q posle ~1.5 meseca.)
 - Prikaz: simbol + XP broj na Napretku; prelazak praga = proslava na ekranu
   rezultata (konfeti mehanizam već postoji). Info modal objašnjava pragove.
 
 ### 3.5 Čuvanje i retroaktivnost
-- `score` se upisuje u `sessions.settings` JSONB pri čuvanju (brz prikaz
-  istorije).
-- Za sesije BEZ upisanog score-a (sve postojeće) score se izračunava na
-  klijentu iz već sačuvanog (`card_draws.reps` + tier vežbe preko
-  `session_exercises`) — ista čista funkcija, drugi ulaz. Istorija time
-  retroaktivno oživi.
+- **Ključevi u `sessions.settings`: `points`, `base_points`, `multiplier`.**
+  Postojeći ključ `score` (= broj oborenih karata u challenge modovima)
+  OSTAJE sa nepromenjenom semantikom — koriste ga postojeći rekordi, prikaz
+  "X/Y" i testovi-ugovor. Nikakva kolizija.
+- Za sesije BEZ upisanog `points` (sve postojeće) radi se **lazy backfill**:
+  pri prvom učitavanju istorije klijent izračuna points iz već sačuvanog
+  (`card_draws.reps` + tier vežbe preko `session_exercises`) istom čistom
+  funkcijom i JEDNOM ga upiše u `settings` te sesije (samo ulogovan korisnik,
+  svoje sesije). Posle backfill-a su XP i lista istorije čisti upiti, bez
+  ponovnog računanja.
 - Score funkcije žive u `src/lib/domain/score.ts` kao čiste funkcije sa unit
   testovima. Tier faktori, množioci i XP pragovi su konstante DOMENSKE LOGIKE
   (formula igre), ne podaci u bazi — svesno odstupanje obrazloženo ovde:
@@ -122,7 +135,12 @@ tierFaktor: tier 1 = 1.0, tier 2 = 1.5, tier 3 = 2.0
 ## 4. Challenge modovi — pravila
 
 Svi novi modovi = novi unosi u `src/lib/modes/registry.ts` + prevodi + prvi-put
-objašnjenje. Ekran koraka 0 se ne menja (invarijanta 5). Svi tajmeri i banke
+objašnjenje. Korak 0 se redizajnira JEDNOM u ovom krugu (tri vrata, §2);
+Challenge meni renderuje kartice iz registra filtriranog po `isChallenge`,
+pa dodavanje modova od tada nadalje NE dira ekran — invarijanta 5 važi u tom
+obliku. Postojeći `classic` unos registra dele Quick i Custom (obe staze
+prave sesije sa `game_mode: 'classic'`; ulaz se beleži u `settings.entry`).
+Svi tajmeri i banke
 su timestamp/deadline aritmetika (invarijanta 1); auto-pauza i Wake Lock iz
 Kruga A važe automatski jer sesija ide kroz isti SessionScreen.
 
@@ -136,35 +154,52 @@ Dobija samo score sloj (§3.2) i seli se u Challenge meni.
   špil (52, balansiran) potroši — remeša se i nastavlja.
 - Kraj: istek vremena zatvara sesiju posle tekuće karte (karta započeta pre
   isteka se računa ako se završi).
-- Rekordi po trajanju (3/5/10 su tri odvojene tabele rekorda).
+- Rekordi po trajanju (3/5/10 = tri odvojene kategorije rekorda, v. §3.3).
+- Upis u bazu: `difficulty_level_id` = Srednji (multiplikator 1.0 se poklapa
+  sa default-om), `total_cards` = 52 fiksno (jedan prolaz špila; NOT NULL
+  kolona traži vrednost na startu), stvaran broj završenih karata u
+  `settings.cards_completed`.
 
 ### 4.3 👑 Dvor
 - Špil: 16 karata — J, Q, K, A u sve 4 boje (4 po boji — balansirano).
-- Mehanika: identična Perfektnom špilu (rok po karti iz istog par računa).
+- Mehanika: rok po karti kao Perfektan špil, ali budžet je UVEK čist par
+  (bez stezanja na rekord×1.05 iz `resolveBudget` — Dvor je ponovljiv "boss
+  fight" sa stabilnim pravilima; napredak se meri points rekordom).
 - Setup: težina (za par sekunde/rep) + vežbe; bez izbora dužine.
 - Score: ×(1 + oborene/ukupno) × 1.25.
 
 ### 4.4 🛡 Preživi špil
 - Špil: ceo (52, balansiran).
 - Banka vremena: start **90 s**. Završetak karte DODAJE banci kvotu te karte
-  (isti par račun kao Perfektan špil); od banke se oduzima stvarno proteklo
-  vreme karte. Saldo se menja samo na klik "sledeća karta" (timestamp
-  aritmetika, bez tick-a); UI prikazuje procenu salda izvedenu iz timestampova.
-- Kraj: banka ≤ 0 posle klika → sesija se završava; score = baza do tog
-  trenutka. Svih 52 → ×1.5.
+  (čist par račun, kao Dvor); od banke se oduzima proteklo AKTIVNO vreme
+  karte — pauza (i auto-pauza iz Kruga A) pomera timestampove i NE troši
+  banku (isti model poverenja kao postojeća kvota Perfektnog špila). Saldo
+  se menja samo na klik "sledeća karta" (timestamp aritmetika, bez tick-a);
+  UI prikazuje procenu salda izvedenu iz timestampova.
+- Kraj: banka ≤ 0 posle klika → sesija se završava; points = baza do tog
+  trenutka. Završena 52. karta = pređen špil → ×1.5, BEZ OBZIRA na saldo
+  posle nje (kraj se proverava tek za sledeću kartu, koje nema).
 - Setup: težina + vežbe.
 
 ### 4.5 🎴 Karta dana
 - Špil: 20 karata (5 po kategoriji), determinističi izvučen iz seed-a =
-  lokalni datum (`YYYY-MM-DD`) — isti za sve korisnike tog dana, radi offline.
+  lokalni datum (`YYYY-MM-DD`) — isti za sve korisnike tog dana unutar iste
+  vremenske zone (svesno prihvaćeno; bitno tek uz budući leaderboard), radi
+  offline. `daily_date` se fiksira na lokalni datum STARTA sesije — ponoć
+  tokom treninga ne menja ništa.
 - Tier dana rotira po danu u nedelji: pon/čet = tier 1, uto/pet = tier 2,
   sre/sub = tier 3, ned = tier 2. Vežbe = defaulti tog tiera — BEZ izbora
   (u tome je poenta: svi rade isto).
-- Mehanika: rok po karti kao Perfektan špil (par za tier dana koristi
-  odgovarajući difficulty red: tier 1→Početnik, 2→Srednji, 3→Napredni).
-- Jednom dnevno se računa (za streak čip i rekord); ponovno igranje istog dana
-  je dozvoljeno ali se score ne upisuje kao "karta dana" drugi put — čuva se
-  kao običan challenge pokušaj bez dnevne oznake.
+- Mehanika: rok po karti kao Perfektan špil, ali UVEK čist par bez stezanja
+  na rekord (poenta "svi rade isto" ne trpi personalizovan budžet); par za
+  tier dana koristi odgovarajući difficulty red: tier 1→Početnik, 2→Srednji,
+  3→Napredni.
+- Prvi pokušaj dana upisuje `daily_date`; ponovno igranje istog dana upisuje
+  `daily_replay: true` i BEZ `daily_date`. Čip i rekord Karte dana ključaju
+  po prisustvu `daily_date`. Replay ULAZI u XP (svesno: XP meri uložen trud,
+  ne fer poređenje — za poređenja služe rekordi).
+- Nema posebnog dnevnog streak-a — postojeći streak već broji svaku završenu
+  sesiju; čip na landingu je samo status današnje Karte dana.
 - Landing čip: "🎴 ✓" (danas odigrano) / "🎴 –", pored streak plamena; tap
   vodi pravo u mod. Stanje za gosta u `localStorage`, za korisnika iz baze.
 
@@ -212,7 +247,7 @@ multiplikator/par. Tier postojećih 12 se izvodi iz dosadašnjeg nivoa.
 | Core | 1 | Mrtva buba | Dead bugs | |
 | Core | 2 | Standardni trbušnjaci | Sit-ups | ✓ |
 | Core | 2 | Planinari | Mountain climbers | |
-| Core | 3 | Nožne makaze | Leg scissors | ✓ |
+| Core | 3 | Nožne makaze | Scissor kicks | ✓ |
 | Core | 3 | V-podizanja | V-ups | |
 
 Sve vežbe su rep-based (bez vežbi na vreme — plank i sl. ne staju u model
@@ -229,15 +264,32 @@ karta=ponavljanja). Nazivi se koriguju u reviziji spec-a po potrebi.
 
 ## 7. Podaci i arhitektura
 
-- **Migracija 0005 (aditivna):** `alter table exercises add column tier`,
-  `add column is_default`; backfill tier-a za postojećih 12 iz njihovog
-  nivoa; insert 12 novih vežbi (sa `name_en`); constraint provere u testu
-  seed-a nisu potrebne (podatak, ne kod).
+- **Migracija 0005 (exercises):** izvršiv redosled: (1) `add column tier
+  smallint` NULLABLE + `add column is_default boolean not null default
+  false`; (2) backfill tier-a za postojećih 12 po pravilu ime nivoa →
+  Početnik=1, Srednji=2, Napredni=3; (3) `alter column tier set not null`;
+  (4) `update … set is_default = true` za postojećih 12; (5) insert 12
+  novih vežbi (sa `name_en` i `difficulty_level_id` po mapiranju
+  tier 1→Početnik, 2→Srednji, 3→Napredni — kolona je NOT NULL i ostaje).
+- **Migracija 0006 (sessions.total_cards check — errata §9.3):** postojeći
+  `check (total_cards in (13, 26, 52))` iz 0001 obara SVE nove veličine
+  špila. Drop + novi check:
+  `total_cards in (13, 26) or (total_cards between 12 and 52 and
+  total_cards % 4 = 0)` — propušta stare redove (13/26) i sve nove veličine.
+  Presedan za drop+add constraint uz erratu: migracija 0003.
 - **`sessions`:** bez novih kolona. Novi `game_mode` stringovi: `sprint`,
   `court`, `survive`, `daily`. Mod-parametri u `settings` JSONB:
-  `score`, `base_score`, `multiplier`, `rep_multiplier`, `card_count`,
-  `sprint_minutes`, `bank_start_seconds`, `survived_cards`, `daily_date`,
-  `entry` (`quick`/`custom`/`challenge`).
+  `points`, `base_points`, `multiplier`, `rep_multiplier`, `card_count`,
+  `cards_completed`, `sprint_minutes`, `bank_start_seconds`,
+  `survived_cards`, `daily_date`, `daily_replay`, `entry`
+  (`quick`/`custom`/`challenge`). Postojeći ključevi (`score` = oborene
+  karte, `pause_count`, `total_pause_seconds`…) nepromenjeni. Rekordi po
+  dimenzijama iz §3.3 filtriraju po JSONB ključevima
+  (`settings->>'sprint_minutes'`, `settings->>'daily_date'`) — SVESNA
+  odluka: bez novih kolona (invarijanta 8); kolona se uvodi tek ako
+  leaderboard (backlog) zatraži indeksiran upit.
+- **Novi upit:** `fetchAllExercises()` (sve vežbe, sa tier-om) za Custom
+  picker; postojeći `fetchExercisesByDifficulty` ostaje za Quick.
 - **Domen:** `score.ts` (baza, množioci, XP, zvanja — čiste funkcije),
   `deck.ts` proširen balansiranim izvlačenjem i konstruktorima specijalnih
   špilova (Dvor, Karta dana sa seed-om), `bank.ts` (Preživi banka, timestamp
@@ -275,7 +327,10 @@ animacije, offline). Kraj v0.4.8 = kraj Kruga B → testiranje uživo → v0.5
 
 ### 9.1 Veličine špila (menja postojeće testove — eksplicitna errata)
 Dužine 13/26 postaju 12/24 (deljivost sa 4 za balansirano izvlačenje; 52
-ostaje). `DeckSize` tip 13|26|52 → 12|24|52. Postojeći testovi `deck.test.ts`
+ostaje). Tip `DeckSize` (13|26|52) postaje `number` validiran pravilom §2.4
+(12–52, deljiv sa 4) — union od tri literala ne može da predstavi Custom
+(12–52 po 4), Dvor (16) i Kartu dana (20); Quick selektor nudi 12/24/52 kao
+svoje tri opcije nad istim tipom. Postojeći testovi `deck.test.ts`
 i svi asserti vezani za 13/26 se ažuriraju po ovoj erratI. i18n ključevi
 `quarterSub`/`halfSub` menjaju brojeve ("12 karata · ~10 min",
 "24 karte · ~20 min"), a etikete `quarterLabel`/`halfLabel` ("¼ špila",
@@ -287,13 +342,20 @@ Dosadašnje slučajno izvlačenje bez garancije po boji zamenjuje se pravilom
 N/4 po boji (§2.4). Testovi koji su asertovali čistu slučajnost se ažuriraju;
 novi testovi asertuju balans i slučajnost redosleda.
 
-Nijedan drugi postojeći test se ne menja.
+### 9.3 `sessions.total_cards` CHECK constraint (menja postojeću šemu —
+eksplicitna errata)
+Constraint `total_cards in (13, 26, 52)` iz migracije 0001 zamenjuje se
+migracijom 0006 (v. §7) da propusti sve veličine iz §2.4 uz očuvanje starih
+redova. Ovo je drop+add constraint po presedanu migracije 0003 (As=1).
+
+Nijedan drugi postojeći test niti postojeća kolona se ne menja.
 
 ## 10. Testiranje
 
-- Unit: score (baza/množioci/XP/zvanja pragovi), balansirano izvlačenje,
+- Unit: points (baza/množioci/XP/zvanja pragovi), balansirano izvlačenje,
   seed-ovani špil Karte dana (isti datum → isti špil), Dvor konstruktor,
-  banka vremena (uklj. pauzu), retroaktivni score.
+  banka vremena (uklj. pauzu i ivicu 52. karte), retroaktivni lazy backfill
+  (uklj. da NE dira postojeći ključ `score`).
 - Komponente: tri vrata navigacija, Custom slajderi (koraci, granice),
   Challenge meni iz registra, istorija detalji, landing čip.
 - Ručno na telefonu: Sprint countdown u pozadini (auto-pauza), Preživi banka
