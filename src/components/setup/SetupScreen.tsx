@@ -2,11 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { EntrySelector } from './EntrySelector';
 import { ModeSelector } from './ModeSelector';
 import { DifficultySelector } from './DifficultySelector';
 import { ExercisePicker } from './ExercisePicker';
 import { SessionLengthSelector } from './SessionLengthSelector';
-import { fetchCategories, fetchExercisesByDifficulty } from '@/lib/supabase/queries';
+import {
+  fetchCategories,
+  fetchExercisesByDifficulty,
+  categoryKeyForName,
+} from '@/lib/supabase/queries';
+import { MODES } from '@/lib/modes/registry';
 import { drawSessionCards } from '@/lib/domain/deck';
 import { calculateReps } from '@/lib/domain/reps';
 import { calculateParSeconds, resolveBudget } from '@/lib/domain/challenge';
@@ -21,11 +27,53 @@ import type {
   CardDrawResult,
   SessionConfig,
   GameMode,
+  EntryPath,
 } from '@/lib/domain/types';
 
-type Step = 'mode' | 'difficulty' | 'exercises' | 'length';
+type Step =
+  | 'entry'
+  | 'quick-difficulty'
+  | 'quick-length'
+  | 'custom-exercises'
+  | 'custom-sliders'
+  | 'challenge-menu'
+  | 'mode-difficulty'
+  | 'mode-exercises'
+  | 'mode-length';
 
-const STEP_NUMBER: Record<Step, number> = { mode: 1, difficulty: 2, exercises: 3, length: 4 };
+function pickDefaults(exercises: Exercise[], categories: Category[]): Record<CategoryKey, Exercise> {
+  const result = {} as Record<CategoryKey, Exercise>;
+  for (const category of categories) {
+    const key = categoryKeyForName(category.name);
+    const def = exercises.find((e) => e.categoryId === category.id && e.isDefault);
+    if (!def) throw new Error(`No default exercise for category ${category.name}`);
+    result[key] = def;
+  }
+  return result;
+}
+
+function stepNumberFor(step: Step): number {
+  const map: Record<Step, number> = {
+    entry: 1,
+    'quick-difficulty': 2,
+    'quick-length': 3,
+    'custom-exercises': 2,
+    'custom-sliders': 2,
+    'challenge-menu': 2,
+    'mode-difficulty': 3,
+    'mode-exercises': 4,
+    'mode-length': 5,
+  };
+  return map[step];
+}
+
+function totalStepsFor(step: Step, entry: EntryPath | null): number {
+  if (step === 'entry') return 3;
+  if (entry === 'quick') return 3;
+  if (entry === 'custom') return 2;
+  if (entry === 'challenge') return 5;
+  return 3;
+}
 
 interface SetupScreenProps {
   onStart: (config: SessionConfig, draws: CardDrawResult[]) => void;
@@ -35,7 +83,8 @@ interface SetupScreenProps {
 
 export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
   const t = useTranslations();
-  const [step, setStep] = useState<Step>('mode');
+  const [step, setStep] = useState<Step>('entry');
+  const [entry, setEntry] = useState<EntryPath | null>(null);
   const [gameMode, setGameMode] = useState<GameMode>('classic');
   const [difficulty, setDifficulty] = useState<DifficultyLevel | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -49,21 +98,36 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
     fetchCategories().then(setCategories);
   }, []);
 
-  async function handleDifficultySelect(level: DifficultyLevel) {
+  function handleEntrySelect(path: EntryPath) {
+    setEntry(path);
+    if (path === 'quick') setStep('quick-difficulty');
+    else if (path === 'custom') setStep('custom-exercises');
+    else setStep('challenge-menu');
+  }
+
+  async function handleQuickDifficultySelect(level: DifficultyLevel) {
+    setDifficulty(level);
+    const fetchedExercises = await fetchExercisesByDifficulty(level.id);
+    setExerciseByCategory(pickDefaults(fetchedExercises, categories));
+    setStep('quick-length');
+  }
+
+  async function handleModeDifficultySelect(level: DifficultyLevel) {
     setDifficulty(level);
     const fetchedExercises = await fetchExercisesByDifficulty(level.id);
     setExercises(fetchedExercises);
-    setStep('exercises');
+    setStep('mode-exercises');
   }
 
   function handleExercisesComplete(selection: Record<CategoryKey, Exercise>) {
     setExerciseByCategory(selection);
-    setStep('length');
+    setStep('mode-length');
   }
 
   async function handleLengthSelect(deckSize: DeckSize) {
-    if (!difficulty || !exerciseByCategory) return;
+    if (!difficulty || !exerciseByCategory || !entry) return;
     const cards = drawSessionCards(deckSize);
+    const mode = entry === 'quick' ? 'classic' : gameMode;
     const draws: CardDrawResult[] = cards.map((card, index) => {
       const categoryKey = SUIT_TO_CATEGORY[card.suit];
       return {
@@ -73,7 +137,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
         exercise: exerciseByCategory[categoryKey],
         reps: calculateReps(card, difficulty.defaultRepMultiplier),
         completedAt: null,
-        beatQuota: gameMode === 'perfect_deck' ? null : undefined,
+        beatQuota: mode === 'perfect_deck' ? null : undefined,
       };
     });
 
@@ -82,10 +146,11 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
       repMultiplier: difficulty.defaultRepMultiplier,
       deckSize,
       exerciseByCategory,
-      gameMode,
+      entry,
+      gameMode: mode,
     };
 
-    if (gameMode === 'perfect_deck') {
+    if (mode === 'perfect_deck') {
       const totalReps = draws.reduce((sum, d) => sum + d.reps, 0);
       const par = calculateParSeconds(totalReps, deckSize, difficulty);
       let record: number | null = null;
@@ -112,13 +177,37 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
   }
 
   function handleBack() {
-    if (step === 'length') setStep('exercises');
-    else if (step === 'exercises') setStep('difficulty');
-    else if (step === 'difficulty') setStep('mode');
-    else onBack?.();
+    switch (step) {
+      case 'entry':
+        onBack?.();
+        break;
+      case 'quick-difficulty':
+        setStep('entry');
+        break;
+      case 'quick-length':
+        setStep('quick-difficulty');
+        break;
+      case 'custom-exercises':
+      case 'custom-sliders':
+        setStep('entry');
+        break;
+      case 'challenge-menu':
+        setStep('entry');
+        break;
+      case 'mode-difficulty':
+        setStep('challenge-menu');
+        break;
+      case 'mode-exercises':
+        setStep('mode-difficulty');
+        break;
+      case 'mode-length':
+        setStep('mode-exercises');
+        break;
+    }
   }
 
-  const stepNumber = STEP_NUMBER[step];
+  const stepNumber = stepNumberFor(step);
+  const totalSteps = totalStepsFor(step, entry);
 
   return (
     <div className="min-h-screen flex flex-col px-6 pt-6 pb-8">
@@ -130,33 +219,43 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
         >
           ←
         </button>
-        <div className="text-sm font-bold text-muted">{t('setup.step', { current: stepNumber, total: 4 })}</div>
+        <div className="text-sm font-bold text-muted">
+          {t('setup.step', { current: stepNumber, total: totalSteps })}
+        </div>
       </div>
       <div className="flex gap-1.5 mt-3.5 mb-7">
-        {[1, 2, 3, 4].map((n) => (
+        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((n) => (
           <div
             key={n}
             className={`flex-1 h-[5px] rounded-[3px] ${n <= stepNumber ? 'bg-accent' : 'bg-surface'}`}
           />
         ))}
       </div>
-      {step === 'mode' && (
+      {step === 'entry' && <EntrySelector onSelect={handleEntrySelect} />}
+      {step === 'quick-difficulty' && (
+        <DifficultySelector onSelect={handleQuickDifficultySelect} />
+      )}
+      {step === 'quick-length' && <SessionLengthSelector onSelect={handleLengthSelect} />}
+      {step === 'challenge-menu' && (
         <ModeSelector
+          modes={MODES.filter((m) => m.isChallenge)}
           onSelect={(m) => {
             setGameMode(m);
-            setStep('difficulty');
+            setStep('mode-difficulty');
           }}
         />
       )}
-      {step === 'difficulty' && <DifficultySelector onSelect={handleDifficultySelect} />}
-      {step === 'exercises' && (
+      {step === 'mode-difficulty' && (
+        <DifficultySelector onSelect={handleModeDifficultySelect} />
+      )}
+      {step === 'mode-exercises' && (
         <ExercisePicker
           categories={categories}
           exercises={exercises}
           onComplete={handleExercisesComplete}
         />
       )}
-      {step === 'length' && <SessionLengthSelector onSelect={handleLengthSelect} />}
+      {step === 'mode-length' && <SessionLengthSelector onSelect={handleLengthSelect} />}
     </div>
   );
 }

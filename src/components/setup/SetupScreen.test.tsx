@@ -43,7 +43,7 @@ const exercises: Exercise[] = [
 ];
 
 describe('SetupScreen', () => {
-  it('walks through difficulty, exercise, and length steps then calls onStart with a full deck', async () => {
+  it('quick staza preskače izbor vežbi i startuje sa default vežbama', async () => {
     vi.mocked(fetchCategories).mockResolvedValue(categories);
     vi.mocked(fetchDifficultyLevels).mockResolvedValue(difficultyLevels);
     vi.mocked(fetchExercisesByDifficulty).mockResolvedValue(exercises);
@@ -52,12 +52,9 @@ describe('SetupScreen', () => {
 
     renderWithIntl(<SetupScreen onStart={onStart} />);
 
-    await user.click(await screen.findByRole('button', { name: /Klasično/ }));
+    await user.click(await screen.findByText(/Brzi trening/));
     await user.click(await screen.findByRole('button', { name: 'Srednji' }));
-    await user.click(await screen.findByRole('button', { name: 'Sklekovi' }));
-    await user.click(screen.getByRole('button', { name: 'Zgibovi' }));
-    await user.click(screen.getByRole('button', { name: 'Čučnjevi' }));
-    await user.click(screen.getByRole('button', { name: 'Trbušnjaci' }));
+    expect(screen.queryByText(/Izaberi vežbu/)).not.toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: 'Ceo špil (52 karte)' }));
 
     expect(onStart).toHaveBeenCalledTimes(1);
@@ -65,8 +62,26 @@ describe('SetupScreen', () => {
     expect(config.deckSize).toBe(52);
     expect(config.repMultiplier).toBe(1);
     expect(config.gameMode).toBe('classic');
+    expect(config.entry).toBe('quick');
+    expect(config.exerciseByCategory).toEqual({
+      push: exercises[0],
+      pull: exercises[1],
+      legs: exercises[2],
+      core: exercises[3],
+    });
     expect(draws).toHaveLength(52);
     expect(draws.every((d: { reps: number }) => d.reps >= 1)).toBe(true);
+  });
+
+  it('challenge staza prikazuje samo challenge modove', async () => {
+    vi.mocked(fetchCategories).mockResolvedValue(categories);
+    const user = userEvent.setup();
+
+    renderWithIntl(<SetupScreen onStart={vi.fn()} />);
+
+    await user.click(await screen.findByText(/Challenge/));
+    expect(screen.getByText(/Perfektan špil/)).toBeInTheDocument();
+    expect(screen.queryByText(/Klasično/)).not.toBeInTheDocument();
   });
 
   it('challenge mode produces a budget from par when no record exists', async () => {
@@ -80,6 +95,7 @@ describe('SetupScreen', () => {
 
     renderWithIntl(<SetupScreen onStart={onStart} userId={null} />);
 
+    await user.click(await screen.findByText(/Challenge/));
     await user.click(await screen.findByRole('button', { name: /Perfektan špil/ }));
     await user.click(await screen.findByRole('button', { name: 'Srednji' }));
     await user.click(await screen.findByRole('button', { name: 'Sklekovi' }));
@@ -90,6 +106,7 @@ describe('SetupScreen', () => {
 
     const [config, draws] = onStart.mock.calls[0];
     expect(config.gameMode).toBe('perfect_deck');
+    expect(config.entry).toBe('challenge');
     expect(config.parSource).toBe('par');
     const totalReps = draws.reduce((s: number, d: { reps: number }) => s + d.reps, 0);
     expect(config.budgetSeconds).toBe(Math.round(totalReps * 3 + 52 * 20));

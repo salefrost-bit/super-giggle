@@ -9,9 +9,10 @@ import type { GameMode } from '@/lib/domain/types';
 interface ModeSelectorProps {
   onSelect: (mode: GameMode) => void;
   beatChipLabel?: string | null;
+  modes?: ModeDefinition[];
 }
 
-export function ModeSelector({ onSelect, beatChipLabel }: ModeSelectorProps) {
+export function ModeSelector({ onSelect, beatChipLabel, modes = MODES }: ModeSelectorProps) {
   const t = useTranslations();
   const [infoMode, setInfoMode] = useState<ModeDefinition | null>(null);
 
@@ -19,7 +20,7 @@ export function ModeSelector({ onSelect, beatChipLabel }: ModeSelectorProps) {
     <div className="flex flex-col flex-1">
       <h2 className="text-[28px] font-extrabold mb-6 leading-tight">{t('setup.chooseMode')}</h2>
       <div className="flex flex-col gap-3.5 flex-1">
-        {MODES.map((mode) => (
+        {modes.map((mode) => (
           <div key={mode.id} className="relative">
             <button
               onClick={() => onSelect(mode.id)}
