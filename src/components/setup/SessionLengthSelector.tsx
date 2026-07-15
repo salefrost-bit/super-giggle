@@ -10,10 +10,10 @@ interface SessionLengthSelectorProps {
 export function SessionLengthSelector({ onSelect }: SessionLengthSelectorProps) {
   const t = useTranslations();
 
-  const OPTIONS: { size: DeckSize; ariaLabel: string; labelKey: string; subKey: string }[] = [
-    { size: 13, ariaLabel: 'Četvrtina špila (13 karata)', labelKey: 'setup.quarterLabel', subKey: 'setup.quarterSub' },
-    { size: 26, ariaLabel: 'Pola špila (26 karata)', labelKey: 'setup.halfLabel', subKey: 'setup.halfSub' },
-    { size: 52, ariaLabel: 'Ceo špil (52 karte)', labelKey: 'setup.fullLabel', subKey: 'setup.fullSub' },
+  const OPTIONS: { size: DeckSize; ariaKey: string; labelKey: string; subKey: string }[] = [
+    { size: 12, ariaKey: 'setup.quarterAria', labelKey: 'setup.quarterLabel', subKey: 'setup.quarterSub' },
+    { size: 24, ariaKey: 'setup.halfAria', labelKey: 'setup.halfLabel', subKey: 'setup.halfSub' },
+    { size: 52, ariaKey: 'setup.fullAria', labelKey: 'setup.fullLabel', subKey: 'setup.fullSub' },
   ];
 
   return (
@@ -23,7 +23,7 @@ export function SessionLengthSelector({ onSelect }: SessionLengthSelectorProps) 
         {OPTIONS.map((option) => (
           <button
             key={option.size}
-            aria-label={option.ariaLabel}
+            aria-label={t(option.ariaKey)}
             onClick={() => onSelect(option.size)}
             className="text-left bg-surface border-2 border-white/5 rounded-[18px] p-5 hover:border-accent/50"
           >

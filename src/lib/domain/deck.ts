@@ -1,4 +1,5 @@
 import type { Card, DeckSize, Suit } from './types';
+import { isValidDeckSize } from './types';
 
 const SUITS: Suit[] = ['hearts', 'clubs', 'spades', 'diamonds'];
 const RANKS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
@@ -23,6 +24,14 @@ export function shuffleDeck(deck: Card[], rng: () => number = Math.random): Card
 }
 
 export function drawSessionCards(deckSize: DeckSize, rng: () => number = Math.random): Card[] {
-  const shuffled = shuffleDeck(createFullDeck(), rng);
-  return shuffled.slice(0, deckSize);
+  if (!isValidDeckSize(deckSize)) {
+    throw new Error(`Invalid deck size ${deckSize} — must be 12–52 divisible by 4 (spec §2.4)`);
+  }
+  const perSuit = deckSize / 4;
+  const picked: Card[] = [];
+  for (const suit of SUITS) {
+    const suitCards = shuffleDeck(RANKS.map((rank) => ({ suit, rank })), rng);
+    picked.push(...suitCards.slice(0, perSuit));
+  }
+  return shuffleDeck(picked, rng);
 }

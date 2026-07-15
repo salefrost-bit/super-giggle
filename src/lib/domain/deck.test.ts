@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createFullDeck, shuffleDeck, drawSessionCards } from './deck';
+import type { Suit } from './types';
 
 function seededRng(seed: number) {
   let s = seed;
@@ -7,6 +8,13 @@ function seededRng(seed: number) {
     s = (s * 9301 + 49297) % 233280;
     return s / 233280;
   };
+}
+
+function countBySuit(cards: { suit: Suit }[]): Record<Suit, number> {
+  return cards.reduce(
+    (acc, c) => ({ ...acc, [c.suit]: acc[c.suit] + 1 }),
+    { hearts: 0, clubs: 0, spades: 0, diamonds: 0 } as Record<Suit, number>
+  );
 }
 
 describe('createFullDeck', () => {
@@ -46,16 +54,30 @@ describe('shuffleDeck', () => {
   });
 });
 
-describe('drawSessionCards', () => {
-  it('returns exactly deckSize cards for each valid size', () => {
-    expect(drawSessionCards(13, seededRng(1))).toHaveLength(13);
-    expect(drawSessionCards(26, seededRng(1))).toHaveLength(26);
-    expect(drawSessionCards(52, seededRng(1))).toHaveLength(52);
+describe('drawSessionCards (balansirano, spec §2.4)', () => {
+  it.each([12, 16, 20, 24, 52])('vraća %i karata sa N/4 po boji', (n) => {
+    const cards = drawSessionCards(n);
+    expect(cards).toHaveLength(n);
+    const counts = countBySuit(cards);
+    expect(Object.values(counts)).toEqual([n / 4, n / 4, n / 4, n / 4]);
   });
 
-  it('returns cards with no duplicates', () => {
-    const cards = drawSessionCards(52, seededRng(7));
-    const unique = new Set(cards.map((c) => `${c.suit}-${c.rank}`));
-    expect(unique.size).toBe(52);
+  it('nema duplikata karata', () => {
+    const cards = drawSessionCards(52);
+    const keys = new Set(cards.map((c) => `${c.suit}-${c.rank}`));
+    expect(keys.size).toBe(52);
+  });
+
+  it('redosled je promešan preko boja (deterministički rng)', () => {
+    let i = 0;
+    const rng = () => ((i += 7) % 13) / 13;
+    const suits = drawSessionCards(12, rng).map((c) => c.suit);
+    // balansiran ali ne grupisan: prve 3 karte nisu sve iste boje
+    expect(new Set(suits.slice(0, 3)).size).toBeGreaterThan(1);
+  });
+
+  it('baca za nevalidnu veličinu', () => {
+    expect(() => drawSessionCards(13)).toThrow();
+    expect(() => drawSessionCards(15)).toThrow();
   });
 });

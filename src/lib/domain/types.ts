@@ -22,7 +22,12 @@ export interface Card {
   rank: number; // 1 = A, 2-10 = face value, 11=J, 12=Q, 13=K
 }
 
-export type DeckSize = 13 | 26 | 52;
+export type DeckSize = number; // validan: 12–52, deljiv sa 4 (spec §2.4); Quick nudi 12/24/52
+export const QUICK_DECK_SIZES = [12, 24, 52] as const;
+
+export function isValidDeckSize(n: number): boolean {
+  return Number.isInteger(n) && n >= 12 && n <= 52 && n % 4 === 0;
+}
 
 export interface Category {
   id: string;
@@ -41,19 +46,31 @@ export interface DifficultyLevel {
   sortOrder: number;
 }
 
+export type ExerciseTier = 1 | 2 | 3;
+
 export interface Exercise {
   id: string;
   name: string;
   nameEn?: string | null;
   categoryId: string;
   difficultyLevelId: string;
+  tier: ExerciseTier;
+  isDefault: boolean;
 }
 
-export type GameMode = 'classic' | 'perfect_deck';
+export type GameMode = 'classic' | 'perfect_deck' | 'sprint' | 'court' | 'survive' | 'daily';
+
+export type EntryPath = 'quick' | 'custom' | 'challenge';
 
 export interface SessionSettings {
   pause_count?: number;
   total_pause_seconds?: number;
+  points?: number;
+  base_points?: number;
+  multiplier?: number;
+  entry?: EntryPath;
+  card_count?: number;
+  rep_multiplier?: number;
 }
 
 export interface ChallengeSettings extends SessionSettings {
@@ -69,6 +86,7 @@ export interface SessionConfig {
   repMultiplier: number;
   deckSize: DeckSize;
   exerciseByCategory: Record<CategoryKey, Exercise>;
+  entry?: EntryPath;
   gameMode?: GameMode;
   budgetSeconds?: number;
   parSource?: 'par' | 'record';
