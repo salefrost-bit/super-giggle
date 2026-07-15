@@ -31,7 +31,7 @@
 
 **Files:** nijedan (provera stanja).
 
-- [ ] **Step 1: Verifikuj čisto polazište**
+- [x] **Step 1: Verifikuj čisto polazište**
 
 ```bash
 git status --short          # očekivano: prazno (ili samo untracked plan)
@@ -56,7 +56,7 @@ NE commituj brisanje.
 **Interfaces:**
 - Produces: kolone `exercises.tier` (smallint 1–3, not null) i `exercises.is_default` (boolean not null); 12 novih redova u `exercises`; `sessions.total_cards` prima 12–52 deljivo sa 4 (plus stare 13/26).
 
-- [ ] **Step 1: Napiši 0005**
+- [x] **Step 1: Napiši 0005**
 
 ```sql
 -- Krug B: tier šema i default vežbe + 12 novih vežbi (2 po tieru po kategoriji).
@@ -97,7 +97,7 @@ join difficulty_levels d on d.name = v.difficulty_name;
 
 Napomena: backfill se oslanja na `difficulty_levels.sort_order` = 1/2/3 za Početnik/Srednji/Napredni (v. `0002_seed.sql:7-10` — tačno tako seedovano).
 
-- [ ] **Step 2: Napiši 0006**
+- [x] **Step 2: Napiši 0006**
 
 ```sql
 -- ERRATA spec §9.3: check iz 0001 propušta samo 13/26/52 i obara sve nove
@@ -109,9 +109,9 @@ alter table sessions add constraint sessions_total_cards_check
 
 Napomena: ime constraint-a je Postgres default za inline check (`sessions_total_cards_check`); ako `drop` javi da ne postoji, proveri stvarno ime sa `select conname from pg_constraint where conrelid = 'sessions'::regclass;` i upotrebi njega.
 
-- [ ] **Step 3: Primeni migracije na Supabase projekat** (SQL editor ili `supabase db push`, kako je rađeno za 0001–0004). Verifikuj: `select name, tier, is_default from exercises order by category_id, tier;` → 24 reda, po 2 na (kategorija, tier), tačno 12 sa `is_default = true`.
+- [x] **Step 3: Primeni migracije na Supabase projekat** (SQL editor ili `supabase db push`, kako je rađeno za 0001–0004). Verifikuj: `select name, tier, is_default from exercises order by category_id, tier;` → 24 reda, po 2 na (kategorija, tier), tačno 12 sa `is_default = true`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add supabase/migrations/0005_exercise_tiers.sql supabase/migrations/0006_total_cards_check.sql
@@ -129,7 +129,7 @@ git commit -m "feat: migracije 0005 (tier + 24 vežbe) i 0006 (total_cards check
 **Interfaces:**
 - Produces: ključeve koje koriste Taskovi 7–11. Skupovi ključeva u oba kataloga MORAJU ostati identični (postojeći test to ne proverava automatski — uporedi ručno ili privremenom skriptom).
 
-- [ ] **Step 1: Dodaj u `messages/sr.json`** (unutar postojećeg objekta; `setup` blok se dopunjuje/menja, ostalo su novi blokovi):
+- [x] **Step 1: Dodaj u `messages/sr.json`** (unutar postojećeg objekta; `setup` blok se dopunjuje/menja, ostalo su novi blokovi):
 
 ```json
 "entry": {
@@ -179,7 +179,7 @@ U `progress` blok dodaj: `"pointsRecordsTitle": "Rekordi (poeni)"`,
 
 Napomena za `landing.repeatLast`: dodaj kao `"repeatLast": "Ponovi poslednji trening"` UNUTAR postojećeg `landing` bloka, ne kao poseban top-level ključ. U `setup` bloku promeni: `"quarterLabel": "Kratak"`, `"quarterSub": "12 karata · ~10 min"`, `"halfLabel": "Srednji"`, `"halfSub": "24 karte · ~20 min"` (errata §9.1; `fullLabel`/`fullSub` ostaju).
 
-- [ ] **Step 2: Dodaj ekvivalente u `messages/en.json`**
+- [x] **Step 2: Dodaj ekvivalente u `messages/en.json`**
 
 ```json
 "entry": {
@@ -223,7 +223,7 @@ Napomena za `landing.repeatLast`: dodaj kao `"repeatLast": "Ponovi poslednji tre
 
 U `landing` blok: `"repeatLast": "Repeat last workout"`. U `setup`: `"quarterLabel": "Short"`, `"quarterSub": "12 cards · ~10 min"`, `"halfLabel": "Medium"`, `"halfSub": "24 cards · ~20 min"`, `"quarterAria": "Short (12 cards)"`, `"halfAria": "Medium (24 cards)"`, `"fullAria": "Full deck (52 cards)"`. U `progress`: `"pointsRecordsTitle": "Records (points)"`, `"sprintDim": "{minutes} min"`.
 
-- [ ] **Step 3: Testovi i provera pariteta**
+- [x] **Step 3: Testovi i provera pariteta**
 
 ```bash
 npm test    # postojeći testovi i dalje prolaze (koriste renderWithIntl sa sr katalogom)
@@ -231,12 +231,14 @@ node -e "const f=(o,p='')=>Object.entries(o).flatMap(([k,v])=>typeof v==='object
 # očekivano: OK (duboka parnost — poredi UGNEŽDENE ključeve, ne samo blokove)
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add messages/sr.json messages/en.json
 git commit -m "feat: i18n ključevi za tri vrata, poene, XP i istoriju (v0.4.1)"
 ```
+
+- [x] **Step 4: Commit**
 
 ---
 
@@ -253,7 +255,7 @@ git commit -m "feat: i18n ključevi za tri vrata, poene, XP i istoriju (v0.4.1)"
 
 **ERRATA CITAT (spec §9.1–9.2, jedini dozvoljeni razlog izmene postojećih testova):** „Dužine 13/26 postaju 12/24 … Tip `DeckSize` (13|26|52) postaje `number` … Postojeći testovi `deck.test.ts` i svi asserti vezani za 13/26 se ažuriraju po ovoj errati" i „Dosadašnje slučajno izvlačenje … zamenjuje se pravilom N/4 po boji (§2.4). Testovi koji su asertovali čistu slučajnost se ažuriraju; novi testovi asertuju balans i slučajnost redosleda."
 
-- [ ] **Step 1: Ažuriraj tipove u `types.ts`**
+- [x] **Step 1: Ažuriraj tipove u `types.ts`**
 
 ```ts
 export type DeckSize = number; // validan: 12–52, deljiv sa 4 (spec §2.4); Quick nudi 12/24/52
@@ -293,7 +295,7 @@ export interface SessionSettings {
 
 `SessionConfig` dobija `entry?: EntryPath;` (ostala polja nepromenjena). PAŽNJA: `Exercise.tier`/`isDefault` su obavezni — kompajler će prijaviti sva mesta koja prave Exercise objekte (testovi, queries) — to je namerno, popravljaju se u ovom i sledećem tasku.
 
-- [ ] **Step 2: Napiši testove balansiranog izvlačenja u `deck.test.ts`** (zameni assert-e vezane za 13/26 i čistu slučajnost; zadrži testove za `createFullDeck`/`shuffleDeck`):
+- [x] **Step 2: Napiši testove balansiranog izvlačenja u `deck.test.ts`** (zameni assert-e vezane za 13/26 i čistu slučajnost; zadrži testove za `createFullDeck`/`shuffleDeck`):
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -336,9 +338,9 @@ describe('drawSessionCards (balansirano, spec §2.4)', () => {
 });
 ```
 
-- [ ] **Step 3: Pokreni — očekivano FAIL** (`drawSessionCards` još seče slučajno): `npm test -- deck`
+- [x] **Step 3: Pokreni — očekivano FAIL** (`drawSessionCards` još seče slučajno): `npm test -- deck`
 
-- [ ] **Step 4: Implementiraj u `deck.ts`**
+- [x] **Step 4: Implementiraj u `deck.ts`**
 
 ```ts
 import { isValidDeckSize } from './types';
@@ -357,9 +359,9 @@ export function drawSessionCards(deckSize: DeckSize, rng: () => number = Math.ra
 }
 ```
 
-- [ ] **Step 5: Ažuriraj `SessionLengthSelector.tsx`:** vrednosti `13 → 12` i `26 → 24`, a hardkodovane `ariaLabel` stringove (`SessionLengthSelector.tsx:14-15`, „Četvrtina špila (13 karata)"…) zameni i18n ključevima `setup.quarterAria`/`halfAria`/`fullAria` iz Task 3. Ažuriraj i njegov test ako asertuje 13/26 ili stare aria stringove; `SetupScreen.test` klikće po `'Ceo špil (52 karte)'` — vrednost `fullAria` je namerno identična, taj assert ostaje netaknut.
+- [x] **Step 5: Ažuriraj `SessionLengthSelector.tsx`:** vrednosti `13 → 12` i `26 → 24`, a hardkodovane `ariaLabel` stringove (`SessionLengthSelector.tsx:14-15`, „Četvrtina špila (13 karata)"…) zameni i18n ključevima `setup.quarterAria`/`halfAria`/`fullAria` iz Task 3. Ažuriraj i njegov test ako asertuje 13/26 ili stare aria stringove; `SetupScreen.test` klikće po `'Ceo špil (52 karte)'` — vrednost `fullAria` je namerno identična, taj assert ostaje netaknut.
 
-- [ ] **Step 6: `npm test` je posle ovog taska ZELEN (Vitest ne type-checkuje — esbuild transform); pada SAMO `npx tsc --noEmit` na obaveznim `Exercise.tier`/`isDefault` poljima u test fajlovima, i to je očekivano crveno do Taska 6 (v. spec errata §9.4). Commit:**
+- [x] **Step 6: `npm test` je posle ovog taska ZELEN (Vitest ne type-checkuje — esbuild transform); pada SAMO `npx tsc --noEmit` na obaveznim `Exercise.tier`/`isDefault` poljima u test fajlovima, i to je očekivano crveno do Taska 6 (v. spec errata §9.4). Commit:**
 
 ```bash
 git add src/lib/domain/types.ts src/lib/domain/deck.ts src/lib/domain/deck.test.ts src/components/setup/SessionLengthSelector.tsx
@@ -395,7 +397,7 @@ export function rankForXp(xp: number): { symbol: string; threshold: number };
 export function nextRank(xp: number): { symbol: string; threshold: number } | null;
 ```
 
-- [ ] **Step 1: Napiši `score.test.ts`**
+- [x] **Step 1: Napiši `score.test.ts`**
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -458,9 +460,9 @@ describe('XP zvanja (spec §3.4)', () => {
 });
 ```
 
-- [ ] **Step 2: Pokreni — FAIL** (`score.ts` ne postoji): `npm test -- score`
+- [x] **Step 2: Pokreni — FAIL** (`score.ts` ne postoji): `npm test -- score`
 
-- [ ] **Step 3: Implementiraj `score.ts`**
+- [x] **Step 3: Implementiraj `score.ts`**
 
 ```ts
 import type { ExerciseTier } from './types';
@@ -533,7 +535,7 @@ export function nextRank(xp: number): { symbol: string; threshold: number } | nu
 }
 ```
 
-- [ ] **Step 4: `npm test -- score` → PASS. Commit:**
+- [x] **Step 4: `npm test -- score` → PASS. Commit:**
 
 ```bash
 git add src/lib/domain/score.ts src/lib/domain/score.test.ts
@@ -576,7 +578,7 @@ export async function getTotalXp(userId: string): Promise<number>;
 // → Σ settings.points (sesije bez points = 0)
 ```
 
-- [ ] **Step 1: Napiši nove testove.** PAŽNJA: `records.test.ts` danas testira samo čistu `aggregateRecords` — NEMA `createClient` mock. Dodaj ga po uzoru na `sessions.test.ts` (vi.mock `./client`):
+- [x] **Step 1: Napiši nove testove.** PAŽNJA: `records.test.ts` danas testira samo čistu `aggregateRecords` — NEMA `createClient` mock. Dodaj ga po uzoru na `sessions.test.ts` (vi.mock `./client`):
 
 ```ts
 import { vi, describe, it, expect } from 'vitest';
@@ -612,9 +614,9 @@ describe('getTotalXp', () => {
 
 `sessions.test.ts` — dodaj test da `getUserSessions` mapira `points/basePoints/multiplier/entry` iz settings (`?? null`), i test da `backfillPoints` za classic sesiju sa draws `[{reps:10,tier:2,completed}]` upisuje `points: 15` i NE menja postojeći `score` ključ u settings objektu koji šalje u update.
 
-- [ ] **Step 2: Pokreni — FAIL.** `npm test -- supabase`
+- [x] **Step 2: Pokreni — FAIL.** `npm test -- supabase`
 
-- [ ] **Step 3: Implementiraj.** Ključni delovi:
+- [x] **Step 3: Implementiraj.** Ključni delovi:
 
 ```ts
 // queries.ts — oba exercise fetch-a prošire select i map:
@@ -670,9 +672,9 @@ export async function backfillPoints(sessionId: string, gameMode: string): Promi
 
 `getSessionDetails`: select `session_exercises(categories(name), exercises(name, name_en, tier))` + `card_draws(reps)` → mapiraj u `SessionDetails` (totalReps = Σ reps).
 
-- [ ] **Step 4: `npm test` → CELA suita PASS (uklj. popravljene mock objekte sa tier/is_default). `npx tsc --noEmit` → čist.**
+- [x] **Step 4: `npm test` → CELA suita PASS (uklj. popravljene mock objekte sa tier/is_default). `npx tsc --noEmit` → čist.**
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/supabase/
@@ -694,7 +696,7 @@ git commit -m "feat: supabase sloj — tier u vežbama, points rekordi, XP, lazy
 - Consumes: `QUICK_DECK_SIZES`, `EntryPath` (Task 4); `fetchExercisesByDifficulty` sa tier poljima (Task 6); postojeće `DifficultySelector`, `SessionLengthSelector`, `drawSessionCards`, `calculateReps`.
 - Produces: `EntrySelector({ onSelect: (entry: EntryPath) => void })`; `SetupScreen` interno stanje `entry: EntryPath | null`; `config.entry` postavljen u `SessionConfig` pri startu. Challenge staza u ovom tasku vodi na postojeći `ModeSelector` filtriran na `isChallenge === true` (u v0.4.1 lista ima samo Perfektan špil).
 
-- [ ] **Step 1: Test za EntrySelector**
+- [x] **Step 1: Test za EntrySelector**
 
 ```tsx
 import { describe, it, expect, vi } from 'vitest';
@@ -716,7 +718,7 @@ describe('EntrySelector', () => {
 });
 ```
 
-- [ ] **Step 2: FAIL, pa implementiraj `EntrySelector.tsx`** (stil prati kartice iz `DifficultySelector.tsx:44-57`):
+- [x] **Step 2: FAIL, pa implementiraj `EntrySelector.tsx`** (stil prati kartice iz `DifficultySelector.tsx:44-57`):
 
 ```tsx
 'use client';
@@ -752,7 +754,7 @@ export function EntrySelector({ onSelect }: { onSelect: (entry: EntryPath) => vo
 }
 ```
 
-- [ ] **Step 3: Restruktuiraj `SetupScreen.tsx`.** Novi tip koraka i tokovi:
+- [x] **Step 3: Restruktuiraj `SetupScreen.tsx`.** Novi tip koraka i tokovi:
 
 ```tsx
 type Step =
@@ -780,9 +782,9 @@ function pickDefaults(exercises: Exercise[], categories: Category[]): Record<Cat
 
 pa prelazi na `quick-length` (`SessionLengthSelector`, sada 12/24/52) i `handleLengthSelect` (postojeći, sa `entry: 'quick'` u config-u i `gameMode: 'classic'`). Challenge staza: `challenge-menu` renderuje `ModeSelector` sa novim prop-om `modes={MODES.filter((m) => m.isChallenge)}`; izbor `perfect_deck` vodi na `mode-difficulty` → `mode-exercises` (postojeći `ExercisePicker` nad `fetchExercisesByDifficulty`) → `mode-length` — identično dosadašnjem wizard-u. Back dugme vraća korak unazad po stazi; sa `entry` na `onBack?.()`. Progres traka: `totalSteps` po stazi (quick: 3, custom: 2, challenge/perfect_deck: 5 — entry je korak 1) i segmenti se renderuju iz `totalSteps` umesto hardkodovanog `[1,2,3,4]` (`SetupScreen.tsx:136`).
 
-- [ ] **Step 4: Testovi SetupScreen** — dodaj: „quick staza preskače izbor vežbi i posle nivoa nudi dužinu"; „challenge staza prikazuje samo challenge modove". `npm test -- Setup` → PASS.
+- [x] **Step 4: Testovi SetupScreen** — dodaj: „quick staza preskače izbor vežbi i posle nivoa nudi dužinu"; „challenge staza prikazuje samo challenge modove". `npm test -- Setup` → PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/setup/
@@ -802,7 +804,7 @@ git commit -m "feat: tri vrata (EntrySelector) + Quick staza sa default vežbama
 - Consumes: `fetchAllExercises` (Task 6), `ExercisePicker` (proširen tier bedžom), `drawSessionCards`, `calculateReps`, `isValidDeckSize`.
 - Produces: `CustomSetup({ categories, exercises, onStart })` gde `onStart(selection: Record<CategoryKey, Exercise>, repMultiplier: number, cardCount: number)`. SetupScreen iz toga gradi `SessionConfig` sa `difficultyLevelId` nivoa čiji je `defaultRepMultiplier` najbliži izabranom multiplikatoru (za par kompatibilnost; sesija je classic pa par ne igra), `repMultiplier` = slajder, `deckSize` = slajder, `entry: 'custom'`, `gameMode: 'classic'`.
 
-- [ ] **Step 1: Test**
+- [x] **Step 1: Test**
 
 ```tsx
 describe('CustomSetup', () => {
@@ -832,11 +834,11 @@ describe('CustomSetup', () => {
 });
 ```
 
-- [ ] **Step 2: FAIL, pa implementiraj.** `CustomSetup` renderuje kategorije kao `ExercisePicker` (svih 6 po kategoriji, sortirano po tier-u, uz bedž `{t('custom.tierBadge', { tier })}` u obliku Ⅰ/Ⅱ/Ⅲ — mapiraj `['Ⅰ','Ⅱ','Ⅲ'][tier-1]`), ispod dva `<input type="range">` sa labelom i live vrednošću (`{multiplier}×`, `{cardCount}` + `{t('custom.cardsPerCategory', { count: cardCount / 4 })}`), pa dugme `custom.start` (disabled dok sve 4 kategorije nemaju izbor). Default: 1.0× / 24. Napomena: ne diraj postojeći `ExercisePicker` auto-complete (poziva `onComplete` kad su sve 4 izabrane) — za Custom napravi lokalnu selekciju u `CustomSetup` (kopiraj pattern iz `ExercisePicker.tsx:29-36`, bez auto-prelaza).
+- [x] **Step 2: FAIL, pa implementiraj.** `CustomSetup` renderuje kategorije kao `ExercisePicker` (svih 6 po kategoriji, sortirano po tier-u, uz bedž `{t('custom.tierBadge', { tier })}` u obliku Ⅰ/Ⅱ/Ⅲ — mapiraj `['Ⅰ','Ⅱ','Ⅲ'][tier-1]`), ispod dva `<input type="range">` sa labelom i live vrednošću (`{multiplier}×`, `{cardCount}` + `{t('custom.cardsPerCategory', { count: cardCount / 4 })}`), pa dugme `custom.start` (disabled dok sve 4 kategorije nemaju izbor). Default: 1.0× / 24. Napomena: ne diraj postojeći `ExercisePicker` auto-complete (poziva `onComplete` kad su sve 4 izabrane) — za Custom napravi lokalnu selekciju u `CustomSetup` (kopiraj pattern iz `ExercisePicker.tsx:29-36`, bez auto-prelaza).
 
-- [ ] **Step 3: SetupScreen custom staza — JEDAN korak `custom`** koji renderuje `CustomSetup` (picker + slajderi + „Kreni" na istom ekranu, tačno kako test iz Step 1 pretpostavlja; staza: entry → custom = 2 koraka). `handleCustomStart(selection, repMultiplier, cardCount)` poziva `drawSessionCards(cardCount)` i gradi draws kao `handleLengthSelect` (`SetupScreen.tsx:64-79`), config sa `entry: 'custom'`, `gameMode: 'classic'`, `difficultyLevelId` nivoa čiji je `defaultRepMultiplier` najbliži izabranom multiplikatoru.
+- [x] **Step 3: SetupScreen custom staza — JEDAN korak `custom`** koji renderuje `CustomSetup` (picker + slajderi + „Kreni" na istom ekranu, tačno kako test iz Step 1 pretpostavlja; staza: entry → custom = 2 koraka). `handleCustomStart(selection, repMultiplier, cardCount)` poziva `drawSessionCards(cardCount)` i gradi draws kao `handleLengthSelect` (`SetupScreen.tsx:64-79`), config sa `entry: 'custom'`, `gameMode: 'classic'`, `difficultyLevelId` nivoa čiji je `defaultRepMultiplier` najbliži izabranom multiplikatoru.
 
-- [ ] **Step 4: `npm test` PASS → Commit**
+- [x] **Step 4: `npm test` PASS → Commit**
 
 ```bash
 git add src/components/setup/
@@ -857,9 +859,9 @@ git commit -m "feat: Custom staza — slobodan izbor vežbi sa tier bedžom + sl
 - Consumes: `calculateBasePoints`, `challengeMultiplier`, `calculatePoints` (Task 5). Tier po karti: `draw.exercise.tier` (Exercise je u `CardDrawResult.exercise`).
 - Produces: `completeSession` settings dobija `points`, `base_points`, `multiplier`, `entry`, `card_count`, `rep_multiplier` UZ postojeće ključeve (`score` za challenge netaknut). `SessionResult` dobija `points: number; basePoints: number; multiplier: number;` (dopuni `types.ts`).
 
-- [ ] **Step 1: Test — payload sadrži points i ne menja score.** U postojećem SessionScreen test fajlu dodaj test koji odigra classic sesiju (2 karte, tier poznat kroz mock exercise) i asertuje da `completeSession` mock prima `settings.points === očekivano`, `settings.base_points`, `settings.multiplier === 1`, i da za perfect_deck sesiju `settings.score` (broj oborenih) POSTOJI pored `settings.points`.
+- [x] **Step 1: Test — payload sadrži points i ne menja score.** U postojećem SessionScreen test fajlu dodaj test koji odigra classic sesiju (2 karte, tier poznat kroz mock exercise) i asertuje da `completeSession` mock prima `settings.points === očekivano`, `settings.base_points`, `settings.multiplier === 1`, i da za perfect_deck sesiju `settings.score` (broj oborenih) POSTOJI pored `settings.points`.
 
-- [ ] **Step 2: FAIL, pa implementiraj u `handleNext` završnoj grani** (`SessionScreen.tsx:150-163`):
+- [x] **Step 2: FAIL, pa implementiraj u `handleNext` završnoj grani** (`SessionScreen.tsx:150-163`):
 
 ```tsx
 const scored = nextDraws.map((d) => ({ reps: d.reps, completedAt: d.completedAt, tier: d.exercise.tier }));
@@ -880,11 +882,11 @@ const settingsPayload = isChallenge
 
 `onFinish` result dobija `points, basePoints, multiplier`.
 
-- [ ] **Step 3: SummaryScreen:** ispod postojećeg vremena dodaj points blok: veliki broj `{t('points.total', { points })}` + mala linija `{t('points.base', { base })} · {t('points.multiplierLabel', { multiplier })}` (multiplier formatiran na 2 decimale kad nije ceo). Za gosta (`isGuest`) zameni/dopuni postojeći `results.guestNote` sa `{t('points.guestKeep', { points })}` IZNAD postojeće note. ⓘ dugme pored points otvara postojeći `InfoModal` sa `points.formulaTitle`/`points.formula`. (Puni animirani ritual sa brojačem i vibracijom je v0.4.7 — ovde statičan prikaz.)
+- [x] **Step 3: SummaryScreen:** ispod postojećeg vremena dodaj points blok: veliki broj `{t('points.total', { points })}` + mala linija `{t('points.base', { base })} · {t('points.multiplierLabel', { multiplier })}` (multiplier formatiran na 2 decimale kad nije ceo). Za gosta (`isGuest`) zameni/dopuni postojeći `results.guestNote` sa `{t('points.guestKeep', { points })}` IZNAD postojeće note. ⓘ dugme pored points otvara postojeći `InfoModal` sa `points.formulaTitle`/`points.formula`. (Puni animirani ritual sa brojačem i vibracijom je v0.4.7 — ovde statičan prikaz.)
 
-- [ ] **Step 3b: Rank-up proslava (spec §3.4).** Za ulogovanog korisnika SummaryScreen po mount-u poziva `getTotalXp(userId)` (posle save-a, pa zbir VEĆ sadrži ovu sesiju): `rankBefore = rankForXp(xp - result.points)`, `rankAfter = rankForXp(xp)`; ako se razlikuju → banner `{t('xp.rankUp', { symbol: rankAfter.symbol })}` + postojeći konfeti mehanizam (`SummaryScreen.tsx:47-62`). SummaryScreen dobija prop `userId: string | null` (prosleđuje `page.tsx`). Test: mock `getTotalXp` → 5100 uz `result.points = 300` (pre: 4800 = '2', posle: 'J') → banner prisutan; `getTotalXp` → 6000 uz points 300 → nema bannera. Gost: bez poziva, bez bannera.
+- [x] **Step 3b: Rank-up proslava (spec §3.4).** Za ulogovanog korisnika SummaryScreen po mount-u poziva `getTotalXp(userId)` (posle save-a, pa zbir VEĆ sadrži ovu sesiju): `rankBefore = rankForXp(xp - result.points)`, `rankAfter = rankForXp(xp)`; ako se razlikuju → banner `{t('xp.rankUp', { symbol: rankAfter.symbol })}` + postojeći konfeti mehanizam (`SummaryScreen.tsx:47-62`). SummaryScreen dobija prop `userId: string | null` (prosleđuje `page.tsx`). Test: mock `getTotalXp` → 5100 uz `result.points = 300` (pre: 4800 = '2', posle: 'J') → banner prisutan; `getTotalXp` → 6000 uz points 300 → nema bannera. Gost: bez poziva, bez bannera.
 
-- [ ] **Step 4: `npm test` PASS, `npx tsc --noEmit` čist → Commit**
+- [x] **Step 4: `npm test` PASS, `npx tsc --noEmit` čist → Commit**
 
 ```bash
 git add src/components/session/ src/components/summary/ src/lib/domain/types.ts
@@ -904,16 +906,16 @@ git commit -m "feat: points u settings payload-u i na ekranu rezultata (uklj. go
 - Consumes: `getUserSessions` (sa `points`), `getSessionDetails`, `backfillPoints`, `getTotalXp` (Task 6); `rankForXp`, `nextRank` (Task 5).
 - Produces: `HistoryRow({ session, details, onExpand })` — `details: SessionDetails | null`; red: datum + ikona moda + points (akcenat); tap poziva `onExpand(session.id)`, a expand sekcija se prikazuje kad `details !== null` (vežbe/tier, `history.totalReps`, trajanje, pauze, `history.beaten` za challenge, `history.breakdown`). VLASNIK FETCH-a je ProgressScreen: `onExpand` tamo lenjo poziva `getSessionDetails(id)` (jednom po sesiji, keš u state mapi) — HistoryRow je čist prikaz, testabilan bez mocka.
 
-- [ ] **Step 1: Test HistoryRow** — collapsed prikazuje points i datum; klik poziva `onExpand` sa id-jem; sa `details` prop-om renderuje vežbe i ukupna ponavljanja.
+- [x] **Step 1: Test HistoryRow** — collapsed prikazuje points i datum; klik poziva `onExpand` sa id-jem; sa `details` prop-om renderuje vežbe i ukupna ponavljanja.
 
-- [ ] **Step 2: Implementiraj `HistoryRow`** (izvuci postojeći red iz `ProgressScreen.tsx:116-135` i proširi expand sekcijom po Interfaces bloku).
+- [x] **Step 2: Implementiraj `HistoryRow`** (izvuci postojeći red iz `ProgressScreen.tsx:116-135` i proširi expand sekcijom po Interfaces bloku).
 
-- [ ] **Step 3: ProgressScreen:**
+- [x] **Step 3: ProgressScreen:**
   - Pri učitavanju: za sesije sa `points === null && status === 'completed'` pozovi `backfillPoints(session.id, session.gameMode)` (Promise.all, pa osveži lokalno stanje vraćenim vrednostima) — spec §3.5.
   - Iznad rekorda dodaj XP karticu: `{rankForXp(xp).symbol}` veliki simbol + `{xp} XP` + progress ka `nextRank` (`{xp}/{next.threshold}`); tap otvara `InfoModal` sa `xp.explanation`. `xp = await getTotalXp(userId)`.
   - Postojeća sekcija rekorda ostaje; points rekordi po dimenzijama se čitaju iz istih sesija (client-side max po ključu dimenzije: classic/perfect_deck → `gameMode|cardCount`; sprint → `sprint|sprintMinutes`; court/survive/daily → samo `gameMode` — spec §3.3; polja `cardCount`/`sprintMinutes` postoje na `SessionHistoryEntry` iz Task 6) i prikazuju pod naslovom `progress.pointsRecordsTitle` u postojećem stilu reda (`progress.cardsLine` za dimenziju broja karata, `progress.sprintDim` za trajanje).
 
-- [ ] **Step 4: `npm test` PASS → Commit**
+- [x] **Step 4: `npm test` PASS → Commit**
 
 ```bash
 git add src/components/progress/
@@ -948,13 +950,13 @@ export function validateLastConfig(config: LastConfig, allExercises: Exercise[])
 // false ako deckSize nije isValidDeckSize ili bilo koji exerciseId ne postoji
 ```
 
-- [ ] **Step 1: Testovi** — save/load roundtrip; load vraća null za pokvaren JSON; validate odbija deckSize 13 (stari zapis) i nepostojeću vežbu (spec §2.5). localStorage mock pattern postoji u `explained.test.ts`.
+- [x] **Step 1: Testovi** — save/load roundtrip; load vraća null za pokvaren JSON; validate odbija deckSize 13 (stari zapis) i nepostojeću vežbu (spec §2.5). localStorage mock pattern postoji u `explained.test.ts`.
 
-- [ ] **Step 2: FAIL → implementiraj** (čist modul, try/catch oko JSON.parse).
+- [x] **Step 2: FAIL → implementiraj** (čist modul, try/catch oko JSON.parse).
 
-- [ ] **Step 3: Integracija:** SessionScreen u `handleNext` završnoj grani poziva `saveLastConfig({...})` SAMO kad je `config.gameMode` `'classic'` ili `'perfect_deck'` (v. Interfaces obim; i za gosta — localStorage nije Supabase). LandingScreen: ispod „Novi trening" dugme `landing.repeatLast`, vidljivo samo ako `loadLastConfig()` nije null; `page.tsx` dobija `handleRepeatLast`: učita `fetchAllExercises()` + `fetchDifficultyLevels()`, validira (nevalidno → sakrij dugme), rekonstruiše `SessionConfig` (za `perfect_deck` ponovi i par/budžet račun iz `SetupScreen.tsx:88-109`), `drawSessionCards(deckSize)` NOVE karte, pa isti tok kao `handleSetupStart`.
+- [x] **Step 3: Integracija:** SessionScreen u `handleNext` završnoj grani poziva `saveLastConfig({...})` SAMO kad je `config.gameMode` `'classic'` ili `'perfect_deck'` (v. Interfaces obim; i za gosta — localStorage nije Supabase). LandingScreen: ispod „Novi trening" dugme `landing.repeatLast`, vidljivo samo ako `loadLastConfig()` nije null; `page.tsx` dobija `handleRepeatLast`: učita `fetchAllExercises()` + `fetchDifficultyLevels()`, validira (nevalidno → sakrij dugme), rekonstruiše `SessionConfig` (za `perfect_deck` ponovi i par/budžet račun iz `SetupScreen.tsx:88-109`), `drawSessionCards(deckSize)` NOVE karte, pa isti tok kao `handleSetupStart`.
 
-- [ ] **Step 4: `npm test` PASS → Commit**
+- [x] **Step 4: `npm test` PASS → Commit**
 
 ```bash
 git add src/lib/domain/lastConfig.ts src/lib/domain/lastConfig.test.ts src/components/landing/ src/components/session/SessionScreen.tsx src/app/page.tsx
@@ -965,10 +967,10 @@ git commit -m "feat: ponovi poslednji trening sa validacijom sačuvane konfigura
 
 ### Task 12: Kapija faze v0.4.1 — verifikacija, CHANGELOG, tag
 
-- [ ] **Step 1:** `npm test` (cela suita PASS) + `npx tsc --noEmit` (čist) + `npm run lint` (čist).
-- [ ] **Step 2: Ručna verifikacija u browseru + NA TELEFONU:** (a) Quick: 2 tapa do prve karte, defaulti tačni po nivou; (b) Custom: slajderi, 6 vežbi po kategoriji sa bedžom, jednak broj karata po kategoriji u sesiji; (c) Perfektan špil kroz Challenge meni radi kao pre; (d) rezultati prikazuju points (gost i ulogovan); (e) istorija: stare sesije dobile points (backfill), expand detalji rade; (f) XP kartica; (g) ponovi poslednji.
-- [ ] **Step 3:** CHANGELOG stavka „v0.4.1 — Temelj igrivosti" jezikom korisnika; `package.json` verzija `0.4.1`.
-- [ ] **Step 4:**
+- [x] **Step 1:** `npm test` (cela suita PASS) + `npx tsc --noEmit` (čist) + `npm run lint` (čist).
+- [x] **Step 2: Ručna verifikacija u browseru + NA TELEFONU:** (a) Quick: 2 tapa do prve karte, defaulti tačni po nivou; (b) Custom: slajderi, 6 vežbi po kategoriji sa bedžom, jednak broj karata po kategoriji u sesiji; (c) Perfektan špil kroz Challenge meni radi kao pre; (d) rezultati prikazuju points (gost i ulogovan); (e) istorija: stare sesije dobile points (backfill), expand detalji rade; (f) XP kartica; (g) ponovi poslednji.
+- [x] **Step 3:** CHANGELOG stavka „v0.4.1 — Temelj igrivosti" jezikom korisnika; `package.json` verzija `0.4.1`.
+- [x] **Step 4:**
 
 ```bash
 git add CHANGELOG.md package.json && git commit -m "chore: verzija 0.4.1 (Temelj igrivosti)"
@@ -990,11 +992,11 @@ git tag -a v0.4.1 -m "Temelj igrivosti: tri vrata, 24 vežbe, points/XP/rekordi"
 **Interfaces:**
 - Produces: registry unosi `{ id: 'sprint', titleKey: 'modes.sprint.title', descKey: 'modes.sprint.desc', explanationKey: 'modes.sprint.explanation', isChallenge: true }` i analogno `court`; `createCourtDeck(rng?): Card[]` — 16 karata (rank 11,12,13,1 × sve 4 boje), promešano.
 
-- [ ] **Step 1: i18n (sr + en):** `modes.sprint.{title,desc,explanation,duration}` („🏃 Sprint", „Što više karata za 3, 5 ili 10 minuta.", objašnjenje: fiksno vreme, remeš špila, karta započeta pre isteka se računa; „{minutes} min") i `modes.court.{title,desc,explanation}` („👑 Dvor", „16 najtežih karata: J, Q, K i A.", objašnjenje: rok po karti kao Perfektan špil ali uvek procena — bez tvog rekorda; bonus ×1.25; asovi su namerno unutra kao „predah" karte — As=1 ponavljanje). En ekvivalenti obavezni.
+- [x] **Step 1: i18n (sr + en):** `modes.sprint.{title,desc,explanation,duration}` („🏃 Sprint", „Što više karata za 3, 5 ili 10 minuta.", objašnjenje: fiksno vreme, remeš špila, karta započeta pre isteka se računa; „{minutes} min") i `modes.court.{title,desc,explanation}` („👑 Dvor", „16 najtežih karata: J, Q, K i A.", objašnjenje: rok po karti kao Perfektan špil ali uvek procena — bez tvog rekorda; bonus ×1.25; asovi su namerno unutra kao „predah" karte — As=1 ponavljanje). En ekvivalenti obavezni.
 
-- [ ] **Step 1b: `ModeSelector.test.tsx` parametrizacija.** AUTORIZACIJA: spec errata §9.4 tačka 2. Dodavanjem sprint+court registar raste na 4 unosa i postojeći assert „tačno 2 ⓘ dugmeta" pada. Prepiši test da renderuje `<ModeSelector modes={[MODES[0], MODES[1]]} />` (eksplicitna lista od 2) — asserti ponašanja (ⓘ otvara objašnjenje, klik bira mod) ostaju identični i test postaje otporan na dalji rast registra.
+- [x] **Step 1b: `ModeSelector.test.tsx` parametrizacija.** AUTORIZACIJA: spec errata §9.4 tačka 2. Dodavanjem sprint+court registar raste na 4 unosa i postojeći assert „tačno 2 ⓘ dugmeta" pada. Prepiši test da renderuje `<ModeSelector modes={[MODES[0], MODES[1]]} />` (eksplicitna lista od 2) — asserti ponašanja (ⓘ otvara objašnjenje, klik bira mod) ostaju identični i test postaje otporan na dalji rast registra.
 
-- [ ] **Step 2: Test `createCourtDeck`:** 16 karata, po 4 iz svake boje, rankovi ⊂ {1,11,12,13}, bez duplikata. FAIL → implementacija:
+- [x] **Step 2: Test `createCourtDeck`:** 16 karata, po 4 iz svake boje, rankovi ⊂ {1,11,12,13}, bez duplikata. FAIL → implementacija:
 
 ```ts
 const COURT_RANKS = [11, 12, 13, 1];
@@ -1005,7 +1007,7 @@ export function createCourtDeck(rng: () => number = Math.random): Card[] {
 }
 ```
 
-- [ ] **Step 3: `npm test` PASS → Commit** `feat: registar + i18n + dvorski špil za Sprint i Dvor`
+- [x] **Step 3: `npm test` PASS → Commit** `feat: registar + i18n + dvorski špil za Sprint i Dvor`
 
 ### Task 14: Dvor mod — setup i sesija
 
@@ -1018,9 +1020,9 @@ export function createCourtDeck(rng: () => number = Math.random): Card[] {
 - Consumes: `createCourtDeck`, `calculateParSeconds`, `calculateQuotaSeconds` (postojeće), `challengeMultiplier({mode:'court',...})`.
 - Produces: court sesija = `gameMode: 'court'`, `deckSize: 16`, `budgetSeconds` = ČIST par (`calculateParSeconds(totalReps, 16, difficulty)` — BEZ `resolveBudget`, spec §4.3), kvote po karti postojećim mehanizmom; settings payload sa `score`/`won` (computeScore) + points (multiplier `court`).
 
-- [ ] **Step 1: Testovi:** SetupScreen — court staza preskače dužinu i pravi 16 draws iz court špila; SessionScreen — za `gameMode:'court'` kvota radi i multiplier je court formula (payload assert).
-- [ ] **Step 2: Implementacija.** U SessionScreen zameni liniju 59: `const isChallenge = (config.gameMode === 'perfect_deck' || config.gameMode === 'court') && config.budgetSeconds != null;` i u points računu (Task 9 kod) mapiraj mode iz `config.gameMode`. Prvi-put modal: `page.tsx:37` uslov proširi na svaki challenge mod preko `hasSeenExplanation(config.gameMode)` + `MODES` lookup za explanationKey (umesto hardkodovanog perfect_deck). LastConfig (Task 11): dodaj snimanje za `'court'` u SessionScreen uslov i granu u `handleRepeatLast` (rekonstrukcija = ista kao court staza: čist par nad 16).
-- [ ] **Step 3: `npm test` PASS → Commit** `feat: Dvor — 16 figura + asova, čist par, ×1.25 bonus`
+- [x] **Step 1: Testovi:** SetupScreen — court staza preskače dužinu i pravi 16 draws iz court špila; SessionScreen — za `gameMode:'court'` kvota radi i multiplier je court formula (payload assert).
+- [x] **Step 2: Implementacija.** U SessionScreen zameni liniju 59: `const isChallenge = (config.gameMode === 'perfect_deck' || config.gameMode === 'court') && config.budgetSeconds != null;` i u points računu (Task 9 kod) mapiraj mode iz `config.gameMode`. Prvi-put modal: `page.tsx:37` uslov proširi na svaki challenge mod preko `hasSeenExplanation(config.gameMode)` + `MODES` lookup za explanationKey (umesto hardkodovanog perfect_deck). LastConfig (Task 11): dodaj snimanje za `'court'` u SessionScreen uslov i granu u `handleRepeatLast` (rekonstrukcija = ista kao court staza: čist par nad 16).
+- [x] **Step 3: `npm test` PASS → Commit** `feat: Dvor — 16 figura + asova, čist par, ×1.25 bonus`
 
 ### Task 15: Sprint mod
 
@@ -1042,13 +1044,13 @@ export async function getBestPoints(userId: string, gameMode: string, dimension:
 
 LastConfig (Task 11): sprint sesija snima `sprintMinutes` u LastConfig; `handleRepeatLast` dobija sprint granu.
 
-- [ ] **Step 1: Testovi:** SprintSetup nudi 3/5/10; SessionScreen sprint: (a) countdown prikazan umesto kvote po karti; (b) posle isteka (mock `useCardQuota` expired) tekuća karta se još može završiti a onda se sesija zatvara; (c) settings payload ima `sprint_minutes` i `cards_completed`, `total_cards` u createSession = 52.
-- [ ] **Step 2: Implementacija.** SessionScreen: za sprint drži `queue: CardDrawResult[]` u state (init draws); kad `currentIndex === queue.length - 1` i vreme nije isteklo, appenduj novih 52 (`drawSessionCards(52)` mapirano u draws sa postojećim `calculateReps` i `exerciseByCategory` — isti kod kao `SetupScreen.tsx:66-79`, izvuci ga u helper `buildDraws(cards, exerciseByCategory, repMultiplier, withQuota)` u `src/lib/domain/draws.ts` + mini test). Kraj: u `handleNext`, ako `sprintExpired` → završi sesiju (ista završna grana, `completedDraws` = samo završene karte).
-- [ ] **Step 3: `npm test` PASS, tsc čist → Commit** `feat: Sprint — 3/5/10 min countdown sa remešanjem špila`
+- [x] **Step 1: Testovi:** SprintSetup nudi 3/5/10; SessionScreen sprint: (a) countdown prikazan umesto kvote po karti; (b) posle isteka (mock `useCardQuota` expired) tekuća karta se još može završiti a onda se sesija zatvara; (c) settings payload ima `sprint_minutes` i `cards_completed`, `total_cards` u createSession = 52.
+- [x] **Step 2: Implementacija.** SessionScreen: za sprint drži `queue: CardDrawResult[]` u state (init draws); kad `currentIndex === queue.length - 1` i vreme nije isteklo, appenduj novih 52 (`drawSessionCards(52)` mapirano u draws sa postojećim `calculateReps` i `exerciseByCategory` — isti kod kao `SetupScreen.tsx:66-79`, izvuci ga u helper `buildDraws(cards, exerciseByCategory, repMultiplier, withQuota)` u `src/lib/domain/draws.ts` + mini test). Kraj: u `handleNext`, ako `sprintExpired` → završi sesiju (ista završna grana, `completedDraws` = samo završene karte).
+- [x] **Step 3: `npm test` PASS, tsc čist → Commit** `feat: Sprint — 3/5/10 min countdown sa remešanjem špila`
 
 ### Task 16: Kapija faze v0.4.2
 
-- [ ] Suita + tsc + lint čisti; ručno NA TELEFONU: Sprint countdown preživljava zaključavanje ekrana (auto-pauza pomera deadline), Dvor kvote, oba moda u istoriji sa points; CHANGELOG „v0.4.2 — Sprint i Dvor"; verzija `0.4.2`; anotirani tag `v0.4.2`; push. **STOP do potvrde korisnika.**
+- [x] Suita + tsc + lint čisti; ručno NA TELEFONU: Sprint countdown preživljava zaključavanje ekrana (auto-pauza pomera deadline), Dvor kvote, oba moda u istoriji sa points; CHANGELOG „v0.4.2 — Sprint i Dvor"; verzija `0.4.2`; anotirani tag `v0.4.2`; push. **STOP do potvrde korisnika.**
 
 ---
 
@@ -1073,10 +1075,10 @@ export function isBankrupt(balanceSeconds: number): boolean; // <= 0
 
 `activeCardSeconds` u SessionScreen = `stopwatch.elapsedSeconds − elapsedAtCardStart` (state koji se postavlja na svaki prelaz karte; stopwatch već isključuje pauze — pauza ne troši banku). UI prikaz salda: `balance − (stopwatch.elapsedSeconds − elapsedAtCardStart)` izveden u renderu. Kvota karte za dopunu: postojeći `calculateCardWeight` sa par stopama težine (čist par). Kraj: posle klika `isBankrupt` → završi sesiju sa `survived_cards: currentIndex+1`, multiplier `{mode:'survive', survivedAll: nextIndex >= 52}`; 52. završena karta = survivedAll čak i ako je saldo posle nje ≤ 0 (spec §4.4).
 
-- [ ] **Step 1: bank.test.ts** — dopuna i trošenje; bankrot na tačno 0; commit posle svakog koraka TDD ciklusa. Config: `parSecondsPerRep`/`parTransitionSeconds` u survive config dolaze sa izabranog difficulty reda, isti pattern kao perfect_deck (`SetupScreen.tsx:88-109`).
-- [ ] **Step 2: registry + i18n (sr/en): `modes.survive.{title,desc,explanation}`** („🛡 Preživi špil", banka 90 s, svaka završena karta dopunjava svoju kvotu, dokle ćeš stići kroz 52).
-- [ ] **Step 3: SetupScreen survive staza + SessionScreen grana sa saldo prikazom umesto kvota-kruga; testovi (spec §10 eksplicitno):** (a) bankrot završava sesiju; (b) 52/52 daje ×1.5 u payload-u; (c) IVICA: 52. karta završena a saldo posle nje ≤ 0 → payload IPAK ima ×1.5 (spec §4.4); (d) pauza ne troši banku — SessionScreen test: pauza između dve karte, `activeCardSeconds` iz `stopwatch.elapsedSeconds` razlike ostaje isti. LastConfig: survive grana (snimanje + repeat).
-- [ ] **Step 4: Suita PASS → Commit** `feat: Preživi špil — banka vremena na timestamp aritmetici`
+- [x] **Step 1: bank.test.ts** — dopuna i trošenje; bankrot na tačno 0; commit posle svakog koraka TDD ciklusa. Config: `parSecondsPerRep`/`parTransitionSeconds` u survive config dolaze sa izabranog difficulty reda, isti pattern kao perfect_deck (`SetupScreen.tsx:88-109`).
+- [x] **Step 2: registry + i18n (sr/en): `modes.survive.{title,desc,explanation}`** („🛡 Preživi špil", banka 90 s, svaka završena karta dopunjava svoju kvotu, dokle ćeš stići kroz 52).
+- [x] **Step 3: SetupScreen survive staza + SessionScreen grana sa saldo prikazom umesto kvota-kruga; testovi (spec §10 eksplicitno):** (a) bankrot završava sesiju; (b) 52/52 daje ×1.5 u payload-u; (c) IVICA: 52. karta završena a saldo posle nje ≤ 0 → payload IPAK ima ×1.5 (spec §4.4); (d) pauza ne troši banku — SessionScreen test: pauza između dve karte, `activeCardSeconds` iz `stopwatch.elapsedSeconds` razlike ostaje isti. LastConfig: survive grana (snimanje + repeat).
+- [x] **Step 4: Suita PASS → Commit** `feat: Preživi špil — banka vremena na timestamp aritmetici`
 
 ### Task 18: Karta dana — seed, tier dana, pravila
 
@@ -1097,20 +1099,20 @@ export function drawDailyCards(dateString: string): Card[];    // drawSessionCar
 
 Daily staza u SetupScreen: učita `fetchAllExercises` + `fetchDifficultyLevels`, vežbe = defaulti `dailyTier` (pattern `pickDefaults` iz Task 7 filtriran na tier), težina = nivo tog tiera (sortOrder === tier), budžet = ČIST par nad 20 karata, `deckSize: 20`, `entry:'challenge'`, settings pri završetku: prvi pokušaj dana → `daily_date: dailyDateString(new Date(startedAt))`; ako već postoji današnja daily sesija (upit: `game_mode='daily'` + `settings->>daily_date = danas`) → `daily_replay: true` bez `daily_date` (spec §4.5). Novi upit u `sessions.ts`: `hasDailyForDate(userId, dateString): Promise<boolean>`; za gosta localStorage ključ `spil.dailyDone.<date>`.
 
-- [ ] **Step 1: daily.test.ts** — isti datum → identičan špil (deep equal dva poziva); različiti datumi → različit; 20 karata balansirano; `dailyTier` za poznate datume (2026-07-13 pon → 1, 2026-07-19 ned → 2).
-- [ ] **Step 2: FAIL → implementiraj** (mulberry32: standardna 32-bit implementacija; hash: FNV-1a nad stringom).
-- [ ] **Step 3: Staza + pravila + testovi** (uklj. replay: mock postojeće današnje sesije → payload ima `daily_replay` a nema `daily_date`). Gost: SessionScreen završna grana za `gameMode:'daily'` upisuje `localStorage['spil.dailyDone.<dateString>'] = '1'` (i za ulogovanog ne škodi, ali izvor istine za ulogovanog je upit). LastConfig: daily grana u `handleRepeatLast` = prosto pokreni daily stazu ponovo (bez parametara).
-- [ ] **Step 4: Suita PASS → Commit** `feat: Karta dana — seed po datumu, tier dana, prvi pokušaj vs replay`
+- [x] **Step 1: daily.test.ts** — isti datum → identičan špil (deep equal dva poziva); različiti datumi → različit; 20 karata balansirano; `dailyTier` za poznate datume (2026-07-13 pon → 1, 2026-07-19 ned → 2).
+- [x] **Step 2: FAIL → implementiraj** (mulberry32: standardna 32-bit implementacija; hash: FNV-1a nad stringom).
+- [x] **Step 3: Staza + pravila + testovi** (uklj. replay: mock postojeće današnje sesije → payload ima `daily_replay` a nema `daily_date`). Gost: SessionScreen završna grana za `gameMode:'daily'` upisuje `localStorage['spil.dailyDone.<dateString>'] = '1'` (i za ulogovanog ne škodi, ali izvor istine za ulogovanog je upit). LastConfig: daily grana u `handleRepeatLast` = prosto pokreni daily stazu ponovo (bez parametara).
+- [x] **Step 4: Suita PASS → Commit** `feat: Karta dana — seed po datumu, tier dana, prvi pokušaj vs replay`
 
 ### Task 19: Landing čip Karte dana
 
 **Files:**
 - Modify: `src/components/landing/LandingScreen.tsx` + test, `src/app/page.tsx` (direktan ulaz u daily), i18n (`landing.dailyDone`: „🎴 ✓" / `landing.dailyPending`: „🎴 Karta dana", en ekvivalenti)
 
-- [ ] **Step 1: Test:** ulogovan sa današnjom daily sesijom → ✓ čip; bez → pending čip; tap poziva `onStartDaily`.
-- [ ] **Step 2: Implementiraj:** čip pored streak plamena (`LandingScreen` već prima streak podatke — prati isti data-flow: page.tsx prosleđuje `dailyDone` iz `hasDailyForDate` / localStorage za gosta; tap → `handleStartDaily` koji pokreće daily stazu direktno (isti kod kao SetupScreen daily staza — izvuci u helper `buildDailySession()` u `src/lib/domain/daily.ts` odn. mali modul da se ne duplira).
-- [ ] **Step 3: Suita PASS → Commit** `feat: landing čip Karta dana`
+- [x] **Step 1: Test:** ulogovan sa današnjom daily sesijom → ✓ čip; bez → pending čip; tap poziva `onStartDaily`.
+- [x] **Step 2: Implementiraj:** čip pored streak plamena (`LandingScreen` već prima streak podatke — prati isti data-flow: page.tsx prosleđuje `dailyDone` iz `hasDailyForDate` / localStorage za gosta; tap → `handleStartDaily` koji pokreće daily stazu direktno (isti kod kao SetupScreen daily staza — izvuci u helper `buildDailySession()` u `src/lib/domain/daily.ts` odn. mali modul da se ne duplira).
+- [x] **Step 3: Suita PASS → Commit** `feat: landing čip Karta dana`
 
 ### Task 20: Kapija faze v0.4.3
 
-- [ ] Suita + tsc + lint; ručno NA TELEFONU: Preživi banka preko pauze/zaključavanja, Karta dana pre i posle ponoći (promena datuma menja špil), replay ponašanje, čip; CHANGELOG „v0.4.3 — Preživi i Karta dana"; verzija `0.4.3`; tag `v0.4.3`; push. **Kraj obima ovog plana — v0.4.4 (Džokeri) traži svoj spec pre ikakvog koda.**
+- [x] Suita + tsc + lint; ručno NA TELEFONU: Preživi banka preko pauze/zaključavanja, Karta dana pre i posle ponoći (promena datuma menja špil), replay ponašanje, čip; CHANGELOG „v0.4.3 — Preživi i Karta dana"; verzija `0.4.3`; tag `v0.4.3`; push. **Kraj obima ovog plana — v0.4.4 (Džokeri) traži svoj spec pre ikakvog koda.**
