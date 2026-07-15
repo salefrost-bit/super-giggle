@@ -1,11 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { calculateStreak } from '@/lib/domain/streak';
-import { getPersonalRecords, getCompletedSessionDates, type PersonalRecord } from '@/lib/supabase/records';
-import { getUserSessions, type SessionHistoryEntry } from '@/lib/supabase/sessions';
+import { rankForXp, nextRank } from '@/lib/domain/score';
+import { getPersonalRecords, getCompletedSessionDates, getTotalXp, type PersonalRecord } from '@/lib/supabase/records';
+import {
+  getUserSessions,
+  getSessionDetails,
+  backfillPoints,
+  type SessionHistoryEntry,
+  type SessionDetails,
+} from '@/lib/supabase/sessions';
 import { StreakInfoModal } from '@/components/streak/StreakInfoModal';
+import { InfoModal } from '@/components/ui/InfoModal';
+import { HistoryRow } from '@/components/progress/HistoryRow';
 
 interface ProgressScreenProps {
   userId: string;
@@ -19,24 +28,122 @@ function formatDuration(totalSeconds: number | null): string {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
+function pointsRecordKey(session: SessionHistoryEntry): string | null {
+  if (session.points === null || session.status !== 'completed') return null;
+  if (session.gameMode === 'classic' || session.gameMode === 'perfect_deck') {
+    return `${session.gameMode}|${session.cardCount ?? session.totalCards}`;
+  }
+  if (session.gameMode === 'sprint') {
+    if (session.sprintMinutes == null) return null;
+    return `sprint|${session.sprintMinutes}`;
+  }
+  if (session.gameMode === 'court' || session.gameMode === 'survive' || session.gameMode === 'daily') {
+    return session.gameMode;
+  }
+  return `${session.gameMode}|${session.cardCount ?? session.totalCards}`;
+}
+
+function pointsRecordDimensionLabel(
+  session: SessionHistoryEntry,
+  t: ReturnType<typeof useTranslations>
+): string {
+  if (session.gameMode === 'classic' || session.gameMode === 'perfect_deck') {
+    return t('progress.cardsLine', { count: session.cardCount ?? session.totalCards });
+  }
+  if (session.gameMode === 'sprint' && session.sprintMinutes != null) {
+    return t('progress.sprintDim', { minutes: session.sprintMinutes });
+  }
+  switch (session.gameMode) {
+    case 'court':
+      return '🏀';
+    case 'survive':
+      return '💀';
+    case 'daily':
+      return '📅';
+    default:
+      return session.gameMode;
+  }
+}
+
+function aggregatePointsRecords(sessions: SessionHistoryEntry[]): SessionHistoryEntry[] {
+  const bestByKey = new Map<string, SessionHistoryEntry>();
+  for (const session of sessions) {
+    const key = pointsRecordKey(session);
+    if (!key) continue;
+    const existing = bestByKey.get(key);
+    if (!existing || (session.points ?? 0) > (existing.points ?? 0)) {
+      bestByKey.set(key, session);
+    }
+  }
+  return Array.from(bestByKey.values());
+}
+
 export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
   const t = useTranslations();
   const [sessions, setSessions] = useState<SessionHistoryEntry[]>([]);
   const [records, setRecords] = useState<PersonalRecord[]>([]);
   const [streak, setStreak] = useState({ days: 0, freezesLeftThisWeek: 2 });
+  const [xp, setXp] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showStreakInfo, setShowStreakInfo] = useState(false);
+  const [showXpInfo, setShowXpInfo] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [detailsMap, setDetailsMap] = useState<Record<string, SessionDetails>>({});
 
   useEffect(() => {
-    Promise.all([getUserSessions(userId), getPersonalRecords(userId), getCompletedSessionDates(userId)])
-      .then(([sessionRows, recordRows, dates]) => {
+    async function load() {
+      try {
+        let sessionRows = await getUserSessions(userId);
+        const needsBackfill = sessionRows.filter(
+          (s) => s.status === 'completed' && s.points === null
+        );
+        if (needsBackfill.length > 0) {
+          await Promise.all(needsBackfill.map((s) => backfillPoints(s.id, s.gameMode)));
+          sessionRows = await getUserSessions(userId);
+        }
+
+        const [recordRows, dates, totalXp] = await Promise.all([
+          getPersonalRecords(userId),
+          getCompletedSessionDates(userId),
+          getTotalXp(userId),
+        ]);
+
         setSessions(sessionRows);
         setRecords(recordRows);
         setStreak(calculateStreak(dates, new Date()));
-      })
-      .catch((err) => console.error('Failed to load progress data', err))
-      .finally(() => setIsLoading(false));
+        setXp(totalXp);
+      } catch (err) {
+        console.error('Failed to load progress data', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void load();
   }, [userId]);
+
+  const pointsRecords = useMemo(() => aggregatePointsRecords(sessions), [sessions]);
+  const rank = rankForXp(xp);
+  const next = nextRank(xp);
+
+  const handleExpand = useCallback(
+    async (sessionId: string) => {
+      if (expandedId === sessionId) {
+        setExpandedId(null);
+        return;
+      }
+      setExpandedId(sessionId);
+      if (!detailsMap[sessionId]) {
+        try {
+          const details = await getSessionDetails(sessionId);
+          setDetailsMap((prev) => ({ ...prev, [sessionId]: details }));
+        } catch (err) {
+          console.error('Failed to load session details', err);
+        }
+      }
+    },
+    [expandedId, detailsMap]
+  );
 
   return (
     <div className="min-h-screen flex flex-col px-6 pt-6 pb-8">
@@ -73,6 +180,24 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
             </div>
           </button>
 
+          <button
+            type="button"
+            onClick={() => setShowXpInfo(true)}
+            className="bg-surface rounded-2xl p-4 flex items-center gap-3 mb-5 text-left w-full"
+          >
+            <span className="text-4xl leading-none">{rank.symbol}</span>
+            <div>
+              <p className="text-2xl font-black leading-none">
+                {xp} {t('xp.label')}
+              </p>
+              {next && (
+                <p className="text-xs text-muted font-semibold mt-1 tabular-nums">
+                  {xp} / {next.threshold}
+                </p>
+              )}
+            </div>
+          </button>
+
           {records.length > 0 && (
             <>
               <p className="text-xs font-extrabold text-muted tracking-widest uppercase mb-2">
@@ -104,6 +229,27 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
             </>
           )}
 
+          {pointsRecords.length > 0 && (
+            <>
+              <p className="text-xs font-extrabold text-muted tracking-widest uppercase mb-2">
+                {t('progress.pointsRecordsTitle')}
+              </p>
+              <div className="flex flex-col gap-2 mb-5">
+                {pointsRecords.map((session) => (
+                  <div
+                    key={pointsRecordKey(session)!}
+                    className="bg-surface rounded-xl px-3.5 py-3 flex justify-between items-center"
+                  >
+                    <p className="text-sm font-bold">
+                      {pointsRecordDimensionLabel(session, t)} · {session.difficultyName}
+                    </p>
+                    <p className="text-sm font-black text-accent tabular-nums">{session.points}</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
           <p className="text-xs font-extrabold text-muted tracking-widest uppercase mb-2">
             {t('progress.historyTitle')}
           </p>
@@ -114,34 +260,31 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
           ) : (
             <div className="flex flex-col gap-2">
               {sessions.map((session) => (
-                <div
+                <HistoryRow
                   key={session.id}
-                  className="bg-surface rounded-xl px-3.5 py-3 flex justify-between items-center text-sm font-bold"
-                >
-                  <span>{new Date(session.startedAt).toLocaleDateString()}</span>
-                  <span className={session.gameMode === 'perfect_deck' ? 'text-accent' : 'text-muted'}>
-                    {session.gameMode === 'perfect_deck' && session.score !== null
-                      ? `⚡ ${session.score}/${session.totalCards}`
-                      : t('progress.classicTag')}
-                  </span>
-                  <span className="text-right">
-                    <span className="block text-muted">{formatDuration(session.totalDurationSeconds)}</span>
-                    {session.totalPauseSeconds != null && session.totalPauseSeconds > 0 && (
-                      <span className="block text-[10px] font-semibold text-muted/70">
-                        {t('pause.historyLabel', { duration: formatDuration(session.totalPauseSeconds) })}
-                      </span>
-                    )}
-                  </span>
-                </div>
+                  session={session}
+                  details={expandedId === session.id ? detailsMap[session.id] ?? null : null}
+                  onExpand={handleExpand}
+                />
               ))}
             </div>
           )}
+
           {showStreakInfo && (
             <StreakInfoModal
               days={streak.days}
               freezesLeftThisWeek={streak.freezesLeftThisWeek}
               onClose={() => setShowStreakInfo(false)}
             />
+          )}
+          {showXpInfo && (
+            <InfoModal
+              title={t('xp.rankTitle')}
+              closeLabel={t('common.close')}
+              onClose={() => setShowXpInfo(false)}
+            >
+              {t('xp.explanation')}
+            </InfoModal>
           )}
         </>
       )}
