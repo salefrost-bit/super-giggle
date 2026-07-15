@@ -1,8 +1,20 @@
 # Šta je novo u ŠPIL-u
 
-## U pripremi — Igrivost
+## v0.4.3 — Preživi i Karta dana (2026-07-15)
 
-Tri načina treninga (brzi, po meri sa slajderima, challenge), poeni i rekordi za svaki trening, XP sa kartaškim zvanjima, više vežbi po kategoriji, novi challenge modovi (Sprint, Dvor, Preživi špil, Karta dana), pa zatim džokeri kao odmor, animacije vežbi, redizajn Napretka, zvuk/vibracija i instalacija na telefon (PWA).
+Novi challenge mod **Preživi špil**: banka od 90 sekundi, svaka završena karta dopunjava kvotu, cilj je proći što više od 52 karata. **Karta dana** — jedinstveni dnevni špil od 20 karata (seed po datumu), tier vežbi rotira tokom nedelje; prvi pokušaj se čuva, replay ne utiče na rekord. Na početnom ekranu čip **🎴 Karta dana** (✓ kad je današnja odigrana).
+
+## v0.4.2 — Sprint i Dvor (2026-07-15)
+
+**Sprint** — izaberi 3, 5 ili 10 minuta, obori što više karata dok odbrojava vreme; špil se remeša kad se iscrpi. **Dvor** — 16 najtežih karata (J, Q, K, A), kvota po karti kao kod Perfektnog špila ali uvek procena (bez ličnog rekorda), bonus ×1.25 na poene.
+
+## v0.4.1 — Temelj igrivosti (2026-07-15)
+
+Tri načina ulaska u trening: brzi (nivo + dužina), po meri (svih 24 vežbe, slajderi), i challenge meni. Biblioteka proširena na 24 vežbe sa nivoima težine. Poeni se računaju po završetku svakog treninga; XP i kartaška zvanja na ekranu Napredak. Istorija sa padajućim detaljima po sesiji. Dugme „Ponovi poslednji trening".
+
+## U pripremi
+
+Džokeri kao odmor, animacije vežbi, redizajn Napretka, zvuk/vibracija i instalacija na telefon (PWA).
 
 ## v0.3 — Pošteno vreme (2026-07-14) — ranije zvano: Krug A
 
