@@ -20,6 +20,7 @@ import { hasSeenExplanation, markExplained } from '@/lib/modes/explained';
 import { MODES } from '@/lib/modes/registry';
 import { loadLastConfig, validateLastConfig } from '@/lib/domain/lastConfig';
 import { drawSessionCards, createCourtDeck } from '@/lib/domain/deck';
+import { buildDraws } from '@/lib/domain/draws';
 import { calculateReps } from '@/lib/domain/reps';
 import { calculateParSeconds, resolveBudget } from '@/lib/domain/challenge';
 import { SUIT_TO_CATEGORY } from '@/lib/domain/types';
@@ -48,7 +49,9 @@ export default function Home() {
         !last ||
         (last.gameMode !== 'classic' &&
           last.gameMode !== 'perfect_deck' &&
-          last.gameMode !== 'court')
+          last.gameMode !== 'sprint' &&
+          last.gameMode !== 'court' &&
+          last.gameMode !== 'survive')
       ) {
         if (!cancelled) setCanRepeatLast(false);
         return;
@@ -77,7 +80,7 @@ export default function Home() {
       setCategoryIdByKey(buildCategoryIdByKey(categories));
     }
     const modeDef = MODES.find((m) => m.id === sessionConfig.gameMode);
-    if (modeDef?.isChallenge && !hasSeenExplanation(sessionConfig.gameMode)) {
+    if (modeDef?.isChallenge && sessionConfig.gameMode && !hasSeenExplanation(sessionConfig.gameMode)) {
       setShowChallengeIntro(true);
     }
     setScreen('session');
@@ -94,7 +97,9 @@ export default function Home() {
       !last ||
       (last.gameMode !== 'classic' &&
         last.gameMode !== 'perfect_deck' &&
-        last.gameMode !== 'court')
+        last.gameMode !== 'sprint' &&
+        last.gameMode !== 'court' &&
+        last.gameMode !== 'survive')
     ) {
       return;
     }
@@ -109,7 +114,7 @@ export default function Home() {
     }
 
     const difficulty = levels.find((level) => level.id === last.difficultyLevelId);
-    if (!difficulty) {
+    if (!difficulty && last.gameMode !== 'sprint') {
       setCanRepeatLast(false);
       return;
     }
@@ -123,6 +128,39 @@ export default function Home() {
         return;
       }
       exerciseByCategory[key] = exercise;
+    }
+
+    if (last.gameMode === 'sprint') {
+      if (last.sprintMinutes == null) {
+        setCanRepeatLast(false);
+        return;
+      }
+      const sprintDifficulty =
+        difficulty ?? levels.find((level) => level.defaultRepMultiplier === 1.0);
+      if (!sprintDifficulty) {
+        setCanRepeatLast(false);
+        return;
+      }
+      const cards = drawSessionCards(52);
+      const sessionDraws = buildDraws(cards, exerciseByCategory, 1.0, false);
+      await handleSetupStart(
+        {
+          difficultyLevelId: sprintDifficulty.id,
+          repMultiplier: 1.0,
+          deckSize: 52,
+          exerciseByCategory,
+          entry: last.entry,
+          gameMode: 'sprint',
+          sprintMinutes: last.sprintMinutes,
+        },
+        sessionDraws
+      );
+      return;
+    }
+
+    if (!difficulty) {
+      setCanRepeatLast(false);
+      return;
     }
 
     const cards = last.gameMode === 'court' ? createCourtDeck() : drawSessionCards(last.deckSize);
@@ -177,6 +215,9 @@ export default function Home() {
       sessionConfig.parSource = 'par';
       sessionConfig.parSecondsPerRep = difficulty.parSecondsPerRep;
       sessionConfig.parTransitionSeconds = difficulty.parTransitionSeconds;
+    } else if (mode === 'survive') {
+      sessionConfig.parSecondsPerRep = difficulty.parSecondsPerRep;
+      sessionConfig.parTransitionSeconds = difficulty.parTransitionSeconds;
     }
 
     await handleSetupStart(sessionConfig, draws);
@@ -210,7 +251,7 @@ export default function Home() {
           title={t(modeDef?.titleKey ?? 'setup.challengeTitle')}
           closeLabel={t('modes.firstRunCta')}
           onClose={() => {
-            markExplained(config.gameMode);
+            if (config.gameMode) markExplained(config.gameMode);
             setShowChallengeIntro(false);
           }}
         >

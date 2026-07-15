@@ -71,6 +71,11 @@ export interface SessionSettings {
   entry?: EntryPath;
   card_count?: number;
   rep_multiplier?: number;
+  sprint_minutes?: number;
+  cards_completed?: number;
+  survived_cards?: number;
+  daily_date?: string;
+  daily_replay?: boolean;
 }
 
 export interface ChallengeSettings extends SessionSettings {
@@ -95,6 +100,7 @@ export interface SessionConfig {
   // weighted quota (calculateCardWeight) without re-fetching the difficulty row.
   parSecondsPerRep?: number;
   parTransitionSeconds?: number;
+  sprintMinutes?: number;
 }
 
 export interface CardDrawResult {

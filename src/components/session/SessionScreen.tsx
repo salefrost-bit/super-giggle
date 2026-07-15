@@ -1,14 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useStopwatch } from '@/hooks/useStopwatch';
 import { useCardQuota } from '@/hooks/useCardQuota';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useLocaleSetting } from '@/i18n/LocaleProvider';
 import { localizedName } from '@/i18n/dbName';
+import { BANK_START_SECONDS, applyCompletedCard, isBankrupt } from '@/lib/domain/bank';
 import { calculateCardWeight, calculateQuotaSeconds, computeScore } from '@/lib/domain/challenge';
 import { calculateBasePoints, challengeMultiplier, calculatePoints } from '@/lib/domain/score';
+import { drawSessionCards } from '@/lib/domain/deck';
+import { buildDraws } from '@/lib/domain/draws';
 import { CardDisplay } from './CardDisplay';
 import { ProgressIndicator } from './ProgressIndicator';
 import { StopwatchDisplay } from './StopwatchDisplay';
@@ -35,6 +38,13 @@ export function SessionScreen({
 }: SessionScreenProps) {
   const t = useTranslations();
   const { locale } = useLocaleSetting();
+  const isSprint = config.gameMode === 'sprint';
+  const isCourt = config.gameMode === 'court';
+  const isSurvive = config.gameMode === 'survive';
+  const isChallenge =
+    (config.gameMode === 'perfect_deck' || isCourt) && config.budgetSeconds != null;
+
+  const [queue, setQueue] = useState<CardDrawResult[]>(draws);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedDraws, setCompletedDraws] = useState<CardDrawResult[]>(draws);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -42,9 +52,11 @@ export function SessionScreen({
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [outcomeFlash, setOutcomeFlash] = useState<'won' | 'lost' | null>(null);
   const stopwatch = useStopwatch();
-  // Screen stays awake for the whole active session (all modes); released on unmount.
+  const lastAppendedAtRef = useRef(-1);
   useWakeLock(true);
 
+  const [balanceSeconds, setBalanceSeconds] = useState(BANK_START_SECONDS);
+  const [elapsedAtCardStart, setElapsedAtCardStart] = useState(0);
   const [pauseOrigin, setPauseOrigin] = useState<'manual' | 'auto' | null>(null);
 
   function handleManualPause() {
@@ -58,17 +70,41 @@ export function SessionScreen({
     stopwatch.resume();
   }
 
-  const isChallenge =
-    (config.gameMode === 'perfect_deck' || config.gameMode === 'court') &&
-    config.budgetSeconds != null;
-  const parRates = { parSecondsPerRep: config.parSecondsPerRep, parTransitionSeconds: config.parTransitionSeconds };
-  const cardWeights = draws.map((d) => calculateCardWeight(d.reps, parRates));
+  const parRates = {
+    parSecondsPerRep: config.parSecondsPerRep,
+    parTransitionSeconds: config.parTransitionSeconds,
+  };
+  const cardWeights = queue.map((d) => calculateCardWeight(d.reps, parRates));
   const totalWeight = cardWeights.reduce((sum, w) => sum + w, 0);
   const quotaSeconds = isChallenge
     ? calculateQuotaSeconds(config.budgetSeconds as number, cardWeights[currentIndex], totalWeight)
     : null;
-  const quota = useCardQuota(quotaSeconds, currentIndex, stopwatch.isPaused);
+  const cardQuota = useCardQuota(quotaSeconds, currentIndex, stopwatch.isPaused);
+  const sprintQuota = useCardQuota(
+    isSprint && config.sprintMinutes != null ? config.sprintMinutes * 60 : null,
+    0,
+    stopwatch.isPaused
+  );
+  const quota = isSprint ? sprintQuota : cardQuota;
   const scoreSoFar = computeScore(completedDraws.slice(0, currentIndex));
+
+  const activeCardSeconds = isSurvive ? stopwatch.elapsedSeconds - elapsedAtCardStart : 0;
+  const displayBalance = isSurvive ? Math.max(0, balanceSeconds - activeCardSeconds) : null;
+  const cardQuotaSeconds = isSurvive ? cardWeights[currentIndex] : null;
+
+  useEffect(() => {
+    if (!isSprint || sprintQuota.expired) return;
+    if (currentIndex !== queue.length - 1) return;
+    if (lastAppendedAtRef.current === queue.length - 1) return;
+    lastAppendedAtRef.current = queue.length - 1;
+
+    const cards = drawSessionCards(52);
+    const appended = buildDraws(cards, config.exerciseByCategory, config.repMultiplier, false).map(
+      (draw, index) => ({ ...draw, orderIndex: queue.length + index })
+    );
+    setQueue((prev) => [...prev, ...appended]);
+    setCompletedDraws((prev) => [...prev, ...appended]);
+  }, [currentIndex, queue.length, isSprint, sprintQuota.expired, config.exerciseByCategory, config.repMultiplier]);
 
   useEffect(() => {
     if (!userId || !categoryIdByKey) return;
@@ -80,7 +116,9 @@ export function SessionScreen({
       gameMode: config.gameMode,
       settings: isChallenge
         ? { budget_seconds: config.budgetSeconds as number, par_source: config.parSource ?? 'par' }
-        : undefined,
+        : isSprint && config.sprintMinutes != null
+          ? { sprint_minutes: config.sprintMinutes }
+          : undefined,
     })
       .then((id) => {
         setSessionId(id);
@@ -90,14 +128,9 @@ export function SessionScreen({
         console.error('Failed to create session', err);
         setSaveState('failed');
       });
-    // Intentionally runs once on mount only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-pause when the app loses visibility (lock screen, call, tab switch).
-  // Reuses the exact same pause path as the button — timestamp shift only.
-  // Guard makes repeated `hidden` events idempotent and keeps a manual
-  // pause's origin from being overwritten.
   useEffect(() => {
     function autoPause() {
       if (!stopwatch.isPaused) {
@@ -108,12 +141,6 @@ export function SessionScreen({
     function handleVisibilityChange() {
       if (document.visibilityState === 'hidden') autoPause();
     }
-    // `pagehide` is the more reliable backgrounding signal on iOS Safari, where
-    // `visibilitychange` is less dependable across app-switch / screen lock
-    // (spec section 11 review point). Pausing is idempotent (Task 4's log +
-    // the isPaused guard), so firing both listeners is harmless. pagehide does
-    // NOT fire on the finish→summary state change (not a page navigation), so
-    // it won't spuriously pause a completing session.
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('pagehide', autoPause);
     return () => {
@@ -122,8 +149,177 @@ export function SessionScreen({
     };
   }, [stopwatch.isPaused, stopwatch.pause]);
 
+  async function finishSession(
+    nextDraws: CardDrawResult[],
+    options: { survivedCards?: number; survivedAll?: boolean } = {}
+  ) {
+    stopwatch.pause();
+    const totalDurationSeconds = stopwatch.elapsedSeconds;
+    const pauseStats = {
+      pause_count: stopwatch.pauseCount,
+      total_pause_seconds: stopwatch.totalPauseSeconds,
+    };
+    const finishedDraws = nextDraws.filter((d) => d.completedAt !== null);
+    const scored = finishedDraws.map((d) => ({
+      reps: d.reps,
+      completedAt: d.completedAt,
+      tier: d.exercise.tier,
+    }));
+    const basePoints = calculateBasePoints(scored);
+    const challengeScore = computeScore(nextDraws);
+
+    let multiplier: number;
+    if (isSurvive) {
+      multiplier = challengeMultiplier({
+        mode: 'survive',
+        survivedAll: options.survivedAll ?? false,
+      });
+    } else if (isChallenge) {
+      multiplier = challengeMultiplier({
+        mode: isCourt ? 'court' : 'perfect_deck',
+        beaten: challengeScore.score,
+        total: nextDraws.length,
+      });
+    } else if (isSprint) {
+      multiplier = challengeMultiplier({ mode: 'sprint' });
+    } else {
+      multiplier = challengeMultiplier({ mode: 'classic' });
+    }
+
+    const points = calculatePoints(basePoints, multiplier);
+    const pointsPayload = {
+      points,
+      base_points: basePoints,
+      multiplier,
+      entry: config.entry,
+      card_count: config.deckSize,
+      rep_multiplier: config.repMultiplier,
+    };
+
+    const settingsPayload = isSurvive
+      ? {
+          survived_cards: options.survivedCards ?? finishedDraws.length,
+          ...pauseStats,
+          ...pointsPayload,
+        }
+      : isChallenge
+        ? {
+            budget_seconds: config.budgetSeconds as number,
+            par_source: config.parSource ?? ('par' as const),
+            best_score: config.bestScoreForCombo ?? null,
+            score: challengeScore.score,
+            won: challengeScore.won,
+            ...pauseStats,
+            ...pointsPayload,
+          }
+        : isSprint
+          ? {
+              sprint_minutes: config.sprintMinutes,
+              cards_completed: finishedDraws.length,
+              ...pauseStats,
+              ...pointsPayload,
+            }
+          : { ...pauseStats, ...pointsPayload };
+
+    if (userId && sessionId && saveState === 'ready') {
+      try {
+        await completeSession(sessionId, totalDurationSeconds, settingsPayload);
+      } catch (err) {
+        console.error('Failed to complete session', err);
+        setSaveState('failed');
+      }
+    }
+
+    if (
+      config.gameMode === 'classic' ||
+      config.gameMode === 'perfect_deck' ||
+      config.gameMode === 'court' ||
+      config.gameMode === 'survive'
+    ) {
+      saveLastConfig({
+        entry: config.entry ?? 'quick',
+        gameMode: config.gameMode,
+        difficultyLevelId: config.difficultyLevelId,
+        repMultiplier: config.repMultiplier,
+        deckSize: config.deckSize,
+        exerciseIds: {
+          push: config.exerciseByCategory.push.id,
+          pull: config.exerciseByCategory.pull.id,
+          legs: config.exerciseByCategory.legs.id,
+          core: config.exerciseByCategory.core.id,
+        },
+      });
+    } else if (isSprint && config.sprintMinutes != null) {
+      saveLastConfig({
+        entry: config.entry ?? 'challenge',
+        gameMode: 'sprint',
+        difficultyLevelId: config.difficultyLevelId,
+        repMultiplier: 1.0,
+        deckSize: 52,
+        sprintMinutes: config.sprintMinutes,
+        exerciseIds: {
+          push: config.exerciseByCategory.push.id,
+          pull: config.exerciseByCategory.pull.id,
+          legs: config.exerciseByCategory.legs.id,
+          core: config.exerciseByCategory.core.id,
+        },
+      });
+    }
+
+    onFinish({
+      totalDurationSeconds,
+      draws: nextDraws,
+      pauseCount: pauseStats.pause_count,
+      totalPauseSeconds: pauseStats.total_pause_seconds,
+      points,
+      basePoints,
+      multiplier,
+    });
+  }
+
   async function handleNext() {
     setIsAdvancing(true);
+
+    if (isSurvive) {
+      const completedAt = new Date().toISOString();
+      const cardQuota = cardWeights[currentIndex];
+      const newBalance = applyCompletedCard(balanceSeconds, cardQuota, activeCardSeconds);
+      const updatedDraw: CardDrawResult = {
+        ...completedDraws[currentIndex],
+        completedAt,
+      };
+      const nextDraws = [...completedDraws];
+      nextDraws[currentIndex] = updatedDraw;
+      setCompletedDraws(nextDraws);
+
+      if (userId && sessionId && saveState === 'ready') {
+        try {
+          await recordCardDraw(sessionId, updatedDraw);
+        } catch (err) {
+          console.error('Failed to record card draw', err);
+          setSaveState('failed');
+        }
+      }
+
+      const nextIndex = currentIndex + 1;
+      const survivedAll = nextIndex >= queue.length;
+
+      if (survivedAll) {
+        await finishSession(nextDraws, { survivedCards: nextIndex, survivedAll: true });
+        return;
+      }
+      if (isBankrupt(newBalance)) {
+        await finishSession(nextDraws, { survivedCards: nextIndex, survivedAll: false });
+        return;
+      }
+
+      setBalanceSeconds(newBalance);
+      setElapsedAtCardStart(stopwatch.elapsedSeconds);
+      setCurrentIndex(nextIndex);
+      setIsAdvancing(false);
+      return;
+    }
+
     const completedAt = new Date().toISOString();
     const updatedDraw: CardDrawResult = {
       ...completedDraws[currentIndex],
@@ -146,93 +342,19 @@ export function SessionScreen({
     }
 
     const nextIndex = currentIndex + 1;
-    if (nextIndex >= draws.length) {
-      stopwatch.pause();
-      // Closure reads: totalDurationSeconds and the pause stats come from the
-      // render BEFORE the wrap-up pause() above, so finishing the session is
-      // not itself counted or timed as a pause.
-      const totalDurationSeconds = stopwatch.elapsedSeconds;
-      const pauseStats = {
-        pause_count: stopwatch.pauseCount,
-        total_pause_seconds: stopwatch.totalPauseSeconds,
-      };
-      const scored = nextDraws.map((d) => ({
-        reps: d.reps,
-        completedAt: d.completedAt,
-        tier: d.exercise.tier,
-      }));
-      const basePoints = calculateBasePoints(scored);
-      const challengeScore = computeScore(nextDraws);
-      const multiplier = isChallenge
-        ? challengeMultiplier({
-            mode: config.gameMode === 'court' ? 'court' : 'perfect_deck',
-            beaten: challengeScore.score,
-            total: nextDraws.length,
-          })
-        : challengeMultiplier({ mode: 'classic' });
-      const points = calculatePoints(basePoints, multiplier);
-      const pointsPayload = {
-        points,
-        base_points: basePoints,
-        multiplier,
-        entry: config.entry,
-        card_count: config.deckSize,
-        rep_multiplier: config.repMultiplier,
-      };
-      const settingsPayload = isChallenge
-        ? {
-            budget_seconds: config.budgetSeconds as number,
-            par_source: config.parSource ?? ('par' as const),
-            best_score: config.bestScoreForCombo ?? null,
-            score: challengeScore.score,
-            won: challengeScore.won,
-            ...pauseStats,
-            ...pointsPayload,
-          }
-        : { ...pauseStats, ...pointsPayload };
-      if (userId && sessionId && saveState === 'ready') {
-        try {
-          await completeSession(sessionId, totalDurationSeconds, settingsPayload);
-        } catch (err) {
-          console.error('Failed to complete session', err);
-          setSaveState('failed');
-        }
-      }
-      if (
-        config.gameMode === 'classic' ||
-        config.gameMode === 'perfect_deck' ||
-        config.gameMode === 'court'
-      ) {
-        saveLastConfig({
-          entry: config.entry ?? 'quick',
-          gameMode: config.gameMode,
-          difficultyLevelId: config.difficultyLevelId,
-          repMultiplier: config.repMultiplier,
-          deckSize: config.deckSize,
-          exerciseIds: {
-            push: config.exerciseByCategory.push.id,
-            pull: config.exerciseByCategory.pull.id,
-            legs: config.exerciseByCategory.legs.id,
-            core: config.exerciseByCategory.core.id,
-          },
-        });
-      }
-      onFinish({
-        totalDurationSeconds,
-        draws: nextDraws,
-        pauseCount: pauseStats.pause_count,
-        totalPauseSeconds: pauseStats.total_pause_seconds,
-        points,
-        basePoints,
-        multiplier,
-      });
+    if (isSprint && sprintQuota.expired) {
+      await finishSession(nextDraws);
+      return;
+    }
+    if (nextIndex >= queue.length) {
+      await finishSession(nextDraws);
       return;
     }
     setCurrentIndex(nextIndex);
     setIsAdvancing(false);
   }
 
-  const current = draws[currentIndex];
+  const current = queue[currentIndex];
   const isWaitingForSession = userId !== null && saveState === 'creating';
   const nextDisabled = stopwatch.isPaused || isAdvancing || isWaitingForSession;
 
@@ -243,14 +365,22 @@ export function SessionScreen({
           <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">
             ⚡ {scoreSoFar.score}/{currentIndex}
             {config.bestScoreForCombo != null
-              ? ` · ${t('progress.bestScore', { score: config.bestScoreForCombo, total: draws.length })}`
+              ? ` · ${t('progress.bestScore', { score: config.bestScoreForCombo, total: queue.length })}`
               : ''}
+          </p>
+        ) : isSprint ? (
+          <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">
+            🏃 {currentIndex + 1}
+          </p>
+        ) : isSurvive ? (
+          <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">
+            🛡 {currentIndex}/{queue.length}
           </p>
         ) : (
           <div className="w-10" />
         )}
         <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} />
-        <ProgressIndicator current={currentIndex + 1} total={draws.length} />
+        <ProgressIndicator current={currentIndex + 1} total={queue.length} />
       </div>
 
       <div className="flex-1 flex flex-col justify-center">
@@ -261,14 +391,16 @@ export function SessionScreen({
           rank={current.card.rank}
           categoryKey={current.categoryKey}
           categoryLabel={undefined}
-          quotaRemainingSeconds={isChallenge ? quota.remainingSeconds : null}
+          quotaRemainingSeconds={isChallenge || isSprint ? quota.remainingSeconds : null}
           quotaFraction={quota.fraction}
+          bankBalanceSeconds={displayBalance}
+          bankQuotaSeconds={cardQuotaSeconds}
           outcomeFlash={outcomeFlash}
         />
         <div className="h-1.5 rounded-[3px] bg-surface/70 mt-5 overflow-hidden">
           <div
             className="h-full bg-accent rounded-[3px]"
-            style={{ width: `${Math.round((currentIndex / draws.length) * 100)}%` }}
+            style={{ width: `${Math.round((currentIndex / queue.length) * 100)}%` }}
           />
         </div>
       </div>

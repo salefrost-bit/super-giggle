@@ -11,7 +11,13 @@ vi.mock('@/lib/supabase/sessions', () => ({
   completeSession: vi.fn(),
 }));
 
+vi.mock('@/hooks/useCardQuota', async () => {
+  const actual = await vi.importActual<typeof import('@/hooks/useCardQuota')>('@/hooks/useCardQuota');
+  return { useCardQuota: vi.fn(actual.useCardQuota) };
+});
+
 import { createSession, recordCardDraw, completeSession } from '@/lib/supabase/sessions';
+import { useCardQuota } from '@/hooks/useCardQuota';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -155,6 +161,7 @@ describe('SessionScreen — perfect_deck challenge', () => {
     );
 
     // Card 2 quota = round(110*38/73) = 57s. Let it expire, then click → lost.
+    await waitFor(() => expect(screen.getByText('Karta 2/2')).toBeInTheDocument());
     await vi.advanceTimersByTimeAsync(58_000);
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
     await waitFor(() =>
@@ -239,6 +246,7 @@ describe('SessionScreen — points payload', () => {
 
     await screen.findByRole('button', { name: 'Sledeća karta' });
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    await waitFor(() => expect(screen.getByText('Karta 2/2')).toBeInTheDocument());
     await vi.advanceTimersByTimeAsync(58_000);
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
 
@@ -301,10 +309,264 @@ describe('SessionScreen — points payload', () => {
   });
 });
 
+describe('SessionScreen — survive', () => {
+  const surviveConfig = {
+    ...config,
+    gameMode: 'survive' as const,
+    deckSize: 2,
+    parSecondsPerRep: 3,
+    parTransitionSeconds: 20,
+  };
+
+  it('bankrot završava sesiju', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    renderWithIntl(
+      <SessionScreen
+        config={surviveConfig}
+        draws={draws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    await vi.advanceTimersByTimeAsync(126_000);
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({ survived_cards: 1, multiplier: 1 })
+      )
+    );
+    expect(onFinish).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
+  });
+
+  it('52/52 daje ×1.5 u payload-u', async () => {
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithIntl(
+      <SessionScreen
+        config={{ ...surviveConfig, deckSize: 1 }}
+        draws={[draws[0]]}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({ survived_cards: 1, multiplier: 1.5 })
+      )
+    );
+  });
+
+  it('IVICA: 52. karta završena a saldo ≤ 0 → payload IPAK ima ×1.5', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    renderWithIntl(
+      <SessionScreen
+        config={{ ...surviveConfig, deckSize: 1 }}
+        draws={[draws[0]]}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    await vi.advanceTimersByTimeAsync(200_000);
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() =>
+      expect(completeSession).toHaveBeenCalledWith(
+        'session-1',
+        expect.any(Number),
+        expect.objectContaining({ multiplier: 1.5, survived_cards: 1 })
+      )
+    );
+    vi.useRealTimers();
+  });
+
+  it('pauza ne troši banku — activeCardSeconds ostaje isti', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+    renderWithIntl(
+      <SessionScreen
+        config={surviveConfig}
+        draws={draws}
+        categoryIdByKey={null}
+        userId={null}
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    await vi.advanceTimersByTimeAsync(5_000);
+    await user.click(screen.getByRole('button', { name: 'Pauza' }));
+    await vi.advanceTimersByTimeAsync(30_000);
+    await user.click(screen.getByRole('button', { name: 'Nastavi trening' }));
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() => expect(onFinish).toHaveBeenCalledTimes(1));
+    vi.useRealTimers();
+  });
+});
+
 function setVisibility(state: 'hidden' | 'visible') {
   Object.defineProperty(document, 'visibilityState', { value: state, configurable: true });
   fireEvent(document, new Event('visibilitychange'));
 }
+
+describe('SessionScreen — sprint', () => {
+  const sprintExercise = {
+    id: 'e1',
+    name: 'Sklekovi',
+    categoryId: 'c1',
+    difficultyLevelId: 'd1',
+    tier: 2 as const,
+    isDefault: true,
+  };
+
+  const sprintConfig: SessionConfig = {
+    difficultyLevelId: 'd1',
+    repMultiplier: 1,
+    deckSize: 52,
+    exerciseByCategory: {
+      push: sprintExercise,
+      pull: sprintExercise,
+      legs: sprintExercise,
+      core: sprintExercise,
+    },
+    entry: 'challenge',
+    gameMode: 'sprint',
+    sprintMinutes: 5,
+  };
+
+  const sprintDraws: CardDrawResult[] = [
+    {
+      orderIndex: 0,
+      card: { suit: 'hearts', rank: 5 },
+      categoryKey: 'push',
+      exercise: sprintExercise,
+      reps: 5,
+      completedAt: null,
+    },
+  ];
+
+  it('prikazuje countdown umesto kvote po karti', async () => {
+    vi.mocked(useCardQuota).mockImplementation((quotaSeconds) => {
+      if (quotaSeconds === 300) {
+        return { remainingSeconds: 245, fraction: 245 / 300, expired: false };
+      }
+      return { remainingSeconds: 0, fraction: 1, expired: false };
+    });
+    vi.mocked(createSession).mockResolvedValue('session-1');
+
+    renderWithIntl(
+      <SessionScreen
+        config={sprintConfig}
+        draws={sprintDraws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={vi.fn()}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    expect(screen.getByText('4:05')).toBeInTheDocument();
+  });
+
+  it('posle isteka završava tekuću kartu pa zatvara sesiju', async () => {
+    vi.mocked(useCardQuota).mockImplementation((quotaSeconds) => {
+      if (quotaSeconds === 300) {
+        return { remainingSeconds: 0, fraction: 0, expired: true };
+      }
+      return { remainingSeconds: 30, fraction: 0.5, expired: false };
+    });
+    vi.mocked(createSession).mockResolvedValue('session-1');
+    vi.mocked(recordCardDraw).mockResolvedValue(undefined);
+    vi.mocked(completeSession).mockResolvedValue(undefined);
+    const onFinish = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithIntl(
+      <SessionScreen
+        config={sprintConfig}
+        draws={sprintDraws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={onFinish}
+      />
+    );
+
+    await screen.findByRole('button', { name: 'Sledeća karta' });
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+
+    await waitFor(() => expect(onFinish).toHaveBeenCalledTimes(1));
+    expect(completeSession).toHaveBeenCalledWith(
+      'session-1',
+      expect.any(Number),
+      expect.objectContaining({
+        sprint_minutes: 5,
+        cards_completed: 1,
+      })
+    );
+  });
+
+  it('createSession šalje total_cards 52 za sprint', async () => {
+    vi.mocked(createSession).mockResolvedValue('session-1');
+
+    renderWithIntl(
+      <SessionScreen
+        config={sprintConfig}
+        draws={sprintDraws}
+        categoryIdByKey={{ push: 'c1', pull: 'c2', legs: 'c3', core: 'c4' }}
+        userId="user-1"
+        onFinish={vi.fn()}
+      />
+    );
+
+    await waitFor(() =>
+      expect(createSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({ deckSize: 52 }),
+          gameMode: 'sprint',
+        })
+      )
+    );
+  });
+});
 
 describe('SessionScreen — auto-pause on visibility loss', () => {
   afterEach(() => {

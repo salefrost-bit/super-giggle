@@ -34,6 +34,7 @@
     "quarterAria": "Short (12 cards)",
     "halfAria": "Medium (24 cards)",
     "fullAria": "Full deck (52 cards)",
+    "chooseSprintDuration": "Choose duration",
     "diffDescBeginner": "Easier reps, ideal to start.",
     "diffDescIntermediate": "Balanced load.",
     "diffDescAdvanced": "Maximum intensity."
@@ -48,6 +49,8 @@
     "reps": "reps",
     "cardOf": "Card {current}/{total}",
     "quotaCaption": "CARD DEADLINE",
+    "bankCaption": "TIME BANK",
+    "bankQuota": "+{seconds}s refill",
     "saveFailed": "Saving isn't working right now — this workout may not appear in your history."
   },
   "results": {
@@ -115,6 +118,11 @@
       "title": "👑 Court",
       "desc": "16 hardest cards: J, Q, K and A.",
       "explanation": "Per-card deadline like Perfect Deck, but you always play against our estimate — not your record. ×1.25 bonus on points. Aces are deliberately included as \"rest\" cards — Ace = 1 rep."
+    },
+    "survive": {
+      "title": "🛡 Survive the deck",
+      "desc": "90-second bank — refill it with every card.",
+      "explanation": "You start with a 90-second bank. Every finished card refills the bank with that card's quota (estimated time for the card). How far can you get through 52 cards? Pausing doesn't drain the bank. Beat every card for a ×1.5 bonus."
     }
   },
   "streak": {

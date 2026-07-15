@@ -34,6 +34,7 @@
     "quarterAria": "Kratak (12 karata)",
     "halfAria": "Srednji (24 karte)",
     "fullAria": "Ceo špil (52 karte)",
+    "chooseSprintDuration": "Izaberi trajanje",
     "diffDescBeginner": "Lakše ponavljanja, idealno za start.",
     "diffDescIntermediate": "Uravnoteženo opterećenje.",
     "diffDescAdvanced": "Maksimalan intenzitet."
@@ -48,6 +49,8 @@
     "reps": "ponavljanja",
     "cardOf": "Karta {current}/{total}",
     "quotaCaption": "ROK ZA KARTU",
+    "bankCaption": "BANKA VREMENA",
+    "bankQuota": "+{seconds}s dopuna",
     "saveFailed": "Čuvanje treninga trenutno ne radi — rezultat možda neće biti sačuvan u istoriji."
   },
   "results": {
@@ -115,6 +118,11 @@
       "title": "👑 Dvor",
       "desc": "16 najtežih karata: J, Q, K i A.",
       "explanation": "Rok po karti kao Perfektan špil, ali uvek igraš protiv naše procene — bez tvog rekorda. Bonus ×1.25 na poene. Asovi su namerno unutra kao predah karte — As=1 ponavljanje."
+    },
+    "survive": {
+      "title": "🛡 Preživi špil",
+      "desc": "Banka od 90 sekundi — dopuni je sa svakom kartom.",
+      "explanation": "Krećeš sa bankom od 90 sekundi. Svaka završena karta dopunjuje banku svojom kvotom (procena vremena za tu kartu). Dokle ćeš stići kroz 52 karte? Pauza ne troši banku. Pređi sve karte za bonus ×1.5."
     }
   },
   "streak": {

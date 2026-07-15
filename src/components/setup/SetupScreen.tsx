@@ -8,6 +8,7 @@ import { DifficultySelector } from './DifficultySelector';
 import { ExercisePicker } from './ExercisePicker';
 import { SessionLengthSelector } from './SessionLengthSelector';
 import { CustomSetup } from './CustomSetup';
+import { SprintSetup } from './SprintSetup';
 import {
   fetchCategories,
   fetchExercisesByDifficulty,
@@ -15,12 +16,13 @@ import {
   fetchDifficultyLevels,
   categoryKeyForName,
 } from '@/lib/supabase/queries';
+import { useLocaleSetting } from '@/i18n/LocaleProvider';
+import { localizedName } from '@/i18n/dbName';
 import { MODES } from '@/lib/modes/registry';
 import { drawSessionCards, createCourtDeck } from '@/lib/domain/deck';
-import { calculateReps } from '@/lib/domain/reps';
+import { buildDraws } from '@/lib/domain/draws';
 import { calculateParSeconds, resolveBudget } from '@/lib/domain/challenge';
 import { getBestDurationSeconds, getBestScore } from '@/lib/supabase/records';
-import { SUIT_TO_CATEGORY } from '@/lib/domain/types';
 import type {
   Category,
   CategoryKey,
@@ -42,7 +44,18 @@ type Step =
   | 'challenge-menu'
   | 'mode-difficulty'
   | 'mode-exercises'
-  | 'mode-length';
+  | 'mode-length'
+  | 'sprint'
+  | 'sprint-exercises';
+
+const NAME_TO_SUIT: Record<string, string> = {
+  Guranje: '♥',
+  Povlačenje: '♣',
+  Noge: '♠',
+  Core: '♦',
+};
+
+const TIER_ROMAN = ['Ⅰ', 'Ⅱ', 'Ⅲ'] as const;
 
 function pickDefaults(exercises: Exercise[], categories: Category[]): Record<CategoryKey, Exercise> {
   const result = {} as Record<CategoryKey, Exercise>;
@@ -64,8 +77,10 @@ function stepNumberFor(step: Step, gameMode: GameMode): number {
     'custom-sliders': 2,
     'challenge-menu': 2,
     'mode-difficulty': 3,
-    'mode-exercises': gameMode === 'court' ? 4 : 4,
+    'mode-exercises': 4,
     'mode-length': 5,
+    sprint: 3,
+    'sprint-exercises': 4,
   };
   return map[step];
 }
@@ -74,7 +89,10 @@ function totalStepsFor(step: Step, entry: EntryPath | null, gameMode: GameMode):
   if (step === 'entry') return 3;
   if (entry === 'quick') return 3;
   if (entry === 'custom') return 2;
-  if (entry === 'challenge') return gameMode === 'court' || gameMode === 'survive' ? 4 : 5;
+  if (entry === 'challenge') {
+    if (gameMode === 'sprint' || gameMode === 'court' || gameMode === 'survive') return 4;
+    return 5;
+  }
   return 3;
 }
 
@@ -86,9 +104,11 @@ interface SetupScreenProps {
 
 export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
   const t = useTranslations();
+  const { locale } = useLocaleSetting();
   const [step, setStep] = useState<Step>('entry');
   const [entry, setEntry] = useState<EntryPath | null>(null);
   const [gameMode, setGameMode] = useState<GameMode>('classic');
+  const [sprintMinutes, setSprintMinutes] = useState<number | null>(null);
   const [difficulty, setDifficulty] = useState<DifficultyLevel | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -97,6 +117,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
     CategoryKey,
     Exercise
   > | null>(null);
+  const [sprintSelection, setSprintSelection] = useState<Partial<Record<CategoryKey, Exercise>>>({});
 
   useEffect(() => {
     fetchCategories().then(setCategories);
@@ -146,17 +167,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
     if (!difficulty) return;
     const deckSize = 52;
     const cards = drawSessionCards(deckSize);
-    const draws: CardDrawResult[] = cards.map((card, index) => {
-      const categoryKey = SUIT_TO_CATEGORY[card.suit];
-      return {
-        orderIndex: index,
-        card,
-        categoryKey,
-        exercise: selection[categoryKey],
-        reps: calculateReps(card, difficulty.defaultRepMultiplier),
-        completedAt: null,
-      };
-    });
+    const sessionDraws = buildDraws(cards, selection, difficulty.defaultRepMultiplier, false);
 
     onStart(
       {
@@ -169,27 +180,16 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
         parSecondsPerRep: difficulty.parSecondsPerRep,
         parTransitionSeconds: difficulty.parTransitionSeconds,
       },
-      draws
+      sessionDraws
     );
   }
 
   function handleCourtStart(selection: Record<CategoryKey, Exercise>) {
     if (!difficulty) return;
     const cards = createCourtDeck();
-    const draws: CardDrawResult[] = cards.map((card, index) => {
-      const categoryKey = SUIT_TO_CATEGORY[card.suit];
-      return {
-        orderIndex: index,
-        card,
-        categoryKey,
-        exercise: selection[categoryKey],
-        reps: calculateReps(card, difficulty.defaultRepMultiplier),
-        completedAt: null,
-        beatQuota: null,
-      };
-    });
+    const sessionDraws = buildDraws(cards, selection, difficulty.defaultRepMultiplier, true);
 
-    const totalReps = draws.reduce((sum, d) => sum + d.reps, 0);
+    const totalReps = sessionDraws.reduce((sum, d) => sum + d.reps, 0);
     const par = calculateParSeconds(totalReps, 16, difficulty);
 
     onStart(
@@ -205,7 +205,37 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
         parSecondsPerRep: difficulty.parSecondsPerRep,
         parTransitionSeconds: difficulty.parTransitionSeconds,
       },
-      draws
+      sessionDraws
+    );
+  }
+
+  async function handleSprintMinutesSelect(minutes: number) {
+    setSprintMinutes(minutes);
+    const fetched = await fetchAllExercises();
+    setAllExercises(fetched);
+    setSprintSelection({});
+    setStep('sprint-exercises');
+  }
+
+  async function handleSprintStart(selection: Record<CategoryKey, Exercise>) {
+    const levels = await fetchDifficultyLevels();
+    const sprintDifficulty = levels.find((level) => level.defaultRepMultiplier === 1.0);
+    if (!sprintDifficulty || sprintMinutes == null) return;
+
+    const cards = drawSessionCards(52);
+    const sessionDraws = buildDraws(cards, selection, 1.0, false);
+
+    onStart(
+      {
+        difficultyLevelId: sprintDifficulty.id,
+        repMultiplier: 1.0,
+        deckSize: 52,
+        exerciseByCategory: selection,
+        entry: 'challenge',
+        gameMode: 'sprint',
+        sprintMinutes,
+      },
+      sessionDraws
     );
   }
 
@@ -222,17 +252,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
         : best
     );
     const cards = drawSessionCards(cardCount);
-    const draws: CardDrawResult[] = cards.map((card, index) => {
-      const categoryKey = SUIT_TO_CATEGORY[card.suit];
-      return {
-        orderIndex: index,
-        card,
-        categoryKey,
-        exercise: selection[categoryKey],
-        reps: calculateReps(card, repMultiplier),
-        completedAt: null,
-      };
-    });
+    const sessionDraws = buildDraws(cards, selection, repMultiplier, false);
 
     onStart(
       {
@@ -243,7 +263,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
         entry: 'custom',
         gameMode: 'classic',
       },
-      draws
+      sessionDraws
     );
   }
 
@@ -251,18 +271,12 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
     if (!difficulty || !exerciseByCategory || !entry) return;
     const cards = drawSessionCards(deckSize);
     const mode = entry === 'quick' ? 'classic' : gameMode;
-    const draws: CardDrawResult[] = cards.map((card, index) => {
-      const categoryKey = SUIT_TO_CATEGORY[card.suit];
-      return {
-        orderIndex: index,
-        card,
-        categoryKey,
-        exercise: exerciseByCategory[categoryKey],
-        reps: calculateReps(card, difficulty.defaultRepMultiplier),
-        completedAt: null,
-        beatQuota: mode === 'perfect_deck' || mode === 'court' ? null : undefined,
-      };
-    });
+    const sessionDraws = buildDraws(
+      cards,
+      exerciseByCategory,
+      difficulty.defaultRepMultiplier,
+      mode === 'perfect_deck' || mode === 'court'
+    );
 
     const config: SessionConfig = {
       difficultyLevelId: difficulty.id,
@@ -274,7 +288,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
     };
 
     if (mode === 'perfect_deck') {
-      const totalReps = draws.reduce((sum, d) => sum + d.reps, 0);
+      const totalReps = sessionDraws.reduce((sum, d) => sum + d.reps, 0);
       const par = calculateParSeconds(totalReps, deckSize, difficulty);
       let record: number | null = null;
       let bestScore: number | null = null;
@@ -296,7 +310,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
       config.parTransitionSeconds = difficulty.parTransitionSeconds;
     }
 
-    onStart(config, draws);
+    onStart(config, sessionDraws);
   }
 
   function handleBack() {
@@ -326,8 +340,18 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
       case 'mode-length':
         setStep('mode-exercises');
         break;
+      case 'sprint':
+        setStep('challenge-menu');
+        break;
+      case 'sprint-exercises':
+        setStep('sprint');
+        break;
     }
   }
+
+  const categoryKeys: CategoryKey[] = ['push', 'pull', 'legs', 'core'];
+  const sprintComplete = categoryKeys.every((key) => sprintSelection[key]);
+  const sortedCategories = [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
 
   const stepNumber = stepNumberFor(step, gameMode);
   const totalSteps = totalStepsFor(step, entry, gameMode);
@@ -371,9 +395,74 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
           modes={MODES.filter((m) => m.isChallenge)}
           onSelect={(m) => {
             setGameMode(m);
-            setStep('mode-difficulty');
+            if (m === 'sprint') {
+              setStep('sprint');
+            } else {
+              setStep('mode-difficulty');
+            }
           }}
         />
+      )}
+      {step === 'sprint' && <SprintSetup onSelect={handleSprintMinutesSelect} />}
+      {step === 'sprint-exercises' && (
+        <div className="flex flex-col flex-1">
+          <h2 className="text-2xl font-extrabold mb-5 leading-tight">{t('setup.chooseExercises')}</h2>
+          <div className="flex flex-col gap-[22px] flex-1">
+            {sortedCategories.map((category) => {
+              const categoryKey = categoryKeyForName(category.name);
+              const categoryExercises = allExercises
+                .filter((e) => e.categoryId === category.id)
+                .sort((a, b) => a.tier - b.tier);
+              const selected = sprintSelection[categoryKey];
+              return (
+                <div key={category.id}>
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <span className="w-[26px] h-[26px] rounded-lg bg-surface flex items-center justify-center text-sm text-accent font-extrabold">
+                      {NAME_TO_SUIT[category.name] ?? '♠'}
+                    </span>
+                    <span className="text-[15px] font-extrabold">{localizedName(category, locale)}</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {categoryExercises.map((exercise) => {
+                      const isSelected = selected?.id === exercise.id;
+                      return (
+                        <button
+                          key={exercise.id}
+                          onClick={() =>
+                            setSprintSelection((prev) => ({ ...prev, [categoryKey]: exercise }))
+                          }
+                          className={`text-left rounded-[14px] px-4 py-3.5 text-[15px] font-bold border-2 ${
+                            isSelected
+                              ? 'bg-accent/10 border-accent text-accent'
+                              : 'bg-surface border-white/5 text-foreground'
+                          }`}
+                        >
+                          <span className="flex items-center justify-between gap-2">
+                            <span>{localizedName(exercise, locale)}</span>
+                            <span className="text-xs font-extrabold text-muted shrink-0">
+                              {t('custom.tierBadge', { tier: TIER_ROMAN[exercise.tier - 1] })}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            disabled={!sprintComplete}
+            onClick={() =>
+              sprintComplete &&
+              handleSprintStart(sprintSelection as Record<CategoryKey, Exercise>)
+            }
+            className="w-full mt-6 bg-accent text-background font-extrabold text-lg py-4 rounded-[18px] disabled:opacity-40"
+          >
+            {t('custom.start')}
+          </button>
+        </div>
       )}
       {step === 'mode-difficulty' && (
         <DifficultySelector onSelect={handleModeDifficultySelect} />

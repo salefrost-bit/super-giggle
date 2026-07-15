@@ -40,4 +40,11 @@ export const MODES: ModeDefinition[] = [
     explanationKey: 'modes.court.explanation',
     isChallenge: true,
   },
+  {
+    id: 'survive',
+    titleKey: 'modes.survive.title',
+    descKey: 'modes.survive.desc',
+    explanationKey: 'modes.survive.explanation',
+    isChallenge: true,
+  },
 ];

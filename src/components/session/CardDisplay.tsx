@@ -27,6 +27,8 @@ interface CardDisplayProps {
   categoryLabel?: string;
   quotaRemainingSeconds?: number | null;
   quotaFraction?: number;
+  bankBalanceSeconds?: number | null;
+  bankQuotaSeconds?: number | null;
   outcomeFlash?: 'won' | 'lost' | null;
 }
 
@@ -39,13 +41,27 @@ export function CardDisplay({
   categoryLabel,
   quotaRemainingSeconds,
   quotaFraction,
+  bankBalanceSeconds,
+  bankQuotaSeconds,
   outcomeFlash,
 }: CardDisplayProps) {
   const t = useTranslations();
 
   const fraction = quotaFraction ?? 1;
   const urgency =
-    quotaRemainingSeconds == null ? 'normal' : fraction >= 0.5 ? 'normal' : fraction >= 0.25 ? 'warn' : 'critical';
+    bankBalanceSeconds != null
+      ? bankBalanceSeconds <= 10
+        ? 'critical'
+        : bankBalanceSeconds <= 30
+          ? 'warn'
+          : 'normal'
+      : quotaRemainingSeconds == null
+        ? 'normal'
+        : fraction >= 0.5
+          ? 'normal'
+          : fraction >= 0.25
+            ? 'warn'
+            : 'critical';
   const borderClass =
     outcomeFlash === 'won'
       ? 'border-accent shadow-[0_0_60px_rgba(204,255,0,0.35)]'
@@ -78,7 +94,29 @@ export function CardDisplay({
         <p className="text-[22px] font-extrabold">{exerciseName}</p>
         <p className="text-[96px] font-black text-accent leading-none mt-1.5">{reps}</p>
         <p className="text-[15px] font-bold text-muted tracking-widest uppercase">{t('workout.reps')}</p>
-        {quotaRemainingSeconds != null && (
+        {bankBalanceSeconds != null ? (
+          <>
+            <p
+              className={`text-2xl font-black tabular-nums mt-2.5 ${
+                urgency === 'critical' ? 'text-red-500' : urgency === 'warn' ? 'text-orange-400' : 'text-accent'
+              }`}
+            >
+              {Math.floor(bankBalanceSeconds / 60)}:{String(bankBalanceSeconds % 60).padStart(2, '0')}
+            </p>
+            <p
+              className={`text-[10px] font-bold tracking-widest ${
+                urgency === 'critical' ? 'text-red-500' : 'text-muted'
+              }`}
+            >
+              {t('workout.bankCaption')}
+            </p>
+            {bankQuotaSeconds != null && (
+              <p className="text-xs font-semibold text-muted mt-1">
+                {t('workout.bankQuota', { seconds: bankQuotaSeconds })}
+              </p>
+            )}
+          </>
+        ) : quotaRemainingSeconds != null ? (
           <>
             <p
               className={`text-2xl font-black tabular-nums mt-2.5 ${
@@ -95,9 +133,9 @@ export function CardDisplay({
               {t('workout.quotaCaption')}
             </p>
           </>
-        )}
+        ) : null}
       </div>
-      {quotaRemainingSeconds != null && (
+      {quotaRemainingSeconds != null && bankBalanceSeconds == null && (
         <div className="h-1 rounded-full bg-background/60 overflow-hidden mt-3">
           <div
             className={`h-full rounded-full ${
