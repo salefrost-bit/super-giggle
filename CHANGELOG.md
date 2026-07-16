@@ -1,5 +1,13 @@
 # Šta je novo u ŠPIL-u
 
+## v0.4.6 — Ispravke iz žive probe (2026-07-17)
+
+Prva proba na telefonu otkrila je pet stvari — sve su ispravljene. Čuvanje treninga je sada otporno na slabu mobilnu mrežu: svaki upis se automatski ponovi ako zapne, a poruka o grešci se javlja samo kad čuvanje stvarno propadne (dosad je umela da se javi i kad je sve prošlo). Registracija sada zaista traži potvrdu mejla pre prijave, sa jasnom porukom ako pokušaš da uđeš pre klika na link. Prsten oko karte se pomera zajedno sa kartom pri deljenju — nema više "pice" koja ostane da svetli iza. U istoriji se rašireni detalji sesije sami doskroluju u vidno polje. I najvažnije za trening: karte se sada dele tako da svaka vežba u svakom špilu dobije potpuno isti zbir ponavljanja (1:1:1:1) — isti rangovi u sve četiri boje, uključujući i Kartu dana.
+
+## U pripremi
+
+Novi izgled kalendara i istorije (više treninga u istom danu, XP na kalendaru) i sitne izmene interfejsa — prvo kroz dizajn prototip. Zatim zvuk i vibracija, pa instalacija na telefon (PWA).
+
 ## v0.4.5 — SHUFFLE (2026-07-16)
 
 Aplikacija se sada zove **SHUFFLE**. Ceo interfejs je nov: početni ekran sa čipovima (profil, streak, Daily Deal), Quick Deal na jednom ekranu, Build your hand, Challenge meni. Tokom treninga — prsten oko karte, boje grejanja, animacija deljenja, pauza overlay i vođeno disanje na džokeru. Na kraju — proslava poena sa RANK UP bedžom. Novi ekrani **Profil**, **Istorija** i **Kako se igra**. Lestvica od 14 kartaških činova (od Džokera do Kralja) i nova biblioteka vežbi.
@@ -19,10 +27,6 @@ Novi challenge mod **Preživi špil**: banka od 90 sekundi, svaka završena kart
 ## v0.4.1 — Temelj igrivosti (2026-07-15)
 
 Tri načina ulaska u trening: brzi (nivo + dužina), po meri (svih 24 vežbe, slajderi), i challenge meni. Biblioteka proširena na 24 vežbe sa nivoima težine. Poeni se računaju po završetku svakog treninga; XP i kartaška zvanja na ekranu Napredak. Istorija sa padajućim detaljima po sesiji. Dugme „Ponovi poslednji trening".
-
-## U pripremi
-
-Zvuk i vibracija tokom treninga (nova karta, rok, proslava). Zatim instalacija na telefon (PWA).
 
 ## v0.3 — Pošteno vreme (2026-07-14) — ranije zvano: Krug A
 

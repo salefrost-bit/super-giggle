@@ -88,6 +88,7 @@
     "creating": "Creating account...",
     "successTitle": "Registration successful!",
     "successNote": "Check your email to confirm your account before logging in.",
+    "emailNotConfirmed": "Your account isn't confirmed yet — click the link in the email we sent you, then log in.",
     "goLogin": "Go to login",
     "guestBanner": "You banked {points} points at the guest table — make an account and they're yours for keeps, streak and rank included.",
     "keepGuest": "Keep playing as guest →",

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 // Heat semantika (spec §5): relativna (quota.fraction) i apsolutna (On the
 // Clock banka, spec S11) skala. Čiste funkcije — bez sopstvenog stanja,
@@ -26,11 +26,14 @@ export const HEAT_COLOR: Record<Heat, string> = {
 interface HeatRingProps {
   fraction: number;
   children: ReactNode;
+  // Spec v0.4.6 §3: deal animacija se primenjuje na prsten (omotač) da bi se
+  // prsten i karta pomerali zajedno — kao u prototipu (s28).
+  style?: CSSProperties;
 }
 
 // Conic prsten oko sadržaja (s12: karta u live sesiji) — boja/glow po
 // heatFor(fraction), popunjenost prstena = fraction.
-export function HeatRing({ fraction, children }: HeatRingProps) {
+export function HeatRing({ fraction, children, style }: HeatRingProps) {
   const heat = heatFor(fraction);
   const color = HEAT_COLOR[heat];
   const deg = Math.max(0, Math.min(1, fraction)) * 360;
@@ -42,6 +45,7 @@ export function HeatRing({ fraction, children }: HeatRingProps) {
       style={{
         background: `conic-gradient(${color} ${deg}deg, var(--color-surface) 0deg)`,
         boxShadow: `0 0 34px ${color}40`,
+        ...style,
       }}
     >
       {children}

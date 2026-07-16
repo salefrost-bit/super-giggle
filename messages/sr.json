@@ -88,6 +88,7 @@
     "creating": "Kreiranje naloga...",
     "successTitle": "Registracija uspešna!",
     "successNote": "Proveri email da potvrdiš nalog pre prijave.",
+    "emailNotConfirmed": "Nalog još nije potvrđen — klikni na link u mejlu koji smo ti poslali, pa se prijavi.",
     "goLogin": "Idi na prijavu",
     "guestBanner": "Osvojio si {points} poena za gostinskim stolom — napravi nalog da ih zadržiš, zajedno sa nizom i činom.",
     "keepGuest": "Nastavi kao gost →",

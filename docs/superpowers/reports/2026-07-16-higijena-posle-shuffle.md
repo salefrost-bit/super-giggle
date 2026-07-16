@@ -36,8 +36,9 @@ summary/results, stari setup copy):
 - `progress.*` sve SEM `progress.cardsLine` (jedini živ, koristi ga
   `page.tsx`): `bestScore`, `classicTag`, `durationLine`, `empty`,
   `historyTitle`, `pointsRecordsTitle`, `recordsTitle`, `sprintDim`, `title`
-- `results.*` — ceo namespace (`challengeDone`, `guestNote`, `newBestScore`,
-  `newRecord`, `totalTime`, `workoutDone`)
+- `results.challengeDone`, `results.guestNote`, `results.newBestScore`,
+  `results.newRecord`, `results.totalTime`, `results.workoutDone` (ostatak
+  `results.*` namespace-a je živ)
 - `settings.title`
 - `setup.beatChip`, `setup.chooseSprintDuration`, `setup.diffDescBeginner`,
   `setup.diffDescIntermediate`, `setup.diffDescAdvanced`, `setup.quarterSub`,

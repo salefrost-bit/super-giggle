@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { MODES } from '@/lib/modes/registry';
 import { avgSecondsPerCard } from '@/components/history/historyUtils';
@@ -52,6 +53,16 @@ function modeIconFromTitle(title: string, gameMode: string): string {
 
 export function HistoryRow({ session, details, isBest, expanded, onExpand }: HistoryRowProps) {
   const t = useTranslations();
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  // Spec v0.4.6 §4: lista živi u kutiji sa unutrašnjim skrolom (max-h) — red
+  // raširen pri dnu otvara detalje ispod ivice kutije. Doskroluj red u vidno
+  // polje kad se raširi i kad detalji stignu (menjaju visinu). jsdom nema
+  // scrollIntoView, otuda opcioni poziv.
+  useEffect(() => {
+    if (!expanded) return;
+    rootRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }, [expanded, details]);
   const dateLabel = new Date(session.startedAt).toLocaleDateString();
   const rgb = MODE_RGB[session.gameMode] ?? MODE_RGB.classic;
   const modeDef = MODES.find((m) => m.id === (session.gameMode as GameMode));
@@ -76,6 +87,7 @@ export function HistoryRow({ session, details, isBest, expanded, onExpand }: His
 
   return (
     <div
+      ref={rootRef}
       data-testid={`history-row-${session.id}`}
       className="rounded-[14px] overflow-hidden transition-[border-color] duration-250"
       style={{

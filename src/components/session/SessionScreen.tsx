@@ -22,7 +22,7 @@ import { buildDraws } from '@/lib/domain/draws';
 import { CardDisplay } from './CardDisplay';
 import { JokerRestScreen } from './JokerRestScreen';
 import { StopwatchDisplay } from './StopwatchDisplay';
-import { HeatRing, HEAT_COLOR, heatFor, heatForAbsolute, type Heat } from '@/components/ui/HeatRing';
+import { HEAT_COLOR, heatFor, heatForAbsolute, type Heat } from '@/components/ui/HeatRing';
 import { SegmentBar } from '@/components/ui/SegmentBar';
 import { LiveDot } from '@/components/ui/LiveDot';
 import { createSession, recordCardDraw, completeSession, hasDailyForDate } from '@/lib/supabase/sessions';
@@ -74,6 +74,8 @@ export function SessionScreen({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedDraws, setCompletedDraws] = useState<CardDrawResult[]>(draws);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  // Klijentski UUID (spec v0.4.6 §1) — čini upis sesije idempotentnim za retry.
+  const [clientSessionId] = useState<string | null>(() => (userId ? crypto.randomUUID() : null));
   const [saveState, setSaveState] = useState<SessionSaveState>(userId ? 'creating' : 'guest');
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [outcomeFlash, setOutcomeFlash] = useState<'won' | 'lost' | null>(null);
@@ -204,6 +206,7 @@ export function SessionScreen({
       config,
       categoryIdByKey,
       startedAtIso: new Date().toISOString(),
+      sessionId: clientSessionId ?? undefined,
       gameMode: config.gameMode,
       settings: isChallenge
         ? { budget_seconds: config.budgetSeconds as number, par_source: config.parSource ?? 'par' }
@@ -662,18 +665,17 @@ export function SessionScreen({
             )}
 
             {isChallenge ? (
-              <HeatRing fraction={quota.fraction}>
-                <CardDisplay
-                  exerciseName={localizedName(current.exercise, locale)}
-                  reps={current.reps}
-                  suit={current.card.suit}
-                  rank={current.card.rank}
-                  dealKey={currentIndex}
-                  outcomeFlash={outcomeFlash}
-                  disabled={nextDisabled}
-                  onTap={handleNext}
-                />
-              </HeatRing>
+              <CardDisplay
+                exerciseName={localizedName(current.exercise, locale)}
+                reps={current.reps}
+                suit={current.card.suit}
+                rank={current.card.rank}
+                dealKey={currentIndex}
+                outcomeFlash={outcomeFlash}
+                disabled={nextDisabled}
+                onTap={handleNext}
+                ringFraction={quota.fraction}
+              />
             ) : (
               <div className="flex-1 flex flex-col">
                 <CardDisplay

@@ -45,8 +45,10 @@ Odluke koje su pale u brainstormu (izvor istine za buduće rasprave):
 | v0.4.3 | Preživi i Karta dana | dva nova challenge moda + dnevna petlja |
 | v0.4.4 | Džokeri | odmor kao karta, svi modovi (kratak sopstveni spec) — ✅ Završen 2026-07-15 |
 | v0.4.5 | SHUFFLE interfejs | ceo novi UI iz Claude Design prototipa: rebrend, EN copy, 14 činova, nova biblioteka vežbi, Profile/History/How to Play, score ritual — spec `specs/2026-07-16-shuffle-interfejs-design.md`. ZAMENJUJE ranije planirane "Animacije vežbi" (odbačene 2026-07-16 kao prekomplikovane) i apsorbuje "Napredak" — ✅ Završen 2026-07-16 |
-| v0.4.6 | Zvuk i ritam | zvuk + vibracija (vizuali score rituala gotovi u v0.4.5) — kratak sopstveni spec |
-| v0.4.7 | PWA | manifest, SW, offline; poslednja — asset lista konačna; verzionisan keš obavezan (kratak sopstveni spec) |
+| v0.4.6 | Ispravke iz žive probe | prva živa proba (2026-07-16) prekinula redosled: otporno čuvanje sesije, potvrda mejla, prsten uz kartu, istorija skrol, ogledalo rangova — spec `specs/2026-07-16-ispravke-zive-probe-design.md` — ✅ Završen 2026-07-17 |
+| (sledeći) | Dizajn-krug | nalaz 2 žive probe (kalendar/XP prikaz više sesija dnevno) + izmene interfejsa; korisnik prvo menja prototip u Claude Design alatu, pa spec ovde |
+| v0.4.x | Zvuk i ritam | zvuk + vibracija (vizuali score rituala gotovi u v0.4.5) — kratak sopstveni spec; pomereno iza dizajn-kruga |
+| v0.4.x | PWA | manifest, SW, offline; poslednja — asset lista konačna; verzionisan keš obavezan (kratak sopstveni spec) |
 
 Proces: jedan implementacioni plan za v0.4.1–v0.4.3 (paket za Cursor, faze
 redom, tag + CHANGELOG + ručna verifikacija po fazi); v0.4.4–v0.4.8 dobijaju

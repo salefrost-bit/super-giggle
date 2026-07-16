@@ -25,7 +25,10 @@ export function LoginForm() {
     const { error: signInError } = await signIn(email, password);
     setIsSubmitting(false);
     if (signInError) {
-      setError(signInError);
+      // Spec v0.4.6 §2: Supabase "Email not confirmed" → razumljiva poruka.
+      setError(
+        /not confirmed/i.test(signInError) ? t('auth.emailNotConfirmed') : signInError
+      );
       return;
     }
     router.push('/');

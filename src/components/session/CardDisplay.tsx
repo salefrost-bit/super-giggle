@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import type { Suit } from '@/lib/domain/types';
+import { HeatRing } from '@/components/ui/HeatRing';
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
   hearts: '♥',
@@ -38,12 +39,15 @@ interface CardDisplayProps extends CardContent {
   outcomeFlash?: 'won' | 'lost' | null;
   disabled?: boolean;
   onTap?: () => void;
+  // Spec v0.4.6 §3: kad postoji kvota, prsten je OVDE — omotač koji nosi deal
+  // transform/opacity, pa se prsten i karta animiraju zajedno (prototip s28).
+  ringFraction?: number | null;
 }
 
 // s1/s12: main exercise card — mirrored rank/suit corners like a real
 // playing card, big reps number, exercise name. Purely presentational: no
 // quota/bank knowledge here anymore (that lives in SessionScreen's external
-// big counter + HeatRing wrapper), matching the prototype's card content.
+// big counter), matching the prototype's card content.
 export function CardDisplay({
   exerciseName,
   reps,
@@ -53,6 +57,7 @@ export function CardDisplay({
   outcomeFlash,
   disabled,
   onTap,
+  ringFraction,
 }: CardDisplayProps) {
   const t = useTranslations();
   // phase + content live in one state object, and each of the three phase
@@ -130,7 +135,12 @@ export function CardDisplay({
     transition = 'none';
   }
 
-  return (
+  // Deal stil ide na NAJSPOLJNIJI element: na prsten kad postoji (prsten +
+  // karta lete zajedno, nema "pizza" ostatka), inače na samu kartu.
+  const dealStyle = { transform, opacity, transition };
+  const hasRing = ringFraction != null;
+
+  const card = (
     <div
       role={onTap ? 'button' : undefined}
       tabIndex={onTap ? 0 : undefined}
@@ -143,7 +153,10 @@ export function CardDisplay({
       }}
       data-testid="exercise-card"
       className={`flex-1 rounded-[28px] border-2 ${outcomeBorder} p-5 flex flex-col justify-between transition-[border-color,box-shadow] duration-300 ${onTap && !disabled ? 'cursor-pointer' : ''}`}
-      style={{ transform, opacity, transition, background: 'linear-gradient(160deg,#2c2c30,#212124 60%,#1e1e21)' }}
+      style={{
+        ...(hasRing ? {} : dealStyle),
+        background: 'linear-gradient(160deg,#2c2c30,#212124 60%,#1e1e21)',
+      }}
     >
       {cornerLabel}
       <div className="text-center">
@@ -160,5 +173,12 @@ export function CardDisplay({
       </div>
       <div className="self-end rotate-180">{cornerLabel}</div>
     </div>
+  );
+
+  if (!hasRing) return card;
+  return (
+    <HeatRing fraction={ringFraction} style={dealStyle}>
+      {card}
+    </HeatRing>
   );
 }

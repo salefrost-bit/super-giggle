@@ -11,6 +11,7 @@ import type {
 } from '../domain/types';
 import { CATEGORY_KEY_TO_NAME, SUIT_TO_CATEGORY } from '../domain/types';
 import { calculateBasePoints, challengeMultiplier, calculatePoints } from '../domain/score';
+import { withSaveRetry } from './retry';
 
 export interface CreateSessionParams {
   userId: string;
@@ -19,26 +20,34 @@ export interface CreateSessionParams {
   startedAtIso: string;
   gameMode?: GameMode;
   settings?: SessionSettings | ChallengeSettings;
+  // Otporno čuvanje (spec v0.4.6 §1): klijentski UUID čini insert idempotentnim
+  // pa je retry bezbedan i kad je prvi upis prošao a odgovor se izgubio.
+  sessionId?: string;
 }
 
 export async function createSession(params: CreateSessionParams): Promise<string> {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from('sessions')
-    .insert({
-      user_id: params.userId,
-      difficulty_level_id: params.config.difficultyLevelId,
-      total_cards: params.config.deckSize,
-      rep_multiplier: params.config.repMultiplier,
-      started_at: params.startedAtIso,
-      status: 'in_progress',
-      ...(params.gameMode ? { game_mode: params.gameMode } : {}),
-      ...(params.settings ? { settings: params.settings } : {}),
-    })
-    .select('id')
-    .single();
-  if (error) throw error;
-  const sessionId = (data as { id: string }).id;
+  const inserted = await withSaveRetry(async () => {
+    const { data, error } = await supabase
+      .from('sessions')
+      .insert({
+        ...(params.sessionId ? { id: params.sessionId } : {}),
+        user_id: params.userId,
+        difficulty_level_id: params.config.difficultyLevelId,
+        total_cards: params.config.deckSize,
+        rep_multiplier: params.config.repMultiplier,
+        started_at: params.startedAtIso,
+        status: 'in_progress',
+        ...(params.gameMode ? { game_mode: params.gameMode } : {}),
+        ...(params.settings ? { settings: params.settings } : {}),
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    return (data as { id: string }).id;
+  });
+  // null = duplicate na retry-ju — moguće samo sa klijentskim ID-em, koji tada i važi.
+  const sessionId = inserted ?? (params.sessionId as string);
 
   const categoryKeys = Object.keys(params.config.exerciseByCategory) as CategoryKey[];
   const sessionExerciseRows = categoryKeys.map((key) => ({
@@ -46,26 +55,28 @@ export async function createSession(params: CreateSessionParams): Promise<string
     category_id: params.categoryIdByKey[key],
     exercise_id: params.config.exerciseByCategory[key].id,
   }));
-  const { error: exercisesError } = await supabase
-    .from('session_exercises')
-    .insert(sessionExerciseRows);
-  if (exercisesError) throw exercisesError;
+  await withSaveRetry(async () => {
+    const { error } = await supabase.from('session_exercises').insert(sessionExerciseRows);
+    if (error) throw error;
+  });
 
   return sessionId;
 }
 
 export async function recordCardDraw(sessionId: string, draw: CardDrawResult): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase.from('card_draws').insert({
-    session_id: sessionId,
-    order_index: draw.orderIndex,
-    suit: draw.card.suit,
-    card_value: draw.card.rank,
-    reps: draw.reps,
-    completed_at: draw.completedAt,
-    beat_quota: draw.beatQuota ?? null,
+  await withSaveRetry(async () => {
+    const { error } = await supabase.from('card_draws').insert({
+      session_id: sessionId,
+      order_index: draw.orderIndex,
+      suit: draw.card.suit,
+      card_value: draw.card.rank,
+      reps: draw.reps,
+      completed_at: draw.completedAt,
+      beat_quota: draw.beatQuota ?? null,
+    });
+    if (error) throw error;
   });
-  if (error) throw error;
 }
 
 export async function completeSession(
@@ -74,16 +85,18 @@ export async function completeSession(
   settings?: SessionSettings | ChallengeSettings
 ): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase
-    .from('sessions')
-    .update({
-      status: 'completed',
-      completed_at: new Date().toISOString(),
-      total_duration_seconds: totalDurationSeconds,
-      ...(settings ? { settings } : {}),
-    })
-    .eq('id', sessionId);
-  if (error) throw error;
+  await withSaveRetry(async () => {
+    const { error } = await supabase
+      .from('sessions')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        total_duration_seconds: totalDurationSeconds,
+        ...(settings ? { settings } : {}),
+      })
+      .eq('id', sessionId);
+    if (error) throw error;
+  });
 }
 
 export interface SessionHistoryEntry {

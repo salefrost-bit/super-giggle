@@ -15,8 +15,8 @@ export function createFullDeck(): Card[] {
   return deck;
 }
 
-export function shuffleDeck(deck: Card[], rng: () => number = Math.random): Card[] {
-  const result = [...deck];
+function shuffleArray<T>(items: T[], rng: () => number): T[] {
+  const result = [...items];
   for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
     [result[i], result[j]] = [result[j], result[i]];
@@ -24,15 +24,23 @@ export function shuffleDeck(deck: Card[], rng: () => number = Math.random): Card
   return result;
 }
 
+export function shuffleDeck(deck: Card[], rng: () => number = Math.random): Card[] {
+  return shuffleArray(deck, rng);
+}
+
+// Ogledalo rangova (spec v0.4.6 §5): jedan skup rangova, isti u sve 4 boje —
+// zbir ponavljanja po vežbi je identičan u svakom podeljenom špilu (1:1:1:1).
 export function drawSessionCards(deckSize: DeckSize, rng: () => number = Math.random): Card[] {
   if (!isValidDeckSize(deckSize)) {
     throw new Error(`Invalid deck size ${deckSize} — must be 12–52 divisible by 4 (spec §2.4)`);
   }
   const perSuit = deckSize / 4;
+  const sessionRanks = shuffleArray(RANKS, rng).slice(0, perSuit);
   const picked: Card[] = [];
   for (const suit of SUITS) {
-    const suitCards = shuffleDeck(RANKS.map((rank) => ({ suit, rank })), rng);
-    picked.push(...suitCards.slice(0, perSuit));
+    for (const rank of sessionRanks) {
+      picked.push({ suit, rank });
+    }
   }
   return shuffleDeck(picked, rng);
 }

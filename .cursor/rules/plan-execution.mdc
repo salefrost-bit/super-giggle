@@ -15,7 +15,8 @@ This repo's implementation is fully specified across a series of plan cycles, ea
 5. **Krug B "Igrivost" (v0.4.1–v0.4.3)** — Spec: `docs/superpowers/specs/2026-07-15-krug-b-design.md` · Plan: `docs/superpowers/plans/2026-07-15-krug-b-plan.md` — **DONE**, all 20 tasks, tags v0.4.1–v0.4.3.
 6. **Džokeri (v0.4.4)** — Spec: `docs/superpowers/specs/2026-07-15-dzokeri-design.md` · Plan: `docs/superpowers/plans/2026-07-15-dzokeri-plan.md` — **DONE**, tag v0.4.4.
 7. **SHUFFLE interfejs (v0.4.5)** — Spec: `docs/superpowers/specs/2026-07-16-shuffle-interfejs-design.md` · Plan: `docs/superpowers/plans/2026-07-16-shuffle-interfejs-plan.md` — **DONE**, tag v0.4.5.
-8. **Next:** v0.4.6 Zvuk i ritam — requires its own short spec before any code (`docs/superpowers/strategy/2026-07-15-krug-b-revizija.md`).
+8. **Ispravke iz žive probe (v0.4.6)** — Spec: `docs/superpowers/specs/2026-07-16-ispravke-zive-probe-design.md` (plan skipped by explicit user decision) — **DONE**, tag v0.4.6.
+9. **Next:** design round — the user reworks the HTML prototype in the Claude Design tool (calendar/XP display for multiple sessions per day + small interface changes), then a spec is written here from that prototype. Sound and PWA phases follow after it.
 
 The development roadmap source of truth is
 `docs/superpowers/strategy/2026-07-15-krug-b-revizija.md` (which amends

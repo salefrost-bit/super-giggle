@@ -82,6 +82,38 @@ describe('drawSessionCards (balansirano, spec §2.4)', () => {
   });
 });
 
+describe('drawSessionCards (ogledalo rangova, spec v0.4.6 §5)', () => {
+  function ranksBySuit(cards: { suit: Suit; rank: number }[]): Record<Suit, number[]> {
+    const result: Record<Suit, number[]> = { hearts: [], clubs: [], spades: [], diamonds: [] };
+    for (const c of cards) result[c.suit].push(c.rank);
+    for (const suit of Object.keys(result) as Suit[]) result[suit].sort((a, b) => a - b);
+    return result;
+  }
+
+  it.each([12, 20, 24, 48])('isti skup rangova u sve 4 boje za špil od %i', (n) => {
+    const bySuit = ranksBySuit(drawSessionCards(n));
+    expect(bySuit.clubs).toEqual(bySuit.hearts);
+    expect(bySuit.spades).toEqual(bySuit.hearts);
+    expect(bySuit.diamonds).toEqual(bySuit.hearts);
+  });
+
+  it.each([12, 20, 24])('zbir rangova (ponavljanja) identičan po boji za špil od %i', (n) => {
+    const bySuit = ranksBySuit(drawSessionCards(n));
+    const sums = (Object.keys(bySuit) as Suit[]).map((s) =>
+      bySuit[s].reduce((acc, r) => acc + r, 0)
+    );
+    expect(new Set(sums).size).toBe(1);
+  });
+
+  it('deterministički rng daje isti špil (ulaz za Daily)', () => {
+    const makeRng = () => {
+      let i = 0;
+      return () => ((i += 7) % 13) / 13;
+    };
+    expect(drawSessionCards(20, makeRng())).toEqual(drawSessionCards(20, makeRng()));
+  });
+});
+
 describe('createCourtDeck', () => {
   const courtRanks = new Set([1, 11, 12, 13]);
 
