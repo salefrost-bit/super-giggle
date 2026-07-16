@@ -47,17 +47,19 @@ beforeEach(() => {
 
 describe('SummaryScreen rank-up', () => {
   it('prikazuje banner kad XP prelazi prag zvanja', async () => {
-    vi.mocked(getTotalXp).mockResolvedValue(5100);
+    // points=300; pre = rankForXp(600-300=300) = 🃏 (< 500); posle = rankForXp(600) = A (>= 500).
+    vi.mocked(getTotalXp).mockResolvedValue(600);
     renderWithIntl(
       <SummaryScreen result={makeResult()} isGuest={false} userId="user-1" onDone={vi.fn()} />
     );
     await waitFor(() =>
-      expect(screen.getByText(/NOVO ZVANJE: J/)).toBeInTheDocument()
+      expect(screen.getByText(/NOVO ZVANJE: A/)).toBeInTheDocument()
     );
   });
 
   it('nema bannera kad zvanje ostaje isto', async () => {
-    vi.mocked(getTotalXp).mockResolvedValue(6000);
+    // points=300; pre = rankForXp(1200-300=900) = A; posle = rankForXp(1200) = A (oba < 1500).
+    vi.mocked(getTotalXp).mockResolvedValue(1200);
     renderWithIntl(
       <SummaryScreen result={makeResult()} isGuest={false} userId="user-1" onDone={vi.fn()} />
     );

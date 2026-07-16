@@ -41,18 +41,20 @@ describe('calculatePoints', () => {
   it('zaokružuje', () => expect(calculatePoints(333, 1.5)).toBe(500));
 });
 
-describe('XP zvanja (spec §3.4)', () => {
-  it('pragovi', () => {
-    expect(rankForXp(0).symbol).toBe('2');
-    expect(rankForXp(4999).symbol).toBe('2');
-    expect(rankForXp(5000).symbol).toBe('J');
-    expect(rankForXp(15000).symbol).toBe('Q');
-    expect(rankForXp(40000).symbol).toBe('K');
-    expect(rankForXp(100000).symbol).toBe('A');
-    expect(rankForXp(999999).symbol).toBe('🃏');
+describe('XP činovi (spec v0.4.5 §4)', () => {
+  it('pragovi 14 činova', () => {
+    expect(rankForXp(0).symbol).toBe('🃏');
+    expect(rankForXp(499).symbol).toBe('🃏');
+    expect(rankForXp(500).symbol).toBe('A');
+    expect(rankForXp(1500).symbol).toBe('2');
+    expect(rankForXp(45000).symbol).toBe('10');
+    expect(rankForXp(60000).symbol).toBe('J');
+    expect(rankForXp(80000).symbol).toBe('Q');
+    expect(rankForXp(105000).symbol).toBe('K');
+    expect(rankForXp(999999).symbol).toBe('K');
   });
-  it('nextRank vraća sledeći prag ili null na vrhu', () => {
-    expect(nextRank(0)?.symbol).toBe('J');
-    expect(nextRank(250000)).toBeNull();
+  it('nextRank', () => {
+    expect(nextRank(0)).toEqual({ symbol: 'A', nameKey: 'ranks.r1', threshold: 500 });
+    expect(nextRank(105000)).toBeNull();
   });
 });

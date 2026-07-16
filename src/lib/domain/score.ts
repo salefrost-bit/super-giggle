@@ -43,24 +43,41 @@ export function calculatePoints(basePoints: number, multiplier: number): number 
   return Math.round(basePoints * multiplier);
 }
 
+// Lestvica činova (errata E1, spec §4) — 14 činova, 🃏 Joker (0) → Ace (1) →
+// … → King (13). Imena/opisi dolaze iz i18n (top-level "ranks"/"ranksDesc"
+// blokovi, Task 5) po nameKey; kalibrisano na ~350 poena po treningu.
 export const XP_RANKS = [
-  { symbol: '2', threshold: 0 },
-  { symbol: 'J', threshold: 5000 },
-  { symbol: 'Q', threshold: 15000 },
-  { symbol: 'K', threshold: 40000 },
-  { symbol: 'A', threshold: 100000 },
-  { symbol: '🃏', threshold: 250000 },
+  { symbol: '🃏', nameKey: 'ranks.r0', threshold: 0 },
+  { symbol: 'A', nameKey: 'ranks.r1', threshold: 500 },
+  { symbol: '2', nameKey: 'ranks.r2', threshold: 1500 },
+  { symbol: '3', nameKey: 'ranks.r3', threshold: 3000 },
+  { symbol: '4', nameKey: 'ranks.r4', threshold: 5500 },
+  { symbol: '5', nameKey: 'ranks.r5', threshold: 9000 },
+  { symbol: '6', nameKey: 'ranks.r6', threshold: 14000 },
+  { symbol: '7', nameKey: 'ranks.r7', threshold: 20000 },
+  { symbol: '8', nameKey: 'ranks.r8', threshold: 27000 },
+  { symbol: '9', nameKey: 'ranks.r9', threshold: 35000 },
+  { symbol: '10', nameKey: 'ranks.r10', threshold: 45000 },
+  { symbol: 'J', nameKey: 'ranks.r11', threshold: 60000 },
+  { symbol: 'Q', nameKey: 'ranks.r12', threshold: 80000 },
+  { symbol: 'K', nameKey: 'ranks.r13', threshold: 105000 },
 ] as const;
 
-export function rankForXp(xp: number): { symbol: string; threshold: number } {
-  let current: { symbol: string; threshold: number } = XP_RANKS[0];
+export interface Rank {
+  symbol: string;
+  nameKey: string;
+  threshold: number;
+}
+
+export function rankForXp(xp: number): Rank {
+  let current: Rank = XP_RANKS[0];
   for (const rank of XP_RANKS) {
     if (xp >= rank.threshold) current = rank;
   }
   return current;
 }
 
-export function nextRank(xp: number): { symbol: string; threshold: number } | null {
+export function nextRank(xp: number): Rank | null {
   for (const rank of XP_RANKS) {
     if (xp < rank.threshold) return rank;
   }
