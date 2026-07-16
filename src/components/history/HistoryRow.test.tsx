@@ -74,6 +74,36 @@ describe('HistoryRow', () => {
     expect(suits).toHaveTextContent('61');
   });
 
+  it('Blitz zaglavlje prikazuje cardsCompleted, ne deck size iz card_count', () => {
+    const sprint: SessionHistoryEntry = {
+      ...session,
+      gameMode: 'sprint',
+      cardCount: 52,
+      cardsCompleted: 12,
+      survivedCards: null,
+    };
+    renderWithIntl(
+      <HistoryRow session={sprint} details={null} isBest={false} expanded={false} onExpand={vi.fn()} />
+    );
+    expect(screen.getByText(/12 karata/)).toBeInTheDocument();
+    expect(screen.queryByText(/52 kar/)).not.toBeInTheDocument();
+  });
+
+  it('Preživi zaglavlje prikazuje survivedCards, ne deck size iz card_count', () => {
+    const survive: SessionHistoryEntry = {
+      ...session,
+      gameMode: 'survive',
+      cardCount: 52,
+      cardsCompleted: null,
+      survivedCards: 37,
+    };
+    renderWithIntl(
+      <HistoryRow session={survive} details={null} isBest={false} expanded={false} onExpand={vi.fn()} />
+    );
+    expect(screen.getByText(/37 karata/)).toBeInTheDocument();
+    expect(screen.queryByText(/52 kar/)).not.toBeInTheDocument();
+  });
+
   it('Blitz AVG koristi cardsCompleted (S6)', () => {
     const sprint: SessionHistoryEntry = {
       ...session,

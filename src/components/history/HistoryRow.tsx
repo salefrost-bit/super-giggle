@@ -64,7 +64,13 @@ export function HistoryRow({ session, details, isBest, expanded, onExpand }: His
         : session.gameMode;
   const icon = modeIconFromTitle(rawTitle, session.gameMode);
   const title = rawTitle.replace(/^\S+\s+/, '') || rawTitle;
-  const cards = session.cardCount ?? session.cardsCompleted ?? session.survivedCards ?? session.totalCards;
+  // card_count je uvek deckSize (52) i za Blitz/Preživi — tamo važi broj odrađenih karata
+  const cards =
+    session.gameMode === 'sprint'
+      ? (session.cardsCompleted ?? session.totalCards)
+      : session.gameMode === 'survive'
+        ? (session.survivedCards ?? session.totalCards)
+        : (session.cardCount ?? session.totalCards);
   const avg = avgSecondsPerCard(session);
   const scoreColor = isBest ? 'var(--color-accent)' : 'var(--color-foreground)';
 
