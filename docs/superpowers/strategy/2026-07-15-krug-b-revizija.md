@@ -56,7 +56,7 @@ kratke spec-ove pre svojih faza, obim im je fiksiran glavnim spec-om.
 
 Sve tri preostale stavke Kruga C povučene su u Krug B kao faze v0.4.4
 (džokeri), v0.4.6→sada backlog (predlog progresije) i v0.4.7 (PWA).
-Krug C više ne postoji; posle v0.4.8 sledi **testiranje uživo**, pa se
+Krug C više ne postoji; posle v0.4.7 sledi **testiranje uživo**, pa se
 **v0.5 planira iz nalaza tog testiranja** (očekuje se i izmena asseta —
 zato PWA keš mora biti verzionisan sa update mehanizmom od prvog dana).
 

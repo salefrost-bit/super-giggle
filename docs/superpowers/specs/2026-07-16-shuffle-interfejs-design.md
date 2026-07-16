@@ -1,7 +1,7 @@
 # v0.4.5 "SHUFFLE" — novi interfejs — design spec
 
 Datum: 2026-07-16
-Status: Nacrt — čeka potvrdu korisnika, pa nezavisnu reviziju
+Status: Revidiran — nalazi nezavisne revizije S1–S12 primenjeni; spreman za plan
 Izvor dizajna: Claude Design handoff prototip (finalna verzija, EN copy),
 sekcije 1–24 — lokalna kopija se drži VAN repoa (dizajn se održava u Claude
 Design alatu; ovaj spec je prevod dizajna u zahteve).
@@ -64,10 +64,23 @@ ID-jevi u kodu i bazi se NIKAD ne menjaju; ovo su isključivo display imena
 | ekran pravila | How to Play | Kako se igra |
 | izbor vežbi | Build your hand | Složi ruku |
 
-Ostali mikro-copy: preuzima se doslovno iz prototipa (EN), SR se prevodi u
-istom glasu tokom implementacije, ključ-po-ključ uz EN (invarijanta 3).
+Ostali mikro-copy: preuzima se iz prototipa (EN), SR se prevodi u istom
+glasu tokom implementacije, ključ-po-ključ uz EN (invarijanta 3) — ALI se
+činjenične tvrdnje koriguju prema stvarnim pravilima igre (S8): (a) broj
+džokera zavisi od špila — 1 za ≤20 karata, ne uvek "two per deck"; (b)
+Blitz: score su POENI, "cards cleared" je čip; (c) XP daju SVE sesije, ne
+samo Challenge; (d) Ace prag ≈ 2 treninga, ne "one cleared deck".
 Nazivi modova u ISTORIJI starih sesija: prikazuju se nova display imena
 (id je isti), što je ispravno — mod je isti, ime je novo.
+
+**Mehanizam prikaza (S2, ključno):** imena TEŽINA i KATEGORIJA u bazi
+(`difficulty_levels.name/name_en`, `categories.name/name_en`) se NE
+diraju — po njima su ključane mape u kodu (`CATEGORY_KEY_TO_NAME`,
+`NAME_TO_SUIT`, `DESC_KEY_BY_NAME`) i `difficultyName` u istoriji. Novi
+nazivi težina (Low Stakes…) i njihovi opisi dolaze ISKLJUČIVO iz i18n
+ključeva mapiranih po `sort_order` (1/2/3); `DESC_KEY_BY_NAME` se
+zamenjuje tim mehanizmom. `localizedName` ostaje za VEŽBE (čija se DB
+imena menjaju migracijom §7) i za kategorije-suit labele.
 
 ## 4. Lestvica činova (errata E1 — menja `XP_RANKS`)
 
@@ -105,9 +118,14 @@ Cilj: sledeći Claude Design izvoz da se mapira, ne prepisuje.
   `--color-suit-spades #ccff00`, `--color-suit-clubs #fafafa`,
   `--color-joker #b9a8ff`, `--color-heat-warn #ffb340`,
   `--color-heat-danger #ff5147`, `--color-court #ffd75e`.
-- **Semantika grejanja (svuda ista):** >50% preostalog = volt, 25–50% =
-  warn, <25% = danger + panic puls + crvena vinjeta (inset shadow).
-  Poštuje `prefers-reduced-motion` (bez pulsa/animacija).
+- **Semantika grejanja:** >50% preostalog = volt, 25–50% = warn, <25% =
+  danger + panic puls + crvena vinjeta (inset shadow). IZUZETAK (S11):
+  On the Clock banka nema fiksni maksimum — pragovi su apsolutni
+  (<15s warn, <8s danger + vinjeta, po dizajn sekciji 20). Sve poštuje
+  `prefers-reduced-motion` (bez pulsa/animacija). Sva grejanja se izvode
+  iz postojećih timestamp izvora (`quota.fraction`, saldo banke) — NIKAD
+  novi interval-akumulator (S12; prototipov setInterval tick se NE
+  prepisuje).
 - **Nove male komponente** u `src/components/ui/`: `SuitChip`, `HeatRing`
   (conic-gradient prsten oko karte/kruga), `SegmentBar` (listovi špila),
   `LiveDot` (bounce + ripple, zamrzava se u pauzi), `StatTile`,
@@ -124,7 +142,7 @@ Cilj: sledeći Claude Design izvoz da se mapira, ne prepisuje.
 | 17 Quick Deal | Quick staza | **spajanje 2 koraka u 1 ekran** (STAKES + DECK SIZE + CTA SHUFFLE THE DECK) — errata E4 |
 | 18 Build your hand | `ExercisePicker`/`CustomSetup` picker deo | redizajn: tier tabovi Ⅰ/Ⅱ/Ⅲ po grupi (prikazuju 2 vežbe tog tiera), grid 2 kolone, tier bedž na kartici |
 | 7 Stack the Deck sliders | `CustomSetup` slajderi | reskin + aura intenziteta, pips, "≈ N reps in the stack" |
-| 19 Challenge menu | Challenge meni (`ModeSelector`) | redizajn: mode kartice sa bojom/glow, ⓘ akordeon umesto modala, Blitz pilule 3/5/10 inline; redosled: Daily Deal prvi |
+| 19 Challenge menu | Challenge meni (`ModeSelector`) | redizajn: mode kartice sa bojom/glow, ⓘ otvara AKORDEON (S4: InfoModal mehanizam ostaje samo za prvi-put modale), Blitz pilule 3/5/10 inline (korak `sprint`/SprintSetup se gasi — errata E5); redosled: Daily Deal prvi |
 | 12/1/2/4/5/6 Live session | `SessionScreen` + `CardDisplay` | najveći deo: kvota kao veliki brojač + HeatRing oko karte, deal animacija (izleti levo / uleti odozdo), SegmentBar progres + "HALF THE DECK DOWN" toast na 50%, štoperica u čipu (TOTAL), LiveDot, vinjeta ispod 25% kvote |
 | 20 Mode variants | `SessionScreen` grane | Blitz: veliki countdown + CARDS CLEARED čip; On the Clock: TIME BANK broj + traka + vinjeta na <8s; Daily Deal: čip sa datumom + footer |
 | 11 Pause overlay | pauza u `SessionScreen` | reskin: blur, rotirajući isprekidani krug, "Breathe. The deck can wait.", CTA BACK IN; auto-pauza label ostaje |
@@ -133,7 +151,7 @@ Cilj: sledeći Claude Design izvoz da se mapira, ne prepisuje.
 | 22 First-time modal | prvi-put modal | reskin (ikona moda, kicker FIRST TIME AT THIS TABLE, CTA SHUFFLE UP & DEAL) |
 | 14 Profile | **NOV ekran** `ProfileScreen` | čin kartica (simbol, ime, XP progres do sledećeg, "660 XP to KING ♠"), 6 stat pločica (§8), Jokers up your sleeve kartica (prikaz ❄️ stanja u džoker temi), dugme SESSION HISTORY →, red Settings (jezik) |
 | 13 History | **NOV ekran** `HistoryScreen` (apsorbuje stari plan "Napredak") | bar-graf LAST 14 DAYS, mesečna paginacija sesija (‹ jul 2026 ›), redovi sesija = postojeći `HistoryRow` u novom stilu (mode ikona/boja, POINTS, BEST bedž, expand: XP/PAUSED/AVG PER CARD + reps po boji), KALENDAR meseca (trenirani dani + danas) |
-| 15 How to Play | **NOV ekran** `HowToPlayScreen` | akordeoni: intro (As=1, J/Q/K vrednosti), načini igre (Quick Deal / Stack the Deck / Challenge sa 5 modova / Joker breather), RANKS OF THE DECK grid (14, "YOU" bedž na trenutnom), streak + jokers blok, About. Zamenjuje rasute info modale kao centralno mesto (postojeći ⓘ modali po modovima OSTAJU — kraći put) |
+| 15 How to Play | **NOV ekran** `HowToPlayScreen` | akordeoni: intro (As=1, J/Q/K vrednosti), načini igre (Quick Deal / Stack the Deck / Challenge sa 5 modova / Joker breather), RANKS OF THE DECK grid (14, "YOU" bedž na trenutnom; gost = The Joker), streak + jokers blok, About. Centralno mesto objašnjenja; ⓘ u Challenge meniju je akordeon (S4), prvi-put modali ostaju |
 | 23 Sign in | `LoginForm`/`SignupForm` | reskin + gost poeni banner (kad se dolazi sa rezultata), "Keep playing as guest →" |
 | 24 Settings/Language | red u Profile | jezik dropdown seli sa landinga u Profile; lista EN/SR + prigušeni budući |
 
@@ -149,6 +167,23 @@ pokreti kojih više nema se PENZIONIŠU (`is_active = false`, ostaju u bazi
 zbog istorije); novi pokreti se ubacuju. Aditivno: nova kolona
 `is_active boolean not null default true`; podaci se ažuriraju po
 presedanu migracije 0004 (update name/name_en vrednosti).
+
+**Koraci migracije 0007 (S1 — obavezno OVIM redom, sinhronizacija tier ↔
+difficulty_level_id ↔ is_default):**
+1. `add column is_active boolean not null default true`.
+2. Penzionisanje: `is_active = false` za 7 redova (lista dole).
+3. Rename-ovi: update `name`/`name_en` za redove gde je pokret isti.
+4. Tier promene SA sinhronizacijom nivoa: Bugarski čučanj tier 3→2 **i**
+   `difficulty_level_id` → Srednji; Planinari tier 2→1 **i** → Početnik;
+   Trbušnjaci tier 1→2 **i** → Srednji (mapiranje tier→nivo iz 0005).
+5. `is_default` preslagivanje: skinuti sa penzionisanih (Assisted
+   pull-ups, Sit-ups, Diamond push-ups...), postaviti po **D** oznakama u
+   tabeli dole (uklj. Mrtva buba→true, Australijski zgibovi/Table row→true).
+6. Insert 7 novih redova (sa `name_en`, `tier`, `difficulty_level_id` po
+   tier mapiranju, `is_default` po tabeli — Pike push-up ulazi kao default).
+Invarijanta na kraju migracije (ručna SQL provera): tačno 24 aktivna reda,
+2 po (kategorija, tier), tačno 1 default po (kategorija, tier), i za svaki
+aktivan red tier odgovara `difficulty_level_id` sort_order-u.
 
 Finalna aktivna biblioteka (EN / SR / tier; **D** = default za Quick Deal):
 
@@ -171,6 +206,10 @@ među aktivnima; `lastConfig` validacija odbija penzionisanu vežbu (dugme
 Run it back se sakriva); istorija starih sesija prikazuje i penzionisane
 (join po id-ju radi i dalje).
 
+Svesno prihvaćeno (S7): `backfillPoints` čita TRENUTNI tier vežbe, pa
+sesije backfill-ovane posle 0007 računaju poene po novim tier-ovima (npr.
+Bugarski čučanj 2.0→1.5) — pre-launch, malo podataka, bez ispravke.
+
 ## 8. Novi upiti/statistike (Profile + History)
 
 Sve izvedeno iz postojećih tabela, bez izmene šeme:
@@ -179,12 +218,17 @@ Sve izvedeno iz postojećih tabela, bez izmene šeme:
   CLEARED (broj completed sesija), LONGEST STREAK (najduži niz ikad —
   računa se iz `getCompletedSessionDates` + postojeća streak logika
   generalizovana na istorijski maksimum), HOURS AT THE TABLE
-  (Σ total_duration_seconds), TOTAL REPS i FAVORITE SUIT (Σ reps po suit
-  iz `card_draws` join preko sesija — jedan agregatni upit).
+  (Σ total_duration_seconds), TOTAL REPS i FAVORITE SUIT — jedan select
+  `sessions(id).card_draws(suit, reps)` za korisnika, sumiranje na
+  KLIJENTU (S6; bez PostgREST agregata/RPC — pre-launch obim je mali;
+  optimizacija = backlog).
+- `getSessionDetails` se PROŠIRUJE da vraća i reps po boji (S6 — danas
+  selektuje samo `reps` bez `suit`) za History expand.
 - History mesečna paginacija: postojeći `getUserSessions` + klijentsko
   grupisanje po mesecu (broj sesija je mali; bez novog upita).
-- AVG PER CARD u expand-u: `total_duration_seconds / broj karata` —
-  računa se iz već dostupnog, bez novih polja.
+- AVG PER CARD u expand-u: `total_duration_seconds / broj ZAVRŠENIH
+  karata` (S6): `settings.cards_completed` (Blitz) →
+  `settings.survived_cards` (On the Clock) → inače `total_cards`.
 - 14-dnevni bar-graf: Σ points po danu iz već učitane liste sesija.
 - Gost: Profile/History prikazuju gost stanje — velika CTA za nalog +
   objašnjenje šta se čuva (nema upita).
@@ -194,8 +238,25 @@ Sve izvedeno iz postojećih tabela, bez izmene šeme:
 Formula poena i množioci; svi `game_mode` id-jevi i `settings` ključevi;
 tajmeri/kvote/banka (sva timestamp aritmetika); streak mehanika; džoker u
 špilu (30s, auto-nastavak); migracije 0001–0006; auth tok; gost pravilo;
-balansirano izvlačenje; Karta dana seed. UI testovi se prilagođavaju novom
-copy-ju (E2), ali ponašajni asserti (šta se dešava, ne kako piše) ostaju.
+balansirano izvlačenje; Karta dana seed; slajderi Stack the Deck zadržavaju
+korake **0.25× / 4 karte** (prototipovi koraci 0.1/1 se NE preuzimaju —
+S10.5); **`getBestDurationSeconds`/`getBestScore` i rekord-stezanje budžeta
+Perfect Deck-a ostaju netaknuti** (S9 — hrane `resolveBudget`, nisu samo
+prikaz); localStorage ključevi (`spil.*`) ostaju (rebrend ih ne dira);
+`StreakInfoModal` ostaje (tap na streak čip), samo copy prelazi na džoker
+temu (E2). UI testovi se prilagođavaju novom copy-ju (E2), ali ponašajni
+asserti (šta se dešava, ne kako piše) ostaju — osim taksativne liste u E5.
+
+Svesna pojednostavljenja prikaza (S9, S10): lista VREMENSKIH rekorda
+(težina×dužina) i "⚡ best X/Y" se više ne prikazuju — podaci ostaju u bazi
+i dalje hrane budžet; "Best times" prikaz = backlog. Dizajn **sekcija 9
+(live SCORE čip + combo/NIZ) se u celosti isključuje** (S5) — poeni se
+računaju tek na kraju sesije, live prikaz bi bio nova logika; backlog.
+Gost na landingu: Profile čip prikazuje 🃏 (The Joker, čin 0), streak čip
+ostaje sakriven kao danas (S10.3). Brojač koraka setup-a: po stazi
+(Quick/Custom: 2 koraka; Challenge: 3 za modove sa setup-om) — dizajnov
+"…/3" je ilustrativan (S10.4). `SessionLengthSelector` (ostaje u
+perfect_deck stazi) dobija reskin sa The Cut/Half Deck/Full Deck (S10.2).
 
 ## 10. Design cleanup (nalog za sledeću Claude Design rundu — ne blokira)
 
@@ -207,6 +268,8 @@ copy-ju (E2), ali ponašajni asserti (šta se dešava, ne kako piše) ostaju.
    implementira po ovom spec-u).
 6. Dodati sekciju 0 "Logic Charter" (pravila igre za buduće agente).
 7. Biblioteka u sekciji 18 → uskladiti sa §7 (bez Plank/Hollow hold).
+8. Činjenične korekcije copy-ja (S8): broj džokera zavisi od špila (1 za
+   ≤20 karata); Blitz score = poeni; XP daju sve sesije; Ace ≈ 2 treninga.
 
 ## 11. Errate (jedini dozvoljeni razlozi izmene postojećeg)
 
@@ -222,6 +285,17 @@ copy-ju (E2), ali ponašajni asserti (šta se dešava, ne kako piše) ostaju.
 - **E4 — Quick tok:** koraci `quick-difficulty` + `quick-length` se spajaju
   u jedan ekran `quick` (STAKES + DECK SIZE + CTA); SetupScreen testovi
   Quick staze se ažuriraju na novi tok.
+- **E5 — Setup/navigacioni tokovi (S3, taksativno):**
+  (1) `ModeSelector.test.tsx` — ⓘ više ne otvara dialog nego akordeon:
+  asserti dialog-a se zamenjuju assertima expand sadržaja;
+  (2) `SetupScreen.test.tsx` sprint staza + `SprintSetup.test.tsx` —
+  korak `sprint` se gasi, trajanje se bira pilulama u Challenge meniju
+  (SprintSetup komponenta i njen test se BRIŠU);
+  (3) `LandingScreen.test.tsx` — test jezik-selektora se seli na
+  Profile/Settings test (selektor napušta landing);
+  (4) `page.test.tsx` — ekran `history` → `ProfileScreen`/`HistoryScreen`
+  navigacioni asserti umesto ProgressScreen-a (ProgressScreen i njegov
+  render put se BRIŠU).
 
 ## 12. Isporuka — preraspodela ostatka Kruga B
 
@@ -250,6 +324,8 @@ deal animacija, breathing, score ritual, reduced-motion).
 
 ## 14. Backlog (dopuna)
 
-Combo/NIZ (vizual postoji u dizajnu sekcija 9 — čeka odluku o formuli),
-daily leaderboard ("daily board"), ručno igranje džokera iz rukava,
-SR-latinica provera copy-ja sa native speaker-om.
+Combo/NIZ + live SCORE čip (dizajn sekcija 9 u celosti — čeka odluku o
+formuli), daily leaderboard ("daily board"), ručno igranje džokera iz
+rukava, "Best times" prikaz vremenskih rekorda, agregatni RPC za profile
+statistike (kad podaci porastu), SR-latinica provera copy-ja sa native
+speaker-om.
