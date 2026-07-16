@@ -161,3 +161,87 @@ describe('SessionScreen — stopwatch chip + LiveDot', () => {
     dotsPaused.forEach((dot) => expect(dot).toHaveAttribute('data-paused', 'true'));
   });
 });
+
+// Task 13 (s20): mode-specific variants — header badge + chip/bar/footer per
+// mode. Underlying quota/bank timer logic is untouched (Task 4/6); these
+// tests assert only the new derived-display layer.
+describe('SessionScreen — Blitz varijanta (s20)', () => {
+  const sprintConfig: SessionConfig = {
+    difficultyLevelId: 'd1',
+    repMultiplier: 1,
+    deckSize: 52,
+    exerciseByCategory: { push: exercise, pull: exercise, legs: exercise, core: exercise },
+    entry: 'challenge',
+    gameMode: 'sprint',
+    sprintMinutes: 5,
+  };
+  const sprintDraws = Array.from({ length: 4 }, (_, i) => buildDraw(i, 5));
+
+  it('prikazuje BLITZ · 5 MIN značku i CARDS CLEARED čip koji raste posle klika', async () => {
+    const user = userEvent.setup();
+    renderWithIntl(
+      <SessionScreen config={sprintConfig} draws={sprintDraws} categoryIdByKey={null} userId={null} onFinish={vi.fn()} />
+    );
+
+    expect(screen.getByText('🏃 Blic · 5 min')).toBeInTheDocument();
+    expect(screen.getByTestId('cards-cleared-chip')).toHaveTextContent('0');
+
+    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    expect(screen.getByTestId('cards-cleared-chip')).toHaveTextContent('1');
+  });
+});
+
+describe('SessionScreen — On the Clock varijanta (s20)', () => {
+  const surviveConfig: SessionConfig = {
+    difficultyLevelId: 'd1',
+    repMultiplier: 1,
+    deckSize: 2,
+    exerciseByCategory: { push: exercise, pull: exercise, legs: exercise, core: exercise },
+    gameMode: 'survive',
+    parSecondsPerRep: 3,
+    parTransitionSeconds: 20,
+  };
+  const draws = [buildDraw(0, 5), buildDraw(1, 6)];
+
+  it('prikazuje ⏳ Na satu značku, TIME BANK traku na 100% na startu, crvenu vinjetu ispod 8s', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    renderWithIntl(
+      <SessionScreen config={surviveConfig} draws={draws} categoryIdByKey={null} userId={null} onFinish={vi.fn()} />
+    );
+
+    expect(screen.getByText('⏳ Na satu')).toBeInTheDocument();
+    const bar = screen.getByTestId('bank-bar-fill');
+    expect(bar).toHaveStyle({ width: '100%' });
+    expect(screen.queryByTestId('danger-vignette')).not.toBeInTheDocument();
+
+    await vi.advanceTimersByTimeAsync(83_000); // balance 90-83 = 7s < 8s danger threshold
+    await waitFor(() => expect(screen.getByTestId('danger-vignette')).toBeInTheDocument());
+
+    vi.useRealTimers();
+  });
+});
+
+describe('SessionScreen — Daily Deal varijanta (s20)', () => {
+  const dailyConfig: SessionConfig = {
+    difficultyLevelId: 'd1',
+    repMultiplier: 1,
+    deckSize: 2,
+    exerciseByCategory: { push: exercise, pull: exercise, legs: exercise, core: exercise },
+    gameMode: 'daily',
+    budgetSeconds: 110,
+    parSource: 'par',
+    parSecondsPerRep: 3,
+    parTransitionSeconds: 20,
+  };
+  const draws = [buildDraw(0, 5), buildDraw(1, 6)];
+
+  it('prikazuje DNEVNA PODELA čip sa datumom i footer sa brojem karata umesto opšteg hint teksta', () => {
+    renderWithIntl(
+      <SessionScreen config={dailyConfig} draws={draws} categoryIdByKey={null} userId={null} onFinish={vi.fn()} />
+    );
+
+    expect(screen.getByTestId('daily-chip')).toHaveTextContent('DNEVNA PODELA');
+    expect(screen.getByText('2 karata · isti špil za sve · nova podela sutra')).toBeInTheDocument();
+  });
+});

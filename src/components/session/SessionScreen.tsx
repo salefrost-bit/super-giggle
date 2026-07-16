@@ -46,6 +46,13 @@ function formatMinSec(totalSeconds: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+function formatDailyDate(date: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale === 'sr' ? 'sr-RS' : 'en-US', {
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}
+
 export function SessionScreen({
   config,
   draws,
@@ -155,6 +162,18 @@ export function SessionScreen({
   // sprint/survive get their own Task 13 variants.
   const vignetteOpacity =
     isChallenge && quota.fraction <= 0.25 ? Math.min(0.5, ((0.25 - quota.fraction) / 0.25) * 0.5) : 0;
+
+  // s20: Blitz "CARDS CLEARED" chip — cards fully advanced past so far.
+  const cardsCleared = currentIndex;
+  // s20: TIME BANK gauge has no fixed max (S11), so BANK_START_SECONDS is
+  // used purely as the visual 100% reference for the bar's width.
+  const bankBarPct = isSurvive ? Math.min(100, ((displayBalance ?? 0) / BANK_START_SECONDS) * 100) : 0;
+  const bankVignetteOpacity =
+    isSurvive && (displayBalance ?? BANK_START_SECONDS) < 8
+      ? Math.min(0.5, ((8 - (displayBalance ?? 0)) / 8) * 0.5)
+      : 0;
+  const activeVignetteOpacity = vignetteOpacity || bankVignetteOpacity;
+  const dailyDateLabel = isDaily ? formatDailyDate(new Date(sessionStartedAt), locale) : '';
 
   useEffect(() => {
     if (hasShownHalfToastRef.current || currentIndex !== halfDeckIndex) return;
@@ -503,19 +522,58 @@ export function SessionScreen({
 
   return (
     <div className="min-h-screen relative flex flex-col px-6 pt-5 pb-7">
-      {vignetteOpacity > 0 && (
+      {activeVignetteOpacity > 0 && (
         <div
+          data-testid="danger-vignette"
           className="absolute inset-0 pointer-events-none z-[3] transition-[box-shadow] duration-300"
-          style={{ boxShadow: `inset 0 0 90px rgba(255,64,52,${vignetteOpacity})` }}
+          style={{ boxShadow: `inset 0 0 90px rgba(255,64,52,${activeVignetteOpacity})` }}
         />
       )}
 
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2.5">
-          <LiveDot paused={stopwatch.isPaused} />
-          <span className="font-extrabold text-xs tracking-[0.14em] text-muted uppercase">
-            {t('workout.cardOf', { current: currentIndex + 1, total: queue.length })}
-          </span>
+        <div className="flex items-center gap-2.5 min-w-0">
+          {isDaily ? (
+            <div
+              data-testid="daily-chip"
+              className="flex items-center gap-2 bg-[#232327] border rounded-full px-3 py-1.5"
+              style={{ borderColor: 'rgba(185,168,255,.4)' }}
+            >
+              <span className="text-sm">🎲</span>
+              <span
+                className="font-extrabold text-[11px] tracking-[0.1em] uppercase whitespace-nowrap"
+                style={{ color: 'var(--color-joker)' }}
+              >
+                {t('workout.dailyDealChip', { date: dailyDateLabel })}
+              </span>
+            </div>
+          ) : isSprint ? (
+            <>
+              <LiveDot paused={stopwatch.isPaused} color="var(--color-heat-warn)" />
+              <span
+                className="font-extrabold text-xs tracking-[0.14em] uppercase whitespace-nowrap"
+                style={{ color: 'var(--color-heat-warn)' }}
+              >
+                {t('modes.sprint.title')} · {t('modes.sprint.duration', { minutes: config.sprintMinutes ?? 0 })}
+              </span>
+            </>
+          ) : isSurvive ? (
+            <>
+              <LiveDot paused={stopwatch.isPaused} color="var(--color-heat-danger)" />
+              <span
+                className="font-extrabold text-xs tracking-[0.14em] uppercase whitespace-nowrap"
+                style={{ color: 'var(--color-heat-danger)' }}
+              >
+                {t('modes.survive.title')}
+              </span>
+            </>
+          ) : (
+            <>
+              <LiveDot paused={stopwatch.isPaused} />
+              <span className="font-extrabold text-xs tracking-[0.14em] text-muted uppercase">
+                {t('workout.cardOf', { current: currentIndex + 1, total: queue.length })}
+              </span>
+            </>
+          )}
         </div>
         <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} paused={stopwatch.isPaused} />
       </div>
@@ -550,6 +608,57 @@ export function SessionScreen({
                   {counterLabel}
                 </div>
               </div>
+            )}
+
+            {isSprint && (
+              <>
+                <div className="h-1.5 rounded-full bg-[#26262a] overflow-hidden mb-3">
+                  <div
+                    className="h-full rounded-full transition-[width,background] duration-300"
+                    style={{
+                      width: `${Math.round(quota.fraction * 100)}%`,
+                      background: counterHeat ? HEAT_COLOR[counterHeat] : undefined,
+                    }}
+                  />
+                </div>
+                <div className="flex justify-center mb-3">
+                  <div
+                    data-testid="cards-cleared-chip"
+                    className="flex items-center gap-2 bg-[#232327] border rounded-full px-[18px] py-2"
+                    style={{ borderColor: 'rgba(255,179,64,.3)' }}
+                  >
+                    <span className="font-black text-[17px] tabular-nums" style={{ color: 'var(--color-heat-warn)' }}>
+                      {cardsCleared}
+                    </span>
+                    <span className="font-extrabold text-[10px] tracking-[0.14em] text-muted uppercase">
+                      {t('workout.cardsCleared')}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {isSurvive && (
+              <>
+                <div className="h-3.5 rounded-full bg-[#26262a] overflow-hidden border border-[#2e2e33] mb-2">
+                  <div
+                    data-testid="bank-bar-fill"
+                    className="h-full rounded-full transition-[width,background] duration-300"
+                    style={{
+                      width: `${bankBarPct}%`,
+                      background: counterHeat ? HEAT_COLOR[counterHeat] : undefined,
+                      boxShadow: counterHeat ? `0 0 14px ${HEAT_COLOR[counterHeat]}` : undefined,
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <span className="text-[11px] font-extrabold text-accent">{t('workout.everyCardFeedsBank')}</span>
+                  <span className="text-[11px] font-extrabold text-muted">·</span>
+                  <span className="text-[11px] font-extrabold" style={{ color: 'var(--color-heat-danger)' }}>
+                    {t('workout.emptyBankGameOver')}
+                  </span>
+                </div>
+              </>
             )}
 
             {isChallenge ? (
@@ -588,7 +697,9 @@ export function SessionScreen({
       )}
 
       {!isResting && (
-        <p className="text-center text-[13px] font-bold text-muted mt-5">{t('workout.hint')}</p>
+        <p className="text-center text-[13px] font-bold text-muted mt-5">
+          {isDaily ? t('workout.dailyFooter', { count: queue.length }) : t('workout.hint')}
+        </p>
       )}
 
       <div className="flex gap-3 mt-6">
