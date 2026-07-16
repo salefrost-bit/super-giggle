@@ -11,6 +11,7 @@ export interface ModeDefinition {
 // Future modes ("survive_deck", "ghost_race", "sprint" — see spec section 1)
 // are added here as new entries plus message keys; step 0 renders cards AND
 // their ⓘ explanations from this list.
+// Redosled niza = redosled kartica u Challenge meniju (s19): Daily prvi.
 export const MODES: ModeDefinition[] = [
   {
     id: 'classic',
@@ -18,6 +19,13 @@ export const MODES: ModeDefinition[] = [
     descKey: 'setup.classicDesc',
     explanationKey: 'modes.classic.explanation',
     isChallenge: false,
+  },
+  {
+    id: 'daily',
+    titleKey: 'modes.daily.title',
+    descKey: 'modes.daily.desc',
+    explanationKey: 'modes.daily.explanation',
+    isChallenge: true,
   },
   {
     id: 'perfect_deck',
@@ -45,13 +53,6 @@ export const MODES: ModeDefinition[] = [
     titleKey: 'modes.survive.title',
     descKey: 'modes.survive.desc',
     explanationKey: 'modes.survive.explanation',
-    isChallenge: true,
-  },
-  {
-    id: 'daily',
-    titleKey: 'modes.daily.title',
-    descKey: 'modes.daily.desc',
-    explanationKey: 'modes.daily.explanation',
     isChallenge: true,
   },
 ];

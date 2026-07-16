@@ -97,7 +97,7 @@ describe('SetupScreen', () => {
     await user.click(screen.getByText('Zgibovi'));
     await user.click(screen.getByText('Čučnjevi'));
     await user.click(screen.getByText('Trbušnjaci'));
-    await user.click(await screen.findByRole('button', { name: 'Ceo špil (52 karte)' }));
+    await user.click(await screen.findByText('Ceo špil'));
 
     const [config, draws] = onStart.mock.calls[0];
     expect(config.gameMode).toBe('perfect_deck');
@@ -127,7 +127,7 @@ describe('SetupScreen', () => {
     await user.click(screen.getByText('Čučnjevi'));
     await user.click(screen.getByText('Trbušnjaci'));
 
-    expect(screen.queryByRole('button', { name: 'Ceo špil (52 karte)' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Ceo špil')).not.toBeInTheDocument();
     expect(onStart).toHaveBeenCalledTimes(1);
     const [config, draws] = onStart.mock.calls[0];
     expect(config.gameMode).toBe('court');
@@ -161,7 +161,7 @@ describe('SetupScreen', () => {
     await user.click(screen.getByText('Čučnjevi'));
     await user.click(screen.getByText('Trbušnjaci'));
 
-    expect(screen.queryByRole('button', { name: 'Ceo špil (52 karte)' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Ceo špil')).not.toBeInTheDocument();
     expect(onStart).toHaveBeenCalledTimes(1);
     const [config, draws] = onStart.mock.calls[0];
     expect(config.gameMode).toBe('survive');
@@ -171,7 +171,7 @@ describe('SetupScreen', () => {
     expect(draws).toHaveLength(52);
   });
 
-  it('sprint staza: trajanje → vežbe → start sa repMultiplier 1.0', async () => {
+  it('errata E5(2): Blitz staza — pilula (challenge meni) → vežbe → start sa repMultiplier 1.0, bez SprintSetup/mode-difficulty koraka', async () => {
     vi.mocked(fetchCategories).mockResolvedValue(categories);
     vi.mocked(fetchDifficultyLevels).mockResolvedValue(difficultyLevels);
     vi.mocked(fetchAllExercises).mockResolvedValue(exercises);
@@ -181,13 +181,13 @@ describe('SetupScreen', () => {
     renderWithIntl(<SetupScreen onStart={onStart} userId={null} />);
 
     await user.click(await screen.findByText(/Challenge/));
+    // Default pilula je 5 min (bez klika); kartica Blitz-a šalje onSelect('sprint', {minutes: 5}).
     await user.click(await screen.findByRole('button', { name: /Blic/ }));
-    await user.click(await screen.findByRole('button', { name: '5 min' }));
+    expect(screen.queryByRole('button', { name: 'Srednji' })).not.toBeInTheDocument();
     await user.click(await screen.findByText('Sklekovi'));
     await user.click(screen.getByText('Zgibovi'));
     await user.click(screen.getByText('Čučnjevi'));
     await user.click(screen.getByText('Trbušnjaci'));
-    await user.click(screen.getByRole('button', { name: 'Kreni' }));
 
     expect(onStart).toHaveBeenCalledTimes(1);
     const [config, draws] = onStart.mock.calls[0];
@@ -197,6 +197,27 @@ describe('SetupScreen', () => {
     expect(config.deckSize).toBe(52);
     expect(config.difficultyLevelId).toBe('d1');
     expect(draws).toHaveLength(52);
+  });
+
+  it('errata E5(2): Blitz pilula 3 min se prenosi u sprintMinutes', async () => {
+    vi.mocked(fetchCategories).mockResolvedValue(categories);
+    vi.mocked(fetchDifficultyLevels).mockResolvedValue(difficultyLevels);
+    vi.mocked(fetchAllExercises).mockResolvedValue(exercises);
+    const onStart = vi.fn();
+    const user = userEvent.setup();
+
+    renderWithIntl(<SetupScreen onStart={onStart} userId={null} />);
+
+    await user.click(await screen.findByText(/Challenge/));
+    await user.click(await screen.findByRole('button', { name: '3 min' }));
+    await user.click(screen.getByRole('button', { name: /Blic/ }));
+    await user.click(await screen.findByText('Sklekovi'));
+    await user.click(screen.getByText('Zgibovi'));
+    await user.click(screen.getByText('Čučnjevi'));
+    await user.click(screen.getByText('Trbušnjaci'));
+
+    const [config] = onStart.mock.calls[0];
+    expect(config.sprintMinutes).toBe(3);
   });
 
   it('daily staza startuje direktno bez izbora', async () => {
