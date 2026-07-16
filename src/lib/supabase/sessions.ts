@@ -103,6 +103,8 @@ export interface SessionHistoryEntry {
   entry: string | null;
   sprintMinutes: number | null;
   cardCount: number | null;
+  cardsCompleted: number | null;
+  survivedCards: number | null;
 }
 
 type SessionSettingsRow = {
@@ -115,6 +117,8 @@ type SessionSettingsRow = {
   entry?: string;
   sprint_minutes?: number;
   card_count?: number;
+  cards_completed?: number;
+  survived_cards?: number;
 };
 
 export async function getUserSessions(userId: string): Promise<SessionHistoryEntry[]> {
@@ -155,12 +159,15 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
     entry: row.settings?.entry ?? null,
     sprintMinutes: row.settings?.sprint_minutes ?? null,
     cardCount: row.settings?.card_count ?? null,
+    cardsCompleted: row.settings?.cards_completed ?? null,
+    survivedCards: row.settings?.survived_cards ?? null,
   }));
 }
 
 export interface SessionDetails {
   exercises: { categoryName: string; name: string; nameEn: string | null; tier: number }[];
   totalReps: number;
+  repsBySuit: Record<Suit, number>;
 }
 
 export async function getSessionDetails(sessionId: string): Promise<SessionDetails> {
@@ -171,7 +178,7 @@ export async function getSessionDetails(sessionId: string): Promise<SessionDetai
         .from('session_exercises')
         .select('categories(name), exercises(name, name_en, tier)')
         .eq('session_id', sessionId),
-      supabase.from('card_draws').select('reps').eq('session_id', sessionId),
+      supabase.from('card_draws').select('suit, reps').eq('session_id', sessionId),
     ]);
   if (exError) throw exError;
   if (drawError) throw drawError;
@@ -188,9 +195,14 @@ export async function getSessionDetails(sessionId: string): Promise<SessionDetai
     tier: row.exercises.tier,
   }));
 
-  const totalReps = (drawRows as Array<{ reps: number }>).reduce((sum, d) => sum + d.reps, 0);
+  const draws = drawRows as Array<{ suit: Suit; reps: number }>;
+  const totalReps = draws.reduce((sum, d) => sum + d.reps, 0);
+  const repsBySuit: Record<Suit, number> = { hearts: 0, clubs: 0, spades: 0, diamonds: 0 };
+  for (const d of draws) {
+    repsBySuit[d.suit] += d.reps;
+  }
 
-  return { exercises, totalReps };
+  return { exercises, totalReps, repsBySuit };
 }
 
 export async function backfillPoints(sessionId: string, gameMode: string): Promise<number | null> {

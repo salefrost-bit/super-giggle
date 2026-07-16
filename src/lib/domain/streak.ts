@@ -21,10 +21,14 @@ function isoWeekKey(date: Date): string {
   return `${isoYear}-W${String(week).padStart(2, '0')}`;
 }
 
-// DST-safe: build the previous calendar day via the Date constructor,
-// never by subtracting 24h of milliseconds (spring-forward days are 23h long).
+// DST-safe: build the previous/next calendar day via the Date constructor,
+// never by adding/subtracting 24h of milliseconds (DST days aren't 24h long).
 function previousDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+}
+
+function nextDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
 }
 
 export function calculateStreak(
@@ -67,4 +71,45 @@ export function calculateStreak(
     days,
     freezesLeftThisWeek: FREEZES_PER_WEEK - (freezesUsed.get(currentWeek) ?? 0),
   };
+}
+
+// Historical maximum streak (Profile "LONGEST STREAK ever") — same freeze
+// mechanic as calculateStreak, but walked FORWARD from the oldest workout to
+// the newest, with no "now" reference: there's no in-progress "today" to
+// special-case, so every day in range either has a workout or doesn't.
+export function longestStreak(completedAtIso: string[]): number {
+  const workoutDays = new Set(completedAtIso.map((iso) => localDayKey(new Date(iso))));
+  if (workoutDays.size === 0) return 0;
+
+  const dayDates = Array.from(workoutDays)
+    .map((key) => {
+      const [y, m, d] = key.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    })
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  let cursor = dayDates[0];
+  const end = dayDates[dayDates.length - 1];
+  const freezesUsed = new Map<string, number>();
+  let currentRun = 0;
+  let best = 0;
+
+  while (cursor.getTime() <= end.getTime()) {
+    const key = localDayKey(cursor);
+    if (workoutDays.has(key)) {
+      currentRun += 1;
+    } else {
+      const week = isoWeekKey(cursor);
+      const used = freezesUsed.get(week) ?? 0;
+      if (used < FREEZES_PER_WEEK) {
+        freezesUsed.set(week, used + 1);
+        currentRun += 1; // frozen day preserves the chain
+      } else {
+        currentRun = 0; // third miss in one ISO week: chain broken
+      }
+    }
+    best = Math.max(best, currentRun);
+    cursor = nextDay(cursor);
+  }
+  return best;
 }

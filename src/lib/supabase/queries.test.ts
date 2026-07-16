@@ -13,20 +13,26 @@ vi.mock('./client', () => ({ createClient: vi.fn() }));
 import { createClient } from './client';
 
 function mockSupabaseChain(resolvedValue: { data: unknown; error: null }) {
-  const order = vi.fn().mockResolvedValue(resolvedValue);
-  const eq = vi.fn().mockResolvedValue(resolvedValue);
-  const select = vi.fn(() => ({ order, eq }));
-  const from = vi.fn(() => ({ select }));
-  return { from };
+  const chain: { select: ReturnType<typeof vi.fn>; eq: ReturnType<typeof vi.fn>; order: ReturnType<typeof vi.fn>; then: (resolve: (v: unknown) => void) => void } = {
+    select: vi.fn(),
+    eq: vi.fn(),
+    order: vi.fn(),
+    then: (resolve) => resolve(resolvedValue),
+  };
+  chain.select.mockReturnValue(chain);
+  chain.eq.mockReturnValue(chain);
+  chain.order.mockReturnValue(chain);
+  const from = vi.fn(() => chain);
+  return { from, chain };
 }
 
 describe('fetchCategories', () => {
   it('maps snake_case rows to domain Category objects', async () => {
-    const chain = mockSupabaseChain({
+    const { from } = mockSupabaseChain({
       data: [{ id: '1', name: 'Guranje', name_en: 'Push', sort_order: 1 }],
       error: null,
     });
-    vi.mocked(createClient).mockReturnValue(chain as never);
+    vi.mocked(createClient).mockReturnValue({ from } as never);
 
     const result = await fetchCategories();
 
@@ -36,7 +42,7 @@ describe('fetchCategories', () => {
 
 describe('fetchDifficultyLevels', () => {
   it('maps snake_case rows to domain DifficultyLevel objects', async () => {
-    const chain = mockSupabaseChain({
+    const { from } = mockSupabaseChain({
       data: [
         {
           id: '1',
@@ -50,7 +56,7 @@ describe('fetchDifficultyLevels', () => {
       ],
       error: null,
     });
-    vi.mocked(createClient).mockReturnValue(chain as never);
+    vi.mocked(createClient).mockReturnValue({ from } as never);
 
     const result = await fetchDifficultyLevels();
 
@@ -70,7 +76,7 @@ describe('fetchDifficultyLevels', () => {
 
 describe('fetchExercisesByDifficulty', () => {
   it('maps snake_case rows to domain Exercise objects', async () => {
-    const chain = mockSupabaseChain({
+    const { from, chain } = mockSupabaseChain({
       data: [{
         id: '1',
         name: 'Čučnjevi',
@@ -79,10 +85,11 @@ describe('fetchExercisesByDifficulty', () => {
         difficulty_level_id: 'd1',
         tier: 1,
         is_default: true,
+        is_active: true,
       }],
       error: null,
     });
-    vi.mocked(createClient).mockReturnValue(chain as never);
+    vi.mocked(createClient).mockReturnValue({ from } as never);
 
     const result = await fetchExercisesByDifficulty('d1');
 
@@ -95,14 +102,17 @@ describe('fetchExercisesByDifficulty', () => {
         difficultyLevelId: 'd1',
         tier: 1,
         isDefault: true,
+        isActive: true,
       },
     ]);
+    expect(chain.eq).toHaveBeenCalledWith('difficulty_level_id', 'd1');
+    expect(chain.eq).toHaveBeenCalledWith('is_active', true);
   });
 });
 
 describe('fetchAllExercises', () => {
   it('maps all exercises with tier and isDefault', async () => {
-    const chain = mockSupabaseChain({
+    const { from, chain } = mockSupabaseChain({
       data: [{
         id: '2',
         name: 'Sklekovi',
@@ -111,10 +121,11 @@ describe('fetchAllExercises', () => {
         difficulty_level_id: 'd1',
         tier: 2,
         is_default: false,
+        is_active: true,
       }],
       error: null,
     });
-    vi.mocked(createClient).mockReturnValue(chain as never);
+    vi.mocked(createClient).mockReturnValue({ from } as never);
 
     const result = await fetchAllExercises();
 
@@ -127,8 +138,11 @@ describe('fetchAllExercises', () => {
         difficultyLevelId: 'd1',
         tier: 2,
         isDefault: false,
+        isActive: true,
       },
     ]);
+    expect(chain.eq).toHaveBeenCalledWith('is_active', true);
+    expect(chain.order).toHaveBeenCalledWith('tier');
   });
 });
 

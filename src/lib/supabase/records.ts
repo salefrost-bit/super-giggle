@@ -1,4 +1,6 @@
 import { createClient } from './client';
+import type { Suit } from '../domain/types';
+import { longestStreak } from '../domain/streak';
 
 export interface PersonalRecord {
   difficultyName: string;
@@ -152,6 +154,75 @@ export async function getBestPoints(
     .map((row) => row.settings?.points)
     .filter((p): p is number => typeof p === 'number');
   return points.length > 0 ? Math.max(...points) : null;
+}
+
+export interface ProfileStats {
+  bestPoints: number | null;
+  decksCleared: number;
+  longestStreak: number;
+  totalSeconds: number;
+  totalReps: number;
+  favoriteSuit: Suit | null;
+}
+
+interface ProfileStatsRow {
+  total_duration_seconds: number | null;
+  settings: { points?: number } | null;
+  completed_at: string | null;
+  card_draws: Array<{ suit: Suit; reps: number }> | null;
+}
+
+// Declaration order = tie-break order (spec S6): hearts, clubs, spades, diamonds.
+const SUIT_TIEBREAK_ORDER: Suit[] = ['hearts', 'clubs', 'spades', 'diamonds'];
+
+export function computeProfileStats(rows: ProfileStatsRow[]): ProfileStats {
+  let bestPoints: number | null = null;
+  let totalSeconds = 0;
+  let totalReps = 0;
+  const repsBySuit: Record<Suit, number> = { hearts: 0, clubs: 0, spades: 0, diamonds: 0 };
+  const completedDates: string[] = [];
+
+  for (const row of rows) {
+    const points = row.settings?.points;
+    if (typeof points === 'number' && (bestPoints === null || points > bestPoints)) {
+      bestPoints = points;
+    }
+    if (row.total_duration_seconds != null) totalSeconds += row.total_duration_seconds;
+    if (row.completed_at) completedDates.push(row.completed_at);
+    for (const draw of row.card_draws ?? []) {
+      totalReps += draw.reps;
+      repsBySuit[draw.suit] += draw.reps;
+    }
+  }
+
+  let favoriteSuit: Suit | null = null;
+  let favoriteReps = 0;
+  for (const suit of SUIT_TIEBREAK_ORDER) {
+    if (repsBySuit[suit] > favoriteReps) {
+      favoriteReps = repsBySuit[suit];
+      favoriteSuit = suit;
+    }
+  }
+
+  return {
+    bestPoints,
+    decksCleared: rows.length,
+    longestStreak: longestStreak(completedDates),
+    totalSeconds,
+    totalReps,
+    favoriteSuit,
+  };
+}
+
+export async function getProfileStats(userId: string): Promise<ProfileStats> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('total_duration_seconds, settings, completed_at, card_draws(suit, reps)')
+    .eq('user_id', userId)
+    .eq('status', 'completed');
+  if (error) throw error;
+  return computeProfileStats(data as unknown as ProfileStatsRow[]);
 }
 
 export async function getTotalXp(userId: string): Promise<number> {

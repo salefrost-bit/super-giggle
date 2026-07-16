@@ -1,5 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createSession, recordCardDraw, completeSession, getUserSessions, backfillPoints, hasDailyForDate } from './sessions';
+import {
+  createSession,
+  recordCardDraw,
+  completeSession,
+  getUserSessions,
+  getSessionDetails,
+  backfillPoints,
+  hasDailyForDate,
+} from './sessions';
 import type { SessionConfig } from '../domain/types';
 
 vi.mock('./client', () => ({ createClient: vi.fn() }));
@@ -141,6 +149,8 @@ describe('getUserSessions', () => {
         entry: null,
         sprintMinutes: null,
         cardCount: null,
+        cardsCompleted: null,
+        survivedCards: null,
       },
     ]);
   });
@@ -277,6 +287,8 @@ describe('challenge extensions', () => {
             card_count: 24,
             sprint_minutes: 5,
             score: 22,
+            cards_completed: 18,
+            survived_cards: 9,
           },
         },
       ],
@@ -297,7 +309,78 @@ describe('challenge extensions', () => {
       cardCount: 24,
       sprintMinutes: 5,
       score: 22,
+      cardsCompleted: 18,
+      survivedCards: 9,
     });
+  });
+
+  it('cardsCompleted/survivedCards su null kad ih nema u settings', async () => {
+    const order = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: 's4',
+          started_at: '2026-07-16T10:00:00.000Z',
+          total_duration_seconds: 300,
+          total_cards: 24,
+          status: 'completed',
+          difficulty_levels: { name: 'Srednji' },
+          game_mode: 'classic',
+          settings: {},
+        },
+      ],
+      error: null,
+    });
+    const eq = vi.fn(() => ({ order }));
+    const select = vi.fn(() => ({ eq }));
+    const from = vi.fn(() => ({ select }));
+    vi.mocked(createClient).mockReturnValue({ from } as never);
+
+    const result = await getUserSessions('user-1');
+    expect(result[0].cardsCompleted).toBeNull();
+    expect(result[0].survivedCards).toBeNull();
+  });
+});
+
+describe('getSessionDetails', () => {
+  it('vraća exercises, totalReps i repsBySuit iz card_draws', async () => {
+    const from = vi.fn((table: string) => {
+      if (table === 'session_exercises') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn().mockResolvedValue({
+              data: [
+                { categories: { name: 'Guranje' }, exercises: { name: 'Sklekovi', name_en: 'Push-up', tier: 2 } },
+              ],
+              error: null,
+            }),
+          })),
+        };
+      }
+      if (table === 'card_draws') {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn().mockResolvedValue({
+              data: [
+                { suit: 'hearts', reps: 10 },
+                { suit: 'hearts', reps: 8 },
+                { suit: 'clubs', reps: 6 },
+              ],
+              error: null,
+            }),
+          })),
+        };
+      }
+      throw new Error(`unexpected table ${table}`);
+    });
+    vi.mocked(createClient).mockReturnValue({ from } as never);
+
+    const details = await getSessionDetails('session-1');
+
+    expect(details.exercises).toEqual([
+      { categoryName: 'Guranje', name: 'Sklekovi', nameEn: 'Push-up', tier: 2 },
+    ]);
+    expect(details.totalReps).toBe(24);
+    expect(details.repsBySuit).toEqual({ hearts: 18, clubs: 6, spades: 0, diamonds: 0 });
   });
 });
 

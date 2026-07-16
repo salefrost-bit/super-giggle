@@ -10,6 +10,7 @@ type ExerciseRow = {
   difficulty_level_id: string;
   tier: number;
   is_default: boolean;
+  is_active: boolean;
 };
 
 function mapExerciseRow(row: ExerciseRow): Exercise {
@@ -21,6 +22,7 @@ function mapExerciseRow(row: ExerciseRow): Exercise {
     difficultyLevelId: row.difficulty_level_id,
     tier: row.tier as ExerciseTier,
     isDefault: row.is_default,
+    isActive: row.is_active,
   };
 }
 
@@ -73,8 +75,9 @@ export async function fetchExercisesByDifficulty(difficultyLevelId: string): Pro
   const supabase = createClient();
   const { data, error } = await supabase
     .from('exercises')
-    .select('id, name, name_en, category_id, difficulty_level_id, tier, is_default')
-    .eq('difficulty_level_id', difficultyLevelId);
+    .select('id, name, name_en, category_id, difficulty_level_id, tier, is_default, is_active')
+    .eq('difficulty_level_id', difficultyLevelId)
+    .eq('is_active', true);
   if (error) throw error;
   return (data as ExerciseRow[]).map(mapExerciseRow);
 }
@@ -83,7 +86,8 @@ export async function fetchAllExercises(): Promise<Exercise[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from('exercises')
-    .select('id, name, name_en, category_id, difficulty_level_id, tier, is_default')
+    .select('id, name, name_en, category_id, difficulty_level_id, tier, is_default, is_active')
+    .eq('is_active', true)
     .order('tier');
   if (error) throw error;
   return (data as ExerciseRow[]).map(mapExerciseRow);

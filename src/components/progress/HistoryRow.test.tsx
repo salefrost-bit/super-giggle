@@ -22,6 +22,8 @@ const session: SessionHistoryEntry = {
   entry: 'custom',
   sprintMinutes: null,
   cardCount: 24,
+  cardsCompleted: null,
+  survivedCards: null,
 };
 
 const details: SessionDetails = {
@@ -30,6 +32,7 @@ const details: SessionDetails = {
     { categoryName: 'Noge', name: 'Iskoraci', nameEn: 'Lunges', tier: 2 },
   ],
   totalReps: 145,
+  repsBySuit: { hearts: 145, clubs: 0, spades: 0, diamonds: 0 },
 };
 
 describe('HistoryRow', () => {

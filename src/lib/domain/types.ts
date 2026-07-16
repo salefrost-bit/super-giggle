@@ -56,6 +56,7 @@ export interface Exercise {
   difficultyLevelId: string;
   tier: ExerciseTier;
   isDefault: boolean;
+  isActive?: boolean;
 }
 
 export type GameMode = 'classic' | 'perfect_deck' | 'sprint' | 'court' | 'survive' | 'daily';
