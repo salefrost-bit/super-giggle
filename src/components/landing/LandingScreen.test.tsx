@@ -16,7 +16,6 @@ const guestProps = {
   onStartWorkout: vi.fn(),
   onShowProfile: vi.fn(),
   onShowHowToPlay: vi.fn(),
-  onSignOut: vi.fn(),
 };
 
 const loggedInUser = { id: 'u1' } as User;
@@ -120,17 +119,9 @@ describe('LandingScreen gost/ulogovan red', () => {
     expect(screen.getByRole('link', { name: 'Prijavi se' })).toBeInTheDocument();
   });
 
-  it('ulogovan korisnik vidi status i Sign out dugme', () => {
-    renderWithIntl(<LandingScreen {...guestProps} user={loggedInUser} onSignOut={vi.fn()} />);
+  it('ulogovan korisnik vidi status (Sign out je na Profile — P4)', () => {
+    renderWithIntl(<LandingScreen {...guestProps} user={loggedInUser} />);
     expect(screen.getByText(/Ulogovan/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Odjavi se' })).toBeInTheDocument();
-  });
-
-  it('Sign out dugme poziva onSignOut', async () => {
-    const user = userEvent.setup();
-    const onSignOut = vi.fn();
-    renderWithIntl(<LandingScreen {...guestProps} user={loggedInUser} onSignOut={onSignOut} />);
-    await user.click(screen.getByRole('button', { name: 'Odjavi se' }));
-    expect(onSignOut).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: 'Odjavi se' })).not.toBeInTheDocument();
   });
 });

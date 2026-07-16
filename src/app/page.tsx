@@ -8,6 +8,7 @@ import { SetupScreen } from '@/components/setup/SetupScreen';
 import { SessionScreen } from '@/components/session/SessionScreen';
 import { SummaryScreen } from '@/components/summary/SummaryScreen';
 import { ProgressScreen } from '@/components/progress/ProgressScreen';
+import { ProfileScreen } from '@/components/profile/ProfileScreen';
 import {
   fetchCategories,
   buildCategoryIdByKey,
@@ -30,7 +31,7 @@ import { SUIT_TO_CATEGORY } from '@/lib/domain/types';
 import type { CardDrawResult, CategoryKey, Exercise, SessionConfig, SessionResult } from '@/lib/domain/types';
 import { rankForXp } from '@/lib/domain/score';
 
-type Screen = 'landing' | 'setup' | 'session' | 'summary' | 'profile' | 'how-to-play';
+type Screen = 'landing' | 'setup' | 'session' | 'summary' | 'profile' | 'history' | 'how-to-play';
 
 // "Run it back · {context}" (s21) — entry naziv + dužina iz LastConfig; za
 // challenge stazu prikazuje ime moda (i minute za Blitz) jer deckSize tu nije
@@ -387,9 +388,8 @@ export default function Home() {
         onStartWorkout={() => setScreen('setup')}
         onRepeatLast={canRepeatLast ? handleRepeatLast : undefined}
         repeatContext={repeatContext}
-        onShowProfile={() => setScreen(user ? 'profile' : 'landing')}
+        onShowProfile={() => setScreen('profile')}
         onShowHowToPlay={() => setScreen('how-to-play')}
-        onSignOut={signOut}
       />
     );
   }
@@ -453,11 +453,19 @@ export default function Home() {
       />
     );
   }
-  // Privremeni sadržaj (Task 7) — Faza D (Task 14/15) zamenjuje pravim
-  // ProfileScreen/HowToPlayScreen; guard user ovde je odbrana druge linije,
-  // onShowProfile već šalje gosta na 'landing'.
-  if (screen === 'profile' && user) {
-    return <ProgressScreen userId={user.id} onBack={() => setScreen('landing')} />;
+  if (screen === 'profile') {
+    return (
+      <ProfileScreen
+        userId={user?.id ?? null}
+        onBack={() => setScreen('landing')}
+        onShowHistory={() => setScreen(user ? 'history' : 'landing')}
+        onSignOut={signOut}
+      />
+    );
+  }
+  // Privremeno do Task 17 (HistoryScreen) — ProgressScreen drži istoriju.
+  if (screen === 'history' && user) {
+    return <ProgressScreen userId={user.id} onBack={() => setScreen('profile')} />;
   }
   if (screen === 'how-to-play') {
     return (

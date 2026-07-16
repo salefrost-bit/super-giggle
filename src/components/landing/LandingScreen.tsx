@@ -18,11 +18,9 @@ interface LandingScreenProps {
   repeatContext?: string;
   onShowProfile: () => void;
   onShowHowToPlay: () => void;
-  onSignOut: () => void;
 }
 
-// s21: čipovi + glow CTA. Jezik-selektor je preseljen na Settings/Profile
-// (errata E5.3) — Task 16 ga vraća kao red u novom ProfileScreen-u.
+// s21: čipovi + glow CTA. Jezik-selektor i Sign out su na Profile (E5.3 / P4).
 export function LandingScreen({
   user,
   rankSymbol,
@@ -33,7 +31,6 @@ export function LandingScreen({
   repeatContext,
   onShowProfile,
   onShowHowToPlay,
-  onSignOut,
 }: LandingScreenProps) {
   const t = useTranslations();
   const [streak, setStreak] = useState<{ days: number; freezesLeftThisWeek: number } | null>(null);
@@ -118,12 +115,7 @@ export function LandingScreen({
           </button>
         )}
         {user ? (
-          <p className="text-center text-[11px] text-muted font-semibold">
-            {t('landing.loggedIn')} ·{' '}
-            <button onClick={onSignOut} className="text-accent font-bold">
-              {t('landing.signOut')}
-            </button>
-          </p>
+          <p className="text-center text-[11px] text-muted font-semibold">{t('landing.loggedIn')}</p>
         ) : (
           <p className="text-center text-[11px] text-muted font-semibold">
             {t('landing.playingAsGuest')} ·{' '}
