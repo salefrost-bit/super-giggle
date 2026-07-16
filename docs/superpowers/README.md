@@ -42,6 +42,7 @@ Ne čita se cela istorija — strategija + poslednji dokumenti su dovoljni.
 | `plans/2026-07-09-gamification-phase2-plan.md` | 15 taskova gamifikacije. | Završen |
 | `plans/2026-07-13-krug-a-plan.md` | 12 taskova Kruga A + obavezna telefonska verifikacija. | Završen |
 | `plans/2026-07-15-dzokeri-plan.md` | 6 taskova v0.4.4 Džokeri: domenski modul, i18n, SessionScreen integracija, prvo objašnjenje, tag. | Završen |
+| `plans/2026-07-16-shuffle-interfejs-plan.md` | 20 taskova v0.4.5 SHUFFLE u 4 faze (temelj → setup → sesija → Profile/History/HowToPlay). | **AKTIVAN — spreman za Cursor** |
 
 ## Izveštaji
 

@@ -12,7 +12,9 @@ This repo's implementation is fully specified across a series of plan cycles, ea
 3. **Phase 2 gamification** — Spec: `docs/superpowers/specs/2026-07-09-gamification-phase2-design.md` · Plan: `docs/superpowers/plans/2026-07-09-gamification-phase2-plan.md` — **DONE**, all 15 tasks committed.
 4. **Krug A (fixes & clarity)** — Spec: `docs/superpowers/specs/2026-07-13-krug-a-design.md` · Plan: `docs/superpowers/plans/2026-07-13-krug-a-plan.md` — **DONE**, all 12 tasks committed.
 
-5. **Krug B "Igrivost" (v0.4.1–v0.4.3)** — Spec: `docs/superpowers/specs/2026-07-15-krug-b-design.md` · Plan: `docs/superpowers/plans/2026-07-15-krug-b-plan.md` — **ACTIVE, execute now.** 20 tasks in 3 phases; each phase ends with a STOP gate (full suite + tsc + CHANGELOG + version bump + annotated tag + the user's manual phone verification) — do NOT start the next phase until the user confirms the gate.
+5. **Krug B "Igrivost" (v0.4.1–v0.4.3)** — Spec: `docs/superpowers/specs/2026-07-15-krug-b-design.md` · Plan: `docs/superpowers/plans/2026-07-15-krug-b-plan.md` — **DONE**, all 20 tasks, tags v0.4.1–v0.4.3.
+6. **Džokeri (v0.4.4)** — Spec: `docs/superpowers/specs/2026-07-15-dzokeri-design.md` · Plan: `docs/superpowers/plans/2026-07-15-dzokeri-plan.md` — **DONE**, tag v0.4.4.
+7. **SHUFFLE interfejs (v0.4.5)** — Spec: `docs/superpowers/specs/2026-07-16-shuffle-interfejs-design.md` · Plan: `docs/superpowers/plans/2026-07-16-shuffle-interfejs-plan.md` — **ACTIVE, execute now.** 20 tasks in 4 phases (A–D); design source is `docs/superpowers/specs/assets/shuffle-prototype.html` (read the referenced section before each visual task). Phase gates = suite + tsc + browser check; single tag v0.4.5 at Task 20 after the user's manual phone verification.
 
 The development roadmap source of truth is
 `docs/superpowers/strategy/2026-07-15-krug-b-revizija.md` (which amends
