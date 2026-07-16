@@ -21,8 +21,10 @@ import { drawSessionCards } from '@/lib/domain/deck';
 import { buildDraws } from '@/lib/domain/draws';
 import { CardDisplay } from './CardDisplay';
 import { JokerRestScreen } from './JokerRestScreen';
-import { ProgressIndicator } from './ProgressIndicator';
 import { StopwatchDisplay } from './StopwatchDisplay';
+import { HeatRing, HEAT_COLOR, heatFor, heatForAbsolute, type Heat } from '@/components/ui/HeatRing';
+import { SegmentBar } from '@/components/ui/SegmentBar';
+import { LiveDot } from '@/components/ui/LiveDot';
 import { createSession, recordCardDraw, completeSession, hasDailyForDate } from '@/lib/supabase/sessions';
 import { saveLastConfig } from '@/lib/domain/lastConfig';
 import type { CardDrawResult, CategoryKey, SessionConfig, SessionResult } from '@/lib/domain/types';
@@ -36,6 +38,13 @@ interface SessionScreenProps {
 }
 
 type SessionSaveState = 'guest' | 'creating' | 'ready' | 'failed';
+
+function formatMinSec(totalSeconds: number): string {
+  const clamped = Math.max(0, Math.round(totalSeconds));
+  const minutes = Math.floor(clamped / 60);
+  const seconds = clamped % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
 
 export function SessionScreen({
   config,
@@ -69,6 +78,12 @@ export function SessionScreen({
   const [balanceSeconds, setBalanceSeconds] = useState(BANK_START_SECONDS);
   const [elapsedAtCardStart, setElapsedAtCardStart] = useState(0);
   const [pauseOrigin, setPauseOrigin] = useState<'manual' | 'auto' | null>(null);
+
+  // s6: "HALF THE DECK DOWN" toast — fires once, first time the halfway
+  // card is reached (based on the INITIAL deck, not sprint's growing queue).
+  const halfDeckIndex = Math.floor(draws.length / 2);
+  const [showHalfToast, setShowHalfToast] = useState(false);
+  const hasShownHalfToastRef = useRef(false);
 
   // Computed once at mount from the INITIAL real-card count. Sprint always
   // uses a 52-card lap (isJokerBreak wraps positions modulo 52 below) even
@@ -115,11 +130,39 @@ export function SessionScreen({
     stopwatch.isPaused || isResting
   );
   const quota = isSprint ? sprintQuota : cardQuota;
-  const scoreSoFar = computeScore(completedDraws.slice(0, currentIndex));
 
   const activeCardSeconds = isSurvive ? stopwatch.elapsedSeconds - elapsedAtCardStart : 0;
   const displayBalance = isSurvive ? Math.max(0, balanceSeconds - activeCardSeconds) : null;
-  const cardQuotaSeconds = isSurvive ? cardWeights[currentIndex] : null;
+
+  // s2/s12: big countdown above the card — challenge (per-card quota) and
+  // sprint (overall countdown) share heatFor(fraction); survive's bank has
+  // no fixed max, so it uses the absolute heatForAbsolute scale (S11).
+  const hasBigCounter = isChallenge || isSprint || isSurvive;
+  const counterSeconds = isSurvive ? displayBalance ?? 0 : quota.remainingSeconds;
+  const counterHeat: Heat | null = isSurvive
+    ? heatForAbsolute(displayBalance ?? 0)
+    : hasBigCounter
+      ? heatFor(quota.fraction)
+      : null;
+  const counterLabel = isChallenge
+    ? t('workout.quotaCaption')
+    : isSprint
+      ? t('workout.timeLeft')
+      : isSurvive
+        ? t('workout.bankCaption')
+        : '';
+  // S12: vignette (inset shadow) is scoped to challenge-with-quota only —
+  // sprint/survive get their own Task 13 variants.
+  const vignetteOpacity =
+    isChallenge && quota.fraction <= 0.25 ? Math.min(0.5, ((0.25 - quota.fraction) / 0.25) * 0.5) : 0;
+
+  useEffect(() => {
+    if (hasShownHalfToastRef.current || currentIndex !== halfDeckIndex) return;
+    hasShownHalfToastRef.current = true;
+    setShowHalfToast(true);
+    const timeoutId = window.setTimeout(() => setShowHalfToast(false), 2300);
+    return () => window.clearTimeout(timeoutId);
+  }, [currentIndex, halfDeckIndex]);
 
   useEffect(() => {
     if (!isSprint || sprintQuota.expired) return;
@@ -460,63 +503,92 @@ export function SessionScreen({
 
   return (
     <div className="min-h-screen relative flex flex-col px-6 pt-5 pb-7">
-      <div className="flex items-center justify-between mb-[22px]">
-        {isChallenge ? (
-          <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">
-            ⚡ {scoreSoFar.score}/{currentIndex}
-            {config.bestScoreForCombo != null
-              ? ` · ${t('progress.bestScore', { score: config.bestScoreForCombo, total: queue.length })}`
-              : ''}
-          </p>
-        ) : isSprint ? (
-          <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">
-            🏃 {currentIndex + 1}
-          </p>
-        ) : isSurvive ? (
-          <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">
-            🛡 {currentIndex}/{queue.length}
-          </p>
-        ) : isDaily ? (
-          <p className="bg-surface/70 backdrop-blur px-3 py-2 rounded-xl text-[13px] font-bold text-accent">
-            🎴 {scoreSoFar.score}/{currentIndex}
-          </p>
-        ) : (
-          <div className="w-10" />
-        )}
-        <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} />
-        <ProgressIndicator current={currentIndex + 1} total={queue.length} />
+      {vignetteOpacity > 0 && (
+        <div
+          className="absolute inset-0 pointer-events-none z-[3] transition-[box-shadow] duration-300"
+          style={{ boxShadow: `inset 0 0 90px rgba(255,64,52,${vignetteOpacity})` }}
+        />
+      )}
+
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <LiveDot paused={stopwatch.isPaused} />
+          <span className="font-extrabold text-xs tracking-[0.14em] text-muted uppercase">
+            {t('workout.cardOf', { current: currentIndex + 1, total: queue.length })}
+          </span>
+        </div>
+        <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} paused={stopwatch.isPaused} />
       </div>
 
-      <div className="flex-1 flex flex-col justify-center">
+      <SegmentBar total={queue.length} current={currentIndex} />
+
+      {showHalfToast && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 bottom-32 z-20 bg-[#232327] border border-accent/40 rounded-full px-[18px] py-2.5 text-[13px] font-black tracking-[0.08em] text-accent whitespace-nowrap shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
+          role="status"
+        >
+          {t('workout.halfDeckDown')}
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col mt-4">
         {isResting ? (
           <JokerRestScreen remainingSeconds={restQuota.remainingSeconds} />
         ) : (
           <>
-            <CardDisplay
-              exerciseName={localizedName(current.exercise, locale)}
-              reps={current.reps}
-              suit={current.card.suit}
-              rank={current.card.rank}
-              categoryKey={current.categoryKey}
-              categoryLabel={undefined}
-              quotaRemainingSeconds={isChallenge || isSprint ? quota.remainingSeconds : null}
-              quotaFraction={quota.fraction}
-              bankBalanceSeconds={displayBalance}
-              bankQuotaSeconds={cardQuotaSeconds}
-              outcomeFlash={outcomeFlash}
-            />
-            <div className="h-1.5 rounded-[3px] bg-surface/70 mt-5 overflow-hidden">
-              <div
-                className="h-full bg-accent rounded-[3px]"
-                style={{ width: `${Math.round((currentIndex / queue.length) * 100)}%` }}
-              />
-            </div>
+            {hasBigCounter && (
+              <div className="text-center mb-3" data-testid="quota-counter" data-heat={counterHeat ?? undefined}>
+                <div
+                  className={`font-black text-[54px] leading-none tabular-nums ${
+                    counterHeat === 'danger' ? 'motion-safe:animate-[panicK_1s_ease-in-out_infinite]' : ''
+                  }`}
+                  style={{ color: counterHeat ? HEAT_COLOR[counterHeat] : undefined, transition: 'color .3s' }}
+                >
+                  {formatMinSec(counterSeconds)}
+                </div>
+                <div className="text-[10px] font-extrabold tracking-[0.24em] text-muted uppercase mt-1">
+                  {counterLabel}
+                </div>
+              </div>
+            )}
+
+            {isChallenge ? (
+              <HeatRing fraction={quota.fraction}>
+                <CardDisplay
+                  exerciseName={localizedName(current.exercise, locale)}
+                  reps={current.reps}
+                  suit={current.card.suit}
+                  rank={current.card.rank}
+                  dealKey={currentIndex}
+                  outcomeFlash={outcomeFlash}
+                  disabled={nextDisabled}
+                  onTap={handleNext}
+                />
+              </HeatRing>
+            ) : (
+              <div className="flex-1 flex flex-col">
+                <CardDisplay
+                  exerciseName={localizedName(current.exercise, locale)}
+                  reps={current.reps}
+                  suit={current.card.suit}
+                  rank={current.card.rank}
+                  dealKey={currentIndex}
+                  outcomeFlash={outcomeFlash}
+                  disabled={nextDisabled}
+                  onTap={handleNext}
+                />
+              </div>
+            )}
           </>
         )}
       </div>
 
       {saveState === 'failed' && (
         <p className="text-sm text-red-500 text-center mt-4">{t('workout.saveFailed')}</p>
+      )}
+
+      {!isResting && (
+        <p className="text-center text-[13px] font-bold text-muted mt-5">{t('workout.hint')}</p>
       )}
 
       <div className="flex gap-3 mt-6">
@@ -541,7 +613,7 @@ export function SessionScreen({
           {pauseOrigin === 'auto' && (
             <p className="text-sm font-semibold text-muted -mt-3">{t('pause.autoLabel')}</p>
           )}
-          <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} />
+          <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} paused={stopwatch.isPaused} />
           <button
             onClick={handleResume}
             className="bg-accent text-background rounded-[18px] px-10 py-[18px] font-extrabold text-base"

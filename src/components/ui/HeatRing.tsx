@@ -17,7 +17,7 @@ export function heatForAbsolute(seconds: number): Heat {
   return 'danger';
 }
 
-const HEAT_COLOR: Record<Heat, string> = {
+export const HEAT_COLOR: Record<Heat, string> = {
   ok: 'var(--color-accent)',
   warn: 'var(--color-heat-warn)',
   danger: 'var(--color-heat-danger)',
@@ -38,7 +38,7 @@ export function HeatRing({ fraction, children }: HeatRingProps) {
   return (
     <div
       data-heat={heat}
-      className="rounded-[31px] p-[3px] transition-[box-shadow] duration-300"
+      className="flex-1 flex flex-col rounded-[31px] p-[3px] transition-[box-shadow] duration-300"
       style={{
         background: `conic-gradient(${color} ${deg}deg, var(--color-surface) 0deg)`,
         boxShadow: `0 0 34px ${color}40`,
