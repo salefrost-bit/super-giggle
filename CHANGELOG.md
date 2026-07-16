@@ -18,7 +18,7 @@ Tri načina ulaska u trening: brzi (nivo + dužina), po meri (svih 24 vežbe, sl
 
 ## U pripremi
 
-Animacije vežbi, redizajn Napretka, zvuk/vibracija i instalacija na telefon (PWA).
+Potpuno novi izgled aplikacije (SHUFFLE): novi ekrani Profil, Istorija i Kako se igra, lestvica od 14 kartaških činova, nova biblioteka vežbi i proslava rezultata. Zatim zvuk/vibracija i instalacija na telefon (PWA).
 
 ## v0.3 — Pošteno vreme (2026-07-14) — ranije zvano: Krug A
 
