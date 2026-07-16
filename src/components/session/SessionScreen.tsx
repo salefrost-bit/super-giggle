@@ -7,7 +7,7 @@ import { useCardQuota } from '@/hooks/useCardQuota';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { useLocaleSetting } from '@/i18n/LocaleProvider';
 import { localizedName } from '@/i18n/dbName';
-import { BANK_START_SECONDS, applyCompletedCard, isBankrupt } from '@/lib/domain/bank';
+import { BANK_START_SECONDS, CARD_SECONDS, bankRemaining, cardAdjustment, isBankrupt } from '@/lib/domain/bank';
 import {
   dailyDateString,
   isDailyDoneLocal,
@@ -25,7 +25,7 @@ import { StopwatchDisplay } from './StopwatchDisplay';
 import { HEAT_COLOR, heatFor, heatForAbsolute, type Heat } from '@/components/ui/HeatRing';
 import { SegmentBar } from '@/components/ui/SegmentBar';
 import { LiveDot } from '@/components/ui/LiveDot';
-import { createSession, recordCardDraw, completeSession, hasDailyForDate } from '@/lib/supabase/sessions';
+import { createSession, recordCardDraw, completeSession, deleteSession, hasDailyForDate } from '@/lib/supabase/sessions';
 import { saveLastConfig } from '@/lib/domain/lastConfig';
 import type { CardDrawResult, CategoryKey, SessionConfig, SessionResult } from '@/lib/domain/types';
 
@@ -35,6 +35,8 @@ interface SessionScreenProps {
   categoryIdByKey: Record<CategoryKey, string> | null;
   userId: string | null;
   onFinish: (result: SessionResult) => void;
+  // Spec v0.4.7 §1: prekid bez čuvanja — poziva se POSLE best-effort brisanja.
+  onAbort?: () => void;
 }
 
 type SessionSaveState = 'guest' | 'creating' | 'ready' | 'failed';
@@ -57,6 +59,7 @@ export function SessionScreen({
   config,
   draws,
   categoryIdByKey,
+  onAbort,
   userId,
   onFinish,
 }: SessionScreenProps) {
@@ -84,7 +87,13 @@ export function SessionScreen({
   const [sessionStartedAt] = useState(() => new Date().toISOString());
   useWakeLock(true);
 
-  const [balanceSeconds, setBalanceSeconds] = useState(BANK_START_SECONDS);
+  // On the Clock (spec v0.4.7 §3): banka = 300 + Σ korekcija − aktivno vreme;
+  // korekcije su ±20s po karti, aktivno vreme isključuje pauze i džoker odmor.
+  const [bankAdjustments, setBankAdjustments] = useState(0);
+  const [restSecondsTotal, setRestSecondsTotal] = useState(0);
+  const restStartElapsedRef = useRef(0);
+  const bankruptFiredRef = useRef(false);
+  const [confirmQuit, setConfirmQuit] = useState(false);
   const [elapsedAtCardStart, setElapsedAtCardStart] = useState(0);
   const [pauseOrigin, setPauseOrigin] = useState<'manual' | 'auto' | null>(null);
 
@@ -123,6 +132,19 @@ export function SessionScreen({
     stopwatch.resume();
   }
 
+  // Spec v0.4.7 §1: prekid bez čuvanja — best-effort brisanje već upisane
+  // sesije (gost nema šta da briše), pa izlaz. Neuspeh brisanja ne blokira.
+  async function handleAbortConfirmed() {
+    if (userId && sessionId) {
+      try {
+        await deleteSession(sessionId);
+      } catch (err) {
+        console.error('Failed to delete aborted session', err);
+      }
+    }
+    onAbort?.();
+  }
+
   const parRates = {
     parSecondsPerRep: config.parSecondsPerRep,
     parTransitionSeconds: config.parTransitionSeconds,
@@ -141,7 +163,19 @@ export function SessionScreen({
   const quota = isSprint ? sprintQuota : cardQuota;
 
   const activeCardSeconds = isSurvive ? stopwatch.elapsedSeconds - elapsedAtCardStart : 0;
-  const displayBalance = isSurvive ? Math.max(0, balanceSeconds - activeCardSeconds) : null;
+  // Aktivno vreme banke: stopwatch već isključuje pauze; džoker odmor se
+  // izuzima eksplicitno (tekući odmor + svi prethodni) — banka je zamrznuta.
+  const restActiveSeconds = isResting
+    ? Math.max(0, stopwatch.elapsedSeconds - restStartElapsedRef.current)
+    : 0;
+  const bankActiveElapsed = stopwatch.elapsedSeconds - restSecondsTotal - restActiveSeconds;
+  const rawBankRemaining = isSurvive ? bankRemaining(bankAdjustments, bankActiveElapsed) : null;
+  const displayBalance = rawBankRemaining != null ? Math.max(0, rawBankRemaining) : null;
+  // Kartin sat 20 → −20 (spec v0.4.7 §3) — samo prikaz; korekcija se računa
+  // iz istog izvora (activeCardSeconds) na završetku karte.
+  const cardCountdown = isSurvive
+    ? Math.max(-CARD_SECONDS, CARD_SECONDS - activeCardSeconds)
+    : null;
 
   // s2/s12: big countdown above the card — challenge (per-card quota) and
   // sprint (overall countdown) share heatFor(fraction); survive's bank has
@@ -243,20 +277,38 @@ export function SessionScreen({
     };
   }, [stopwatch.isPaused, stopwatch.pause]);
 
-  // Rest ends the same way any useCardQuota-driven countdown ends: when
-  // `expired` flips true. Guarded by `pendingIndexRef` so it fires exactly
-  // once per rest even though this effect re-runs on every stopwatch tick.
-  useEffect(() => {
-    if (!isResting || !restQuota.expired) return;
+  // Zajednička putanja kraja odmora (spec v0.4.7 §2): istek I preskok idu
+  // istim kodom. Guarded by `pendingIndexRef` so it fires exactly once per
+  // rest. Trajanje odmora se knjiži u restSecondsTotal (survive banka stoji).
+  function endRest() {
     const pending = pendingIndexRef.current;
     if (pending === null) return;
     pendingIndexRef.current = null;
     setIsResting(false);
     setJokerBreaksTaken((n) => n + 1);
+    setRestSecondsTotal(
+      (total) => total + Math.max(0, stopwatch.elapsedSeconds - restStartElapsedRef.current)
+    );
     if (isSurvive) setElapsedAtCardStart(stopwatch.elapsedSeconds);
     setCurrentIndex(pending);
     setIsAdvancing(false);
-  }, [isResting, restQuota.expired, isSurvive, stopwatch.elapsedSeconds]);
+  }
+
+  useEffect(() => {
+    if (!isResting || !restQuota.expired) return;
+    endRest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isResting, restQuota.expired, stopwatch.elapsedSeconds]);
+
+  // On the Clock: banka curi u realnom vremenu — bankrot mora da okine i BEZ
+  // klika na kartu (spec v0.4.7 §3). Ref čuva od dvostrukog završetka.
+  useEffect(() => {
+    if (!isSurvive || isResting || isAdvancing || rawBankRemaining == null) return;
+    if (rawBankRemaining > 0 || bankruptFiredRef.current) return;
+    bankruptFiredRef.current = true;
+    void finishSession(completedDraws, { survivedCards: currentIndex, survivedAll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSurvive, isResting, isAdvancing, rawBankRemaining]);
 
   async function finishSession(
     nextDraws: CardDrawResult[],
@@ -427,8 +479,14 @@ export function SessionScreen({
 
     if (isSurvive) {
       const completedAt = new Date().toISOString();
-      const cardQuota = cardWeights[currentIndex];
-      const newBalance = applyCompletedCard(balanceSeconds, cardQuota, activeCardSeconds);
+      // Spec v0.4.7 §3: korekcija = preostalo na kartinom satu (clamp ±20),
+      // sabira se/oduzima od banke koja inače curi u realnom vremenu.
+      const adjustment = cardAdjustment(activeCardSeconds);
+      const newAdjustments = bankAdjustments + adjustment;
+      const remainingAfter = bankRemaining(
+        newAdjustments,
+        stopwatch.elapsedSeconds - restSecondsTotal
+      );
       const updatedDraw: CardDrawResult = {
         ...completedDraws[currentIndex],
         completedAt,
@@ -447,20 +505,25 @@ export function SessionScreen({
       }
 
       const nextIndex = currentIndex + 1;
-      const survivedAll = nextIndex >= queue.length;
 
-      if (survivedAll) {
-        await finishSession(nextDraws, { survivedCards: nextIndex, survivedAll: true });
+      if (nextIndex >= queue.length) {
+        bankruptFiredRef.current = true;
+        await finishSession(nextDraws, {
+          survivedCards: nextIndex,
+          survivedAll: !isBankrupt(remainingAfter),
+        });
         return;
       }
-      if (isBankrupt(newBalance)) {
+      if (isBankrupt(remainingAfter)) {
+        bankruptFiredRef.current = true;
         await finishSession(nextDraws, { survivedCards: nextIndex, survivedAll: false });
         return;
       }
 
-      setBalanceSeconds(newBalance);
+      setBankAdjustments(newAdjustments);
       if (isJokerBreak(nextIndex, jokerBreaks)) {
         pendingIndexRef.current = nextIndex;
+        restStartElapsedRef.current = stopwatch.elapsedSeconds;
         setRestKey((k) => k + 1);
         setIsResting(true);
         return;
@@ -511,6 +574,7 @@ export function SessionScreen({
     }
     if (isJokerBreak(nextIndex, jokerBreaks, isSprint ? 52 : null)) {
       pendingIndexRef.current = nextIndex;
+      restStartElapsedRef.current = stopwatch.elapsedSeconds;
       setRestKey((k) => k + 1);
       setIsResting(true);
       return;
@@ -535,6 +599,17 @@ export function SessionScreen({
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5 min-w-0">
+          {onAbort && (
+            <button
+              type="button"
+              onClick={() => setConfirmQuit(true)}
+              aria-label={t('workout.quitAria')}
+              data-testid="quit-button"
+              className="flex-none w-8 h-8 rounded-lg bg-surface text-muted text-base font-black flex items-center justify-center"
+            >
+              ✕
+            </button>
+          )}
           {isDaily ? (
             <div
               data-testid="daily-chip"
@@ -594,7 +669,7 @@ export function SessionScreen({
 
       <div className="flex-1 flex flex-col mt-4">
         {isResting ? (
-          <JokerRestScreen remainingSeconds={restQuota.remainingSeconds} />
+          <JokerRestScreen remainingSeconds={restQuota.remainingSeconds} onSkip={endRest} />
         ) : (
           <>
             {hasBigCounter && (
@@ -654,11 +729,25 @@ export function SessionScreen({
                     }}
                   />
                 </div>
-                <div className="flex items-center justify-center gap-3 mb-3">
+                <div className="flex items-center justify-center gap-3 mb-2">
                   <span className="text-[11px] font-extrabold text-accent">{t('workout.everyCardFeedsBank')}</span>
                   <span className="text-[11px] font-extrabold text-muted">·</span>
                   <span className="text-[11px] font-extrabold" style={{ color: 'var(--color-heat-danger)' }}>
                     {t('workout.emptyBankGameOver')}
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-2 mb-3" data-testid="card-clock">
+                  <span
+                    className="font-black text-xl tabular-nums"
+                    style={{
+                      color:
+                        (cardCountdown ?? 0) >= 0 ? 'var(--color-accent)' : 'var(--color-heat-danger)',
+                    }}
+                  >
+                    {(cardCountdown ?? 0) >= 0 ? `+${cardCountdown}s` : `${cardCountdown}s`}
+                  </span>
+                  <span className="text-[10px] font-extrabold tracking-[0.2em] text-muted uppercase">
+                    {t('workout.cardClockCaption')}
                   </span>
                 </div>
               </>
@@ -696,6 +785,48 @@ export function SessionScreen({
 
       {saveState === 'failed' && (
         <p className="text-sm text-red-500 text-center mt-4">{t('workout.saveFailed')}</p>
+      )}
+
+      {confirmQuit && (
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          aria-label={t('workout.quitTitle')}
+          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          style={{ background: 'rgba(10,10,13,.72)', backdropFilter: 'blur(4px)' }}
+        >
+          <div
+            className="w-full max-w-[390px] rounded-3xl p-6"
+            style={{
+              background: 'linear-gradient(160deg,#26262b,#1d1d20)',
+              border: '1px solid rgba(255,81,71,.4)',
+              boxShadow: '0 24px 50px rgba(0,0,0,.6)',
+            }}
+          >
+            <p className="text-[20px] font-black text-center">{t('workout.quitTitle')}</p>
+            <p className="text-[13px] font-bold text-muted text-center leading-relaxed mt-3">
+              {t('workout.quitBody')}
+            </p>
+            <div className="flex gap-3 mt-5">
+              <button
+                type="button"
+                onClick={() => setConfirmQuit(false)}
+                className="flex-1 font-extrabold text-sm tracking-[0.08em] py-3.5 rounded-2xl bg-accent text-background"
+              >
+                {t('workout.quitCancel')}
+              </button>
+              <button
+                type="button"
+                data-testid="quit-confirm"
+                onClick={() => void handleAbortConfirmed()}
+                className="flex-1 font-extrabold text-sm tracking-[0.08em] py-3.5 rounded-2xl border text-foreground"
+                style={{ borderColor: 'rgba(255,81,71,.5)', color: 'var(--color-heat-danger)' }}
+              >
+                {t('workout.quitConfirm')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {!isResting && (

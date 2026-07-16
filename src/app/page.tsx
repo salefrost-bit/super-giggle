@@ -439,6 +439,7 @@ export default function Home() {
         categoryIdByKey={categoryIdByKey}
         userId={user?.id ?? null}
         onFinish={handleSessionFinish}
+        onAbort={() => setScreen('landing')}
       />
     );
   }

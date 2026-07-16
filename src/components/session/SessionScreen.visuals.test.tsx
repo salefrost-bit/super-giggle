@@ -215,7 +215,9 @@ describe('SessionScreen — On the Clock varijanta (s20)', () => {
     expect(bar).toHaveStyle({ width: '100%' });
     expect(screen.queryByTestId('danger-vignette')).not.toBeInTheDocument();
 
-    await vi.advanceTimersByTimeAsync(83_000); // balance 90-83 = 7s < 8s danger threshold
+    // ERRATA v0.4.7 §3 ("bank timera koji krece da odbrojava od 300 sekundi"):
+    // banka 90 → 300, pa danger prag < 8s zahteva 293s umesto 83s.
+    await vi.advanceTimersByTimeAsync(293_000); // balance 300-293 = 7s < 8s danger threshold
     await waitFor(() => expect(screen.getByTestId('danger-vignette')).toBeInTheDocument());
 
     vi.useRealTimers();

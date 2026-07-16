@@ -56,11 +56,17 @@
     "halfDeckDown": "HALF THE DECK DOWN",
     "cardsCleared": "CARDS CLEARED",
     "timeLeft": "TIME LEFT",
-    "everyCardFeedsBank": "+every card feeds the bank",
+    "everyCardFeedsBank": "+fast cards feed the bank, slow ones drain it",
     "emptyBankGameOver": "empty bank = game over",
     "dailyDealChip": "DAILY DEAL · {date}",
     "dailyFooter": "{count} cards · same deck for everyone · new deal tomorrow",
-    "saveFailed": "Saving isn't working right now — this workout may not appear in your history."
+    "saveFailed": "Saving isn't working right now — this workout may not appear in your history.",
+    "quitAria": "Quit workout",
+    "quitTitle": "Quit this workout?",
+    "quitBody": "If you quit, this workout won't be saved to your history.",
+    "quitConfirm": "QUIT",
+    "quitCancel": "KEEP GOING",
+    "cardClockCaption": "CARD CLOCK"
   },
   "results": {
     "score": "{score}/{total} cards beaten",
@@ -127,8 +133,8 @@
     },
     "survive": {
       "title": "⏳ On the Clock",
-      "desc": "A bank of seconds. Empty bank — game over.",
-      "explanation": "You start with a bank of seconds. Every finished card refills the bank with that card's quota (estimated time for the card). How far can you get through 52 cards? Pausing doesn't drain the bank. Beat every card for a ×1.5 bonus."
+      "desc": "A 5-minute bank. Clear the deck before it hits zero.",
+      "explanation": "The bank starts at 5 minutes and keeps ticking down. Every card runs its own 20-second clock that crosses into the negative: finish fast and the leftover seconds go INTO the bank; run late and the overrun (capped at −20s) comes out of it. Clear all 52 cards before the bank empties — success earns a ×1.5 points bonus. Jokers freeze the bank, and so does pausing."
     },
     "daily": {
       "title": "🎲 Daily Deal",
@@ -310,12 +316,13 @@
   },
   "jokers": {
     "title": "🃏 Joker",
-    "explanation": "Draw a joker and you get 30 seconds of rest instead of an exercise — it moves on to the next card automatically. Shorter decks (12 cards) carry one joker, longer ones carry two. It never costs your per-card time or budget — rest is always free."
+    "explanation": "Draw a joker and you get 30 seconds of rest instead of an exercise — it moves on automatically, or skip it if you're ready. Decks under 20 cards carry no joker; a 20-card deck carries one, longer decks two. It never costs your per-card time or budget — rest is always free (and in On the Clock it freezes the bank)."
   },
   "joker": {
     "breatherLabel": "JOKER · 30s BREATHER",
     "breatheIn": "BREATHE IN",
     "breatheOut": "BREATHE OUT",
-    "nextCardAuto": "Next card flips itself."
+    "nextCardAuto": "Next card flips itself.",
+    "skip": "Skip the rest"
   }
 }

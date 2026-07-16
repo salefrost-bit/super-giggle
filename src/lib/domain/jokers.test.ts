@@ -7,10 +7,16 @@ describe('JOKER_REST_SECONDS', () => {
   });
 });
 
+// ERRATA v0.4.7 §2 ("jocker kartu treba izbaciti iz deckova sa manje od 20
+// karata"): asserti za špilove < 20 promenjeni sa 1 na 0; testovi pozicija
+// prebačeni na špil od 20 (najmanji koji još ima džokera).
 describe('jokerCountFor', () => {
-  it('returns 1 for decks up to 20 cards', () => {
-    expect(jokerCountFor(12)).toBe(1);
-    expect(jokerCountFor(16)).toBe(1);
+  it('returns 0 for decks below 20 cards (spec v0.4.7 §2)', () => {
+    expect(jokerCountFor(12)).toBe(0);
+    expect(jokerCountFor(16)).toBe(0);
+  });
+
+  it('returns 1 for exactly 20 cards', () => {
     expect(jokerCountFor(20)).toBe(1);
   });
 
@@ -21,21 +27,21 @@ describe('jokerCountFor', () => {
 });
 
 describe('assignJokerBreaks', () => {
-  it('returns a single deterministic position when the eligible range has exactly one slot', () => {
-    // realCardCount=6: earliest=5, latest=5 — only one possible position regardless of rng.
-    expect(assignJokerBreaks(6, () => 0.5)).toEqual([5]);
+  it('returns no breaks for decks below 20 cards (spec v0.4.7 §2)', () => {
+    expect(assignJokerBreaks(12, () => 0.5)).toEqual([]);
+    expect(assignJokerBreaks(16, () => 0.5)).toEqual([]);
   });
 
   it('never returns a position before the 5th card (warmup)', () => {
-    const breaks = assignJokerBreaks(12, () => 0);
+    const breaks = assignJokerBreaks(20, () => 0);
     expect(breaks[0]).toBeGreaterThanOrEqual(5);
   });
 
   it('never returns the last card as a break position', () => {
-    const breaksLow = assignJokerBreaks(12, () => 0);
-    const breaksHigh = assignJokerBreaks(12, () => 0.999999);
-    expect(breaksLow.every((n) => n <= 11)).toBe(true);
-    expect(breaksHigh.every((n) => n <= 11)).toBe(true);
+    const breaksLow = assignJokerBreaks(20, () => 0);
+    const breaksHigh = assignJokerBreaks(20, () => 0.999999);
+    expect(breaksLow.every((n) => n <= 19)).toBe(true);
+    expect(breaksHigh.every((n) => n <= 19)).toBe(true);
   });
 
   it('returns two positions at least 4 cards apart for decks >= 24', () => {

@@ -79,6 +79,17 @@ export async function recordCardDraw(sessionId: string, draw: CardDrawResult): P
   });
 }
 
+// Prekid bez čuvanja (spec v0.4.7 §1): briše sesiju u toku; kaskada nosi
+// session_exercises + card_draws. Best-effort kod pozivaoca — neuspeh ne
+// sme da blokira izlaz iz treninga.
+export async function deleteSession(sessionId: string): Promise<void> {
+  const supabase = createClient();
+  await withSaveRetry(async () => {
+    const { error } = await supabase.from('sessions').delete().eq('id', sessionId);
+    if (error) throw error;
+  });
+}
+
 export async function completeSession(
   sessionId: string,
   totalDurationSeconds: number,

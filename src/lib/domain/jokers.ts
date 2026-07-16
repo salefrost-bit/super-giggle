@@ -7,7 +7,9 @@ export const JOKER_REST_SECONDS = 30;
 const WARMUP_CARDS = 5;
 const MIN_GAP_CARDS = 4;
 
+// Spec v0.4.7 §2: špilovi ispod 20 karata nemaju džokera (Custom 12/16, Court).
 export function jokerCountFor(realCardCount: number): number {
+  if (realCardCount < 20) return 0;
   return realCardCount <= 20 ? 1 : 2;
 }
 
@@ -24,6 +26,7 @@ export function assignJokerBreaks(
   if (earliest > latest) return [];
 
   const count = jokerCountFor(realCardCount);
+  if (count === 0) return [];
   if (count === 1) {
     return [earliest + Math.floor(rng() * (latest - earliest + 1))];
   }

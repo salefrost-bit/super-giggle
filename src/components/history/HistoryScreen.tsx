@@ -234,7 +234,18 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
             <div className="mt-1 text-right text-[10px] font-bold text-[#52525b]">
               {t('historyScreen.monthSessions', { count: monthSessions.length })}
             </div>
-            <div className="mt-2 flex max-h-[430px] flex-col gap-2 overflow-y-auto pb-6">
+            <div
+              className="mt-2 flex max-h-[430px] flex-col gap-2 overflow-y-auto pb-6"
+              data-testid="sessions-scroll-zone"
+              style={{
+                // Spec v0.4.7 §4 (prototip linija 626): tanak vidljiv scrollbar +
+                // fade na dnu — signal da lista skroluje unutar svoje zone.
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#3a3a40 transparent',
+                maskImage: 'linear-gradient(to bottom, black 88%, transparent)',
+                WebkitMaskImage: 'linear-gradient(to bottom, black 88%, transparent)',
+              }}
+            >
               {monthSessions.map((session) => (
                 <HistoryRow
                   key={session.id}

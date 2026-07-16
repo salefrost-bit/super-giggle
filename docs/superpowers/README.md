@@ -32,6 +32,7 @@ Ne čita se cela istorija — strategija + poslednji dokumenti su dovoljni.
 | `specs/2026-07-15-dzokeri-design.md` | v0.4.4 Džokeri: ugrađeni odmor (30s, automatski) u svim modovima, bez migracije šeme. | Završen (implementiran) |
 | `specs/2026-07-16-shuffle-interfejs-design.md` | v0.4.5 SHUFFLE: novi interfejs iz Claude Design prototipa — rebrend, EN copy, 14 činova, nova biblioteka, Profile/History/How to Play. | Završen (implementiran) |
 | `specs/2026-07-16-ispravke-zive-probe-design.md` | v0.4.6: ispravke iz prve žive probe — otporno čuvanje (klijentski ID + retry), potvrda mejla, prsten uz kartu, istorija skrol, ogledalo rangova. Plan preskočen odlukom korisnika. | Završen (implementiran) |
+| `specs/2026-07-17-ispravke-zive-probe-2-design.md` | v0.4.7: druga runda ispravki — prekid sesije bez čuvanja, džokeri (<20 karata nema, preskakanje), On the Clock nova logika (300s banka, ±20s po karti), scroll zona istorije. Errate: bank/jokers/visuals testovi. | Završen (implementiran) |
 | `specs/assets/` | HTML prototipovi (Claude Design) za redizajn i gamifikaciju + istorijski SQL nacrt (`phase2_gamification.sql`, superseded). | Istorijska referenca |
 
 ## Planovi

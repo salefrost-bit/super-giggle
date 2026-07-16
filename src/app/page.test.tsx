@@ -156,7 +156,7 @@ describe('Home (top-level state machine)', () => {
     await user.click(screen.getByRole('button', { name: 'PODELI MI' }));
     await user.click(await screen.findByRole('button', { name: 'finish-setup' }));
 
-    expect(await screen.findByText(/Ako izvučeš džoker/)).toBeInTheDocument();
+    expect(await screen.findByText(/Povuci džokera/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'finish-session' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'PROMEŠAJ I PODELI' }));
@@ -168,7 +168,7 @@ describe('Home (top-level state machine)', () => {
     await user.click(screen.getByRole('button', { name: 'PODELI MI' }));
     await user.click(await screen.findByRole('button', { name: 'finish-setup' }));
     expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
-    expect(screen.queryByText(/Ako izvučeš džoker/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Povuci džokera/)).not.toBeInTheDocument();
   });
 
   it('chains jokers intro then challenge intro when both are unseen', async () => {
@@ -180,7 +180,7 @@ describe('Home (top-level state machine)', () => {
     await user.click(screen.getByRole('button', { name: 'PODELI MI' }));
     await user.click(await screen.findByRole('button', { name: 'finish-setup-challenge' }));
 
-    expect(await screen.findByText(/Ako izvučeš džoker/)).toBeInTheDocument();
+    expect(await screen.findByText(/Povuci džokera/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'PROMEŠAJ I PODELI' }));
 
     expect(await screen.findByText(/Svaka karta ima svoju vremensku kvotu/)).toBeInTheDocument();

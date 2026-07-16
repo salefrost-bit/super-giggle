@@ -56,11 +56,17 @@
     "halfDeckDown": "POLA ŠPILA GOTOVO",
     "cardsCleared": "OBORENE KARTE",
     "timeLeft": "PREOSTALO VREME",
-    "everyCardFeedsBank": "+svaka karta puni banku",
+    "everyCardFeedsBank": "+brza karta puni banku, spora je prazni",
     "emptyBankGameOver": "prazna banka = kraj igre",
     "dailyDealChip": "DNEVNA PODELA · {date}",
     "dailyFooter": "{count} karata · isti špil za sve · nova podela sutra",
-    "saveFailed": "Čuvanje treninga trenutno ne radi — rezultat možda neće biti sačuvan u istoriji."
+    "saveFailed": "Čuvanje treninga trenutno ne radi — rezultat možda neće biti sačuvan u istoriji.",
+    "quitAria": "Prekini trening",
+    "quitTitle": "Prekini trening?",
+    "quitBody": "Ako prekineš, ovaj trening se neće sačuvati u istoriju.",
+    "quitConfirm": "PREKINI",
+    "quitCancel": "NASTAVI",
+    "cardClockCaption": "SAT KARTE"
   },
   "results": {
     "score": "{score}/{total} oborenih karata",
@@ -127,8 +133,8 @@
     },
     "survive": {
       "title": "⏳ Na satu",
-      "desc": "Banka sekundi. Prazna banka — kraj igre.",
-      "explanation": "Krećeš sa bankom sekundi. Svaka završena karta dopunjuje banku svojom kvotom (procena vremena za tu kartu). Dokle ćeš stići kroz 52 karte? Pauza ne troši banku. Pređi sve karte za bonus ×1.5."
+      "desc": "Banka od 5 minuta. Isprazni špil pre nego što padne na nulu.",
+      "explanation": "Banka kreće od 5 minuta i stalno otkucava. Svaka karta ima svoj sat od 20 sekundi koji prelazi u minus: završiš li brzo, ostatak sekundi ide U banku; kasniš li, minus (najviše −20s) se oduzima. Isprazni sve 52 karte pre nego što banka padne na nulu — uspeh nosi ×1.5 na poene. Džokeri zamrzavaju banku, pauza takođe."
     },
     "daily": {
       "title": "🎲 Dnevna podela",
@@ -310,12 +316,13 @@
   },
   "jokers": {
     "title": "🃏 Džoker",
-    "explanation": "Ako izvučeš džoker, dobijaš 30 sekundi odmora umesto vežbe — automatski se nastavlja na sledeću kartu. Kraći špilovi (12 karata) imaju jedan džoker, duži imaju dva. Ne troši tvoje vreme po karti niti budžet — odmor je uvek besplatan."
+    "explanation": "Povuci džokera i dobijaš 30 sekundi odmora umesto vežbe — sam prelazi na sledeću kartu, a možeš i da ga preskočiš. Špilovi ispod 20 karata nemaju džokera; od 20 nose jednog, duži dva. Nikad ne troši tvoje vreme po karti ni budžet — odmor je uvek besplatan (u On the Clock zamrzava i banku)."
   },
   "joker": {
     "breatherLabel": "DŽOKER · 30s PREDAH",
     "breatheIn": "UDAH",
     "breatheOut": "IZDAH",
-    "nextCardAuto": "Sledeća karta se sama okreće."
+    "nextCardAuto": "Sledeća karta se sama okreće.",
+    "skip": "Preskoči odmor"
   }
 }

@@ -61,12 +61,17 @@ function buildDraw(index: number, rank: number, ex = exercise): CardDrawResult {
   };
 }
 
-const restDraws: CardDrawResult[] = [1, 2, 3, 4, 5, 6].map((rank, i) => buildDraw(i, rank));
+// ERRATA v0.4.7 §2 ("jocker kartu treba izbaciti iz deckova sa manje od 20
+// karata"): rest testovi prelaze sa špila od 6 na 20 karata (najmanji sa
+// džokerom); pozicija odmora je deterministična kroz Math.random → 0 (= 5).
+const restDraws: CardDrawResult[] = Array.from({ length: 20 }, (_, i) =>
+  buildDraw(i, (i % 13) + 1)
+);
 
 const restConfig: SessionConfig = {
   difficultyLevelId: 'd1',
   repMultiplier: 1,
-  deckSize: 6,
+  deckSize: 20,
   exerciseByCategory: { push: exercise, pull: exercise, legs: exercise, core: exercise },
 };
 
@@ -351,13 +356,16 @@ describe('SessionScreen — survive', () => {
     parTransitionSeconds: 20,
   };
 
-  it('bankrot završava sesiju', async () => {
+  // ERRATA v0.4.7 §3 ("bank timera koji krece da odbrojava od 300 sekundi
+  // […] ako se ceo spil izvrti pre nego sto glavni timer istekne challenge
+  // je uspeo"): banka sada curi u realnom vremenu, pa bankrot okida na tick
+  // — bez klika. Stari test (klik posle 126s na banci od 90) je zamenjen.
+  it('bankrot na tick završava sesiju bez klika (spec v0.4.7 §3)', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.mocked(createSession).mockResolvedValue('session-1');
     vi.mocked(recordCardDraw).mockResolvedValue(undefined);
     vi.mocked(completeSession).mockResolvedValue(undefined);
     const onFinish = vi.fn();
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
     renderWithIntl(
       <SessionScreen
@@ -370,14 +378,13 @@ describe('SessionScreen — survive', () => {
     );
 
     await screen.findByRole('button', { name: 'Sledeća karta' });
-    await vi.advanceTimersByTimeAsync(126_000);
-    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    await vi.advanceTimersByTimeAsync(301_000);
 
     await waitFor(() =>
       expect(completeSession).toHaveBeenCalledWith(
         'session-1',
         expect.any(Number),
-        expect.objectContaining({ survived_cards: 1, multiplier: 1 })
+        expect.objectContaining({ survived_cards: 0, multiplier: 1 })
       )
     );
     expect(onFinish).toHaveBeenCalledTimes(1);
@@ -744,9 +751,17 @@ describe('SessionScreen — pause persistence (all modes)', () => {
 });
 
 describe('SessionScreen — joker rest', () => {
+  let randomSpy: ReturnType<typeof vi.spyOn>;
+
   beforeEach(async () => {
     const actual = await vi.importActual<typeof import('@/hooks/useCardQuota')>('@/hooks/useCardQuota');
     vi.mocked(useCardQuota).mockImplementation(actual.useCardQuota);
+    // Deterministična pozicija odmora: rng → 0 daje earliest slot (5. karta).
+    randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
+  });
+
+  afterEach(() => {
+    randomSpy.mockRestore();
   });
 
   it('shows a rest screen after the warmup card and auto-advances without a click', async () => {
@@ -764,8 +779,7 @@ describe('SessionScreen — joker rest', () => {
       />
     );
 
-    // 6-card deck → assignJokerBreaks(6, ...) is ALWAYS [5] regardless of rng
-    // (single-slot range), so this is deterministic without mocking Math.random.
+    // 20-card deck + Math.random → 0 ⇒ assignJokerBreaks vraća [5].
     for (let i = 0; i < 5; i++) {
       await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
     }
@@ -841,7 +855,10 @@ describe('SessionScreen — joker rest', () => {
     await vi.advanceTimersByTimeAsync(30_000);
     await waitFor(() => expect(screen.queryByText('DŽOKER · 30s PREDAH')).not.toBeInTheDocument());
 
-    await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    // Preostalih 15 karata (6–20) do kraja špila od 20.
+    for (let i = 0; i < 15; i++) {
+      await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
+    }
 
     await waitFor(() =>
       expect(completeSession).toHaveBeenCalledWith(

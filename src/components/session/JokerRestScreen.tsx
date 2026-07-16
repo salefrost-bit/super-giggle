@@ -5,12 +5,14 @@ import { JOKER_REST_SECONDS } from '@/lib/domain/jokers';
 
 interface JokerRestScreenProps {
   remainingSeconds: number;
+  // Spec v0.4.7 §2: odmor može da se preskoči — ista putanja kao istek.
+  onSkip?: () => void;
 }
 
 // s3: BREATHE IN/OUT + concentric rings — both derived from the existing
 // joker countdown (timestamp-sourced remainingSeconds). 8s cycle:
 //   phase = Math.floor((30 − remaining) / 4) % 2  → 0 = in, 1 = out
-export function JokerRestScreen({ remainingSeconds }: JokerRestScreenProps) {
+export function JokerRestScreen({ remainingSeconds, onSkip }: JokerRestScreenProps) {
   const t = useTranslations();
   const elapsed = Math.max(0, JOKER_REST_SECONDS - remainingSeconds);
   const phase = Math.floor(elapsed / 4) % 2;
@@ -88,6 +90,18 @@ export function JokerRestScreen({ remainingSeconds }: JokerRestScreenProps) {
         {formatted}
       </p>
       <p className="text-[13px] font-bold text-muted">{t('joker.nextCardAuto')}</p>
+
+      {onSkip && (
+        <button
+          type="button"
+          data-testid="skip-rest"
+          onClick={onSkip}
+          className="mt-1 px-5 py-2.5 rounded-2xl border text-[13px] font-extrabold tracking-[0.08em]"
+          style={{ borderColor: 'rgba(150,160,255,.35)', color: '#cfd6ff' }}
+        >
+          {t('joker.skip')}
+        </button>
+      )}
     </div>
   );
 }
