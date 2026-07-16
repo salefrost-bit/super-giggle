@@ -120,7 +120,11 @@
     "backHome": "← Nazad na početak",
     "guestBanner": "Osvojio si {points} poena za gostinskim stolom — napravi nalog da ih zadržiš, zajedno sa nizom i činom.",
     "keepGuest": "Nastavi kao gost →",
-    "joinTable": "Pridruži se stolu"
+    "joinTable": "Pridruži se stolu",
+    "noAccount": "Nemaš nalog?",
+    "haveAccount": "Već imaš nalog?",
+    "emailPlaceholder": "ti@primer.com",
+    "passwordPlaceholder": "••••••••"
   },
   "pause": {
     "autoLabel": "Automatski pauzirano",
@@ -132,6 +136,7 @@
   "modes": {
     "infoAria": "Objašnjenje moda",
     "firstRunCta": "PROMEŠAJ I PODELI",
+    "firstRunKicker": "PRVI PUT ZA OVIM STOLOM",
     "classic": {
       "explanation": "Svojim tempom, bez pritiska — meri se samo ukupno vreme."
     },

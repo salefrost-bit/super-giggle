@@ -59,6 +59,71 @@ function describeLastConfig(
   return `${entryLabel}, ${lengthLabel}`;
 }
 
+function splitIcon(title: string): { icon: string; label: string } {
+  const [icon, ...rest] = title.split(' ');
+  return { icon, label: rest.join(' ') };
+}
+
+// s22: prvi-put modal (mod/jokeri objašnjenje pre prve sesije tog tipa) —
+// bespoke centrirana kartica, za razliku od generičkog InfoModal bottom-sheet-a
+// koji ostaje nepromenjen za StreakInfoModal/formula modal (van obima Task 11).
+function FirstRunModal({
+  title,
+  kicker,
+  body,
+  ctaLabel,
+  onClose,
+}: {
+  title: string;
+  kicker: string;
+  body: string;
+  ctaLabel: string;
+  onClose: () => void;
+}) {
+  const { icon, label } = splitIcon(title);
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      className="fixed inset-0 z-50 flex items-center justify-center p-6"
+      style={{ background: 'rgba(10,10,13,.72)', backdropFilter: 'blur(4px)' }}
+    >
+      <div
+        className="w-full max-w-[390px] rounded-3xl p-6 motion-safe:animate-[badgeK_0.45s_cubic-bezier(.2,.9,.3,1.3)]"
+        style={{
+          background: 'linear-gradient(160deg,#26262b,#1d1d20)',
+          border: '1px solid rgba(204,255,0,.4)',
+          boxShadow: '0 0 50px rgba(204,255,0,.15), 0 24px 50px rgba(0,0,0,.6)',
+        }}
+      >
+        <span
+          className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center text-2xl mx-auto"
+          style={{
+            background: 'radial-gradient(circle at 50% 34%, rgba(204,255,0,.25), rgba(0,0,0,.15) 78%), #1d1d20',
+            border: '1px solid rgba(204,255,0,.45)',
+          }}
+        >
+          {icon}
+        </span>
+        <p className="text-[22px] font-black text-center mt-3.5">{label}</p>
+        <p className="text-[10px] font-extrabold tracking-[0.2em] text-accent text-center mt-1 uppercase">
+          {kicker}
+        </p>
+        <p className="text-[13px] font-bold text-muted text-center leading-relaxed mt-3.5">{body}</p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full font-extrabold text-sm tracking-[0.12em] py-4 rounded-2xl mt-[18px] bg-accent text-background"
+          style={{ boxShadow: '0 0 26px rgba(204,255,0,.3)' }}
+        >
+          {ctaLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const t = useTranslations();
   const { user, isLoading, signOut } = useAuth();
@@ -340,31 +405,31 @@ export default function Home() {
   if (screen === 'session' && config) {
     if (introStep === 'jokers') {
       return (
-        <InfoModal
+        <FirstRunModal
           title={t('jokers.title')}
-          closeLabel={t('modes.firstRunCta')}
+          kicker={t('modes.firstRunKicker')}
+          body={t('jokers.explanation')}
+          ctaLabel={t('modes.firstRunCta')}
           onClose={() => {
             markExplained('jokers');
             setIntroStep(pendingChallengeIntro ? 'challenge' : null);
           }}
-        >
-          {t('jokers.explanation')}
-        </InfoModal>
+        />
       );
     }
     if (introStep === 'challenge') {
       const modeDef = MODES.find((m) => m.id === config.gameMode);
       return (
-        <InfoModal
+        <FirstRunModal
           title={t(modeDef?.titleKey ?? 'setup.challengeTitle')}
-          closeLabel={t('modes.firstRunCta')}
+          kicker={t('modes.firstRunKicker')}
+          body={t(modeDef?.explanationKey ?? 'modes.perfect_deck.explanation')}
+          ctaLabel={t('modes.firstRunCta')}
           onClose={() => {
             if (config.gameMode) markExplained(config.gameMode);
             setIntroStep(null);
           }}
-        >
-          {t(modeDef?.explanationKey ?? 'modes.perfect_deck.explanation')}
-        </InfoModal>
+        />
       );
     }
     return (

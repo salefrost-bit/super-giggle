@@ -120,7 +120,11 @@
     "backHome": "← Back to start",
     "guestBanner": "You banked {points} points at the guest table — make an account and they're yours for keeps, streak and rank included.",
     "keepGuest": "Keep playing as guest →",
-    "joinTable": "Join the table"
+    "joinTable": "Join the table",
+    "noAccount": "No account?",
+    "haveAccount": "Already have an account?",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "••••••••"
   },
   "pause": {
     "autoLabel": "Paused automatically",
@@ -132,6 +136,7 @@
   "modes": {
     "infoAria": "About this mode",
     "firstRunCta": "SHUFFLE UP & DEAL",
+    "firstRunKicker": "FIRST TIME AT THIS TABLE",
     "classic": {
       "explanation": "Your pace, no pressure — only total time is tracked."
     },

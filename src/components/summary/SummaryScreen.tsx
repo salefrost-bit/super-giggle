@@ -181,7 +181,7 @@ export function SummaryScreen({ result, isGuest, config, userId, onDone }: Summa
             {t('results.guestNote')}
           </p>
           <Link
-            href="/signup"
+            href={`/signup?points=${result.points}`}
             className="block w-full bg-accent text-background rounded-2xl p-4 font-extrabold text-[15px]"
           >
             {t('results.createAccount')}

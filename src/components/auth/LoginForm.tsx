@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/lib/auth/AuthContext';
 
+const INPUT_CLASSES =
+  'w-full rounded-[14px] px-4 py-3.5 text-sm font-bold text-foreground placeholder:text-[#52525b] bg-[#212124] border border-[#303036] outline-none transition-[border-color,box-shadow] duration-200 focus:border-accent focus:shadow-[0_0_0_3px_rgba(204,255,0,0.12)]';
+
 export function LoginForm() {
   const t = useTranslations();
   const { signIn } = useAuth();
@@ -29,35 +32,64 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="min-h-screen flex flex-col justify-center gap-4 px-7">
-      <h1 className="text-[28px] font-extrabold mb-2">{t('auth.loginTitle')}</h1>
-      <input
-        type="email"
-        required
-        placeholder={t('auth.email')}
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="bg-surface border-2 border-white/5 rounded-2xl px-4 py-3.5 text-foreground placeholder:text-muted focus:border-accent/50 outline-none"
-      />
-      <input
-        type="password"
-        required
-        placeholder={t('auth.password')}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="bg-surface border-2 border-white/5 rounded-2xl px-4 py-3.5 text-foreground placeholder:text-muted focus:border-accent/50 outline-none"
-      />
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-accent text-background rounded-[18px] p-5 font-extrabold text-lg disabled:opacity-50"
-      >
-        {isSubmitting ? t('auth.loggingIn') : t('auth.loginCta')}
-      </button>
-      <Link href="/" className="text-center text-sm text-muted underline">
-        {t('auth.backHome')}
-      </Link>
-    </form>
+    <div className="min-h-screen flex flex-col px-6 pt-6 pb-8">
+      <div className="flex items-center gap-3.5 mb-8">
+        <Link
+          href="/"
+          aria-label={t('common.back')}
+          className="bg-surface text-foreground w-10 h-10 rounded-xl text-lg font-extrabold flex items-center justify-center flex-none"
+        >
+          ←
+        </Link>
+        <h1 className="text-[24px] font-extrabold">{t('auth.loginTitle')}</h1>
+      </div>
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 gap-4">
+        <div>
+          <div className="text-[11px] font-extrabold tracking-[0.12em] text-muted uppercase mb-1.5">
+            {t('auth.email')}
+          </div>
+          <input
+            type="email"
+            required
+            placeholder={t('auth.emailPlaceholder')}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={INPUT_CLASSES}
+          />
+        </div>
+        <div>
+          <div className="text-[11px] font-extrabold tracking-[0.12em] text-muted uppercase mb-1.5">
+            {t('auth.password')}
+          </div>
+          <input
+            type="password"
+            required
+            placeholder={t('auth.passwordPlaceholder')}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={INPUT_CLASSES}
+          />
+        </div>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="bg-accent text-background rounded-[16px] p-4 font-extrabold text-[15px] tracking-[0.06em] disabled:opacity-50 mt-1"
+          style={{ boxShadow: '0 0 30px rgba(204,255,0,.25)' }}
+        >
+          {isSubmitting ? t('auth.loggingIn') : t('auth.loginCta')}
+        </button>
+        <p className="text-center text-xs font-bold text-muted">
+          {t('auth.noAccount')}{' '}
+          <Link href="/signup" className="text-accent font-extrabold">
+            {t('auth.joinTable')}
+          </Link>
+        </p>
+        <div className="flex-1" />
+        <Link href="/" className="text-center text-xs font-bold text-[#52525b] hover:text-muted">
+          {t('auth.keepGuest')}
+        </Link>
+      </form>
+    </div>
   );
 }
