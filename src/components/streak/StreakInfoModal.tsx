@@ -19,7 +19,7 @@ export function StreakInfoModal({ days, freezesLeftThisWeek, onClose }: StreakIn
       <p className="mb-3">{t('streak.explanation')}</p>
       <p className="font-extrabold text-foreground">
         🔥 {t('progress.streak', { days })} ·{' '}
-        {t('progress.streakCaption', { freezes: '❄️'.repeat(freezesLeftThisWeek) || '0' })}
+        {t('progress.streakCaption', { freezes: '🃏'.repeat(freezesLeftThisWeek) || '0' })}
       </p>
     </InfoModal>
   );

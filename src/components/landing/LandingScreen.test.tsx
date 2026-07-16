@@ -54,7 +54,7 @@ describe('LandingScreen daily chip', () => {
         onSignOut={() => {}}
       />
     );
-    expect(screen.getByRole('button', { name: '🎴 ✓' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '🎲 Dnevna podela ✓' })).toBeInTheDocument();
   });
 
   it('prikazuje pending čip bez današnje sesije', () => {
@@ -68,7 +68,7 @@ describe('LandingScreen daily chip', () => {
         onSignOut={() => {}}
       />
     );
-    expect(screen.getByRole('button', { name: '🎴 Karta dana' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '🎲 Dnevna podela' })).toBeInTheDocument();
   });
 
   it('tap poziva onStartDaily', async () => {
@@ -84,7 +84,7 @@ describe('LandingScreen daily chip', () => {
         onSignOut={() => {}}
       />
     );
-    await user.click(screen.getByRole('button', { name: '🎴 Karta dana' }));
+    await user.click(screen.getByRole('button', { name: '🎲 Dnevna podela' }));
     expect(onStartDaily).toHaveBeenCalledTimes(1);
   });
 });
@@ -100,13 +100,13 @@ describe('LandingScreen repeat last', () => {
         onSignOut={() => {}}
       />
     );
-    expect(screen.getByRole('button', { name: 'Ponovi poslednji trening' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ponovi podelu' })).toBeInTheDocument();
   });
 
   it('sakriva dugme kad onRepeatLast nije prosleđen', () => {
     renderWithLocaleSpy(
       <LandingScreen user={null} onStartWorkout={() => {}} onShowHistory={() => {}} onSignOut={() => {}} />
     );
-    expect(screen.queryByRole('button', { name: 'Ponovi poslednji trening' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ponovi podelu' })).not.toBeInTheDocument();
   });
 });

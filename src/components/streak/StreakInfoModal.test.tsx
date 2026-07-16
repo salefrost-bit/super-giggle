@@ -9,10 +9,10 @@ describe('StreakInfoModal', () => {
     renderWithIntl(<StreakInfoModal days={4} freezesLeftThisWeek={1} onClose={() => {}} />);
 
     expect(screen.getByText(/Niz raste za svaki dan/)).toBeInTheDocument();
-    // The state line only — NOT `/❄️/`, which also appears in the explanation
+    // The state line only — NOT `/🃏/`, which also appears in the explanation
     // paragraph and would make getByText throw on multiple matches.
     expect(screen.getByText(/4 dana/)).toBeInTheDocument();
-    expect(screen.getByText(/zamrzavanja ove nedelje/)).toBeInTheDocument();
+    expect(screen.getByText(/džokeri iz rukava ove nedelje/)).toBeInTheDocument();
   });
 
   it('closes via the button', async () => {

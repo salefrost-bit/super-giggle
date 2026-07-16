@@ -11,7 +11,7 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: 'ŠPIL — Trening bez opreme',
+  title: 'SHUFFLE — Trening bez opreme',
   description: 'Trening bez opreme, zasnovan na izvlačenju karata. Izvuci kartu, odradi seriju.',
 };
 

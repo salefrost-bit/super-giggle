@@ -7,9 +7,9 @@ describe('EntrySelector', () => {
   it('prikazuje tri kartice i javlja izbor', () => {
     const onSelect = vi.fn();
     renderWithIntl(<EntrySelector onSelect={onSelect} />);
-    fireEvent.click(screen.getByText(/Brzi trening/));
+    fireEvent.click(screen.getByText(/Brza podela/));
     expect(onSelect).toHaveBeenCalledWith('quick');
-    fireEvent.click(screen.getByText(/Po meri/));
+    fireEvent.click(screen.getByText(/Složi špil/));
     expect(onSelect).toHaveBeenCalledWith('custom');
     fireEvent.click(screen.getByText(/Challenge/));
     expect(onSelect).toHaveBeenCalledWith('challenge');

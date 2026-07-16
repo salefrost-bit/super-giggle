@@ -53,7 +53,7 @@ describe('SetupScreen', () => {
 
     renderWithIntl(<SetupScreen onStart={onStart} />);
 
-    await user.click(await screen.findByText(/Brzi trening/));
+    await user.click(await screen.findByText(/Brza podela/));
     await user.click(await screen.findByRole('button', { name: 'Srednji' }));
     expect(screen.queryByText(/Izaberi vežbu/)).not.toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: 'Ceo špil (52 karte)' }));
@@ -147,7 +147,7 @@ describe('SetupScreen', () => {
     renderWithIntl(<SetupScreen onStart={onStart} userId={null} />);
 
     await user.click(await screen.findByText(/Challenge/));
-    await user.click(await screen.findByRole('button', { name: /Preživi špil/ }));
+    await user.click(await screen.findByRole('button', { name: /Na satu/ }));
     await user.click(await screen.findByRole('button', { name: 'Srednji' }));
     await user.click(await screen.findByRole('button', { name: 'Sklekovi' }));
     await user.click(screen.getByRole('button', { name: 'Zgibovi' }));
@@ -174,7 +174,7 @@ describe('SetupScreen', () => {
     renderWithIntl(<SetupScreen onStart={onStart} userId={null} />);
 
     await user.click(await screen.findByText(/Challenge/));
-    await user.click(await screen.findByRole('button', { name: /Sprint/ }));
+    await user.click(await screen.findByRole('button', { name: /Blic/ }));
     await user.click(await screen.findByRole('button', { name: '5 min' }));
     await user.click(await screen.findByText('Sklekovi'));
     await user.click(screen.getByText('Zgibovi'));
@@ -214,7 +214,7 @@ describe('SetupScreen', () => {
       renderWithIntl(<SetupScreen onStart={onStart} userId={null} />);
 
       await user.click(await screen.findByText(/Challenge/));
-      await user.click(await screen.findByRole('button', { name: /Karta dana/ }));
+      await user.click(await screen.findByRole('button', { name: /Dnevna podela/ }));
 
       expect(screen.queryByRole('button', { name: 'Srednji' })).not.toBeInTheDocument();
       expect(onStart).toHaveBeenCalledTimes(1);

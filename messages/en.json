@@ -1,7 +1,7 @@
 {
   "common": { "back": "Back", "loading": "Loading...", "error": "Error: {message}", "close": "Close" },
   "landing": {
-    "appName": "ŠPIL",
+    "appName": "SHUFFLE",
     "tagline": "No-equipment training.\nDraw a card, do the set.",
     "continueGuest": "Continue as guest",
     "login": "Log in",
@@ -11,31 +11,36 @@
     "viewProgress": "View progress →",
     "signOut": "Sign out",
     "streakDays": "{days, plural, one {# day} other {# days}}",
-    "repeatLast": "Repeat last workout",
-    "dailyDone": "🎴 ✓",
-    "dailyPending": "🎴 Daily card"
+    "repeatLast": "Run it back",
+    "runItBackContext": "Run it back · {context}",
+    "dailyDone": "🎲 Daily Deal ✓",
+    "dailyPending": "🎲 Daily Deal",
+    "dealMeIn": "DEAL ME IN",
+    "playingAsGuest": "Playing as guest",
+    "signIn": "Sign in",
+    "howToPlay": "How to Play"
   },
   "setup": {
     "step": "Step {current}/{total}",
     "chooseMode": "How are you training?",
     "classicTitle": "🃏 Classic",
     "classicDesc": "Your own pace, total time is tracked.",
-    "challengeTitle": "⚡ Challenge: Perfect Deck",
-    "challengeDesc": "Every card has a deadline. Beat them all.",
+    "challengeTitle": "⚡ Perfect Deck",
+    "challengeDesc": "Every card has a clock. Clear them all.",
     "beatChip": "Beat: {time}",
     "chooseLevel": "Choose your level",
     "levelsLoading": "Loading levels...",
-    "chooseExercises": "Pick an exercise for each category",
+    "chooseExercises": "Build your hand",
     "chooseLength": "Choose workout length",
-    "quarterLabel": "Short",
+    "quarterLabel": "The Cut",
     "quarterSub": "12 cards · ~10 min",
-    "halfLabel": "Medium",
+    "halfLabel": "Half Deck",
     "halfSub": "24 cards · ~20 min",
-    "fullLabel": "Full deck",
+    "fullLabel": "Full Deck",
     "fullSub": "52 cards · ~35 min",
-    "quarterAria": "Short (12 cards)",
-    "halfAria": "Medium (24 cards)",
-    "fullAria": "Full deck (52 cards)",
+    "quarterAria": "The Cut (12 cards)",
+    "halfAria": "Half Deck (24 cards)",
+    "fullAria": "Full Deck (52 cards)",
     "chooseSprintDuration": "Choose duration",
     "diffDescBeginner": "Easier reps, ideal to start.",
     "diffDescIntermediate": "Balanced load.",
@@ -50,9 +55,18 @@
     "resumeWorkout": "Resume workout",
     "reps": "reps",
     "cardOf": "Card {current}/{total}",
-    "quotaCaption": "CARD DEADLINE",
+    "quotaCaption": "ON THE CLOCK",
     "bankCaption": "TIME BANK",
     "bankQuota": "+{seconds}s refill",
+    "total": "TOTAL",
+    "hint": "Done? Tap the card — the next one's already waiting.",
+    "halfDeckDown": "HALF THE DECK DOWN",
+    "cardsCleared": "CARDS CLEARED",
+    "timeLeft": "TIME LEFT",
+    "everyCardFeedsBank": "+every card feeds the bank",
+    "emptyBankGameOver": "empty bank = game over",
+    "dailyDealChip": "DAILY DEAL · {date}",
+    "dailyFooter": "{count} cards · same deck for everyone · new deal tomorrow",
     "saveFailed": "Saving isn't working right now — this workout may not appear in your history."
   },
   "results": {
@@ -63,6 +77,8 @@
     "perfectDeck": "PERFECT DECK!",
     "newRecord": "NEW RECORD",
     "newBestScore": "NEW BEST SCORE",
+    "deckCleared": "DECK CLEARED",
+    "newBest": "★ NEW BEST",
     "guestNote": "Guest results aren't saved. Create an account to track progress over time.",
     "createAccount": "Create account",
     "backHome": "Back to start"
@@ -70,7 +86,7 @@
   "progress": {
     "title": "Progress",
     "streak": "{days, plural, one {# day} other {# days}}",
-    "streakCaption": "streak · freezes left this week: {freezes}",
+    "streakCaption": "streak · jokers up your sleeve this week: {freezes}",
     "recordsTitle": "Records",
     "bestScore": "⚡ best: {score}/{total}",
     "historyTitle": "History",
@@ -94,16 +110,21 @@
     "successTitle": "Registration successful!",
     "successNote": "Check your email to confirm your account before logging in.",
     "goLogin": "Go to login",
-    "backHome": "← Back to start"
+    "backHome": "← Back to start",
+    "guestBanner": "You banked {points} points at the guest table — make an account and they're yours for keeps, streak and rank included.",
+    "keepGuest": "Keep playing as guest →",
+    "joinTable": "Join the table"
   },
   "pause": {
     "autoLabel": "Paused automatically",
     "summary": "Pauses: {count} · total {duration}",
-    "historyLabel": "⏸ {duration}"
+    "historyLabel": "⏸ {duration}",
+    "breathe": "Breathe. The deck can wait.",
+    "backIn": "BACK IN"
   },
   "modes": {
     "infoAria": "About this mode",
-    "firstRunCta": "Got it, let's go",
+    "firstRunCta": "SHUFFLE UP & DEAL",
     "classic": {
       "explanation": "Your pace, no pressure — only total time is tracked."
     },
@@ -111,46 +132,66 @@
       "explanation": "Every card has its own time quota. Move to the next card before the quota runs out and the card is beaten ✓. Quota expired? The card is lost ✗ — but the workout never stops: finish your reps at your own pace and carry on. Unused time doesn't carry over. Beat every card for a PERFECT DECK. Your first run is against our estimate; once you set a record, you race your best time +5%."
     },
     "sprint": {
-      "title": "🏃 Sprint",
-      "desc": "How many cards in 3, 5, or 10 minutes.",
-      "explanation": "Fixed time — shuffle the deck and flip cards until the clock runs out. A card started before time expires still counts.",
+      "title": "🏃 Blitz",
+      "desc": "3, 5 or 10 minutes. Deal till the clock dies.",
+      "explanation": "Fixed time — shuffle the deck and flip cards until the clock runs out. Every cleared card still earns points; the cards-cleared counter is just your pace.",
       "duration": "{minutes} min"
     },
     "court": {
-      "title": "👑 Court",
-      "desc": "16 hardest cards: J, Q, K and A.",
+      "title": "👑 The Court",
+      "desc": "16 royals: J, Q, K — and the Ace to catch your breath.",
       "explanation": "Per-card deadline like Perfect Deck, but you always play against our estimate — not your record. ×1.25 bonus on points. Aces are deliberately included as \"rest\" cards — Ace = 1 rep."
     },
     "survive": {
-      "title": "🛡 Survive the deck",
-      "desc": "90-second bank — refill it with every card.",
-      "explanation": "You start with a 90-second bank. Every finished card refills the bank with that card's quota (estimated time for the card). How far can you get through 52 cards? Pausing doesn't drain the bank. Beat every card for a ×1.5 bonus."
+      "title": "⏳ On the Clock",
+      "desc": "A bank of seconds. Empty bank — game over.",
+      "explanation": "You start with a bank of seconds. Every finished card refills the bank with that card's quota (estimated time for the card). How far can you get through 52 cards? Pausing doesn't drain the bank. Beat every card for a ×1.5 bonus."
     },
     "daily": {
-      "title": "🎴 Daily card",
-      "desc": "Today's challenge — same deck for everyone.",
+      "title": "🎲 Daily Deal",
+      "desc": "One deck, 20 cards, same for everyone.",
       "explanation": "Every day a new 20-card deck, the same for all players. Exercises and level are set by the day — no choices. Per-card deadline like Perfect Deck, always against our estimate. Your first attempt of the day counts for the chip and record; replaying the same day is a replay."
     }
   },
   "streak": {
     "title": "Workout streak",
-    "explanation": "🔥 Your streak grows for every day with at least one finished workout. ❄️ Miss a day? Up to 2 days per week freeze automatically and your streak survives — a third missed day in the same week breaks it. Freezes reset weekly and can't be saved up."
+    "explanation": "🔥 Your streak grows for every day you clear a deck. 🃏 Jokers up your sleeve — two a week. Skip a day and one plays itself, the flame stays lit. Fresh pair every Monday, they don't stack."
   },
   "entry": {
-    "title": "How are you training today?",
-    "quickTitle": "🏃 Quick workout",
-    "quickDesc": "Pick a level and go — we pick the exercises.",
-    "customTitle": "🎛 Custom",
-    "customDesc": "Every exercise and slider your way.",
+    "title": "How are you playing today?",
+    "quickTitle": "🏃 Quick Deal",
+    "quickDesc": "Pick your stakes, we build the deck.",
+    "customTitle": "🎛 Stack the Deck",
+    "customDesc": "Every exercise, every card — rig it your way.",
     "challengeTitle": "⚡ Challenge",
-    "challengeDesc": "Modes with a clock, records and points."
+    "challengeDesc": "Five tables. Records on the line."
+  },
+  "quick": {
+    "stakes": "STAKES",
+    "deckSize": "DECK SIZE",
+    "level1": { "name": "Low Stakes", "desc": "Lighter hands · ×0.75" },
+    "level2": { "name": "High Stakes", "desc": "The standard table · ×1.0" },
+    "level3": { "name": "All In", "desc": "Heavy hands · ×1.25" },
+    "len12": { "name": "The Cut", "min": "~10 min" },
+    "len24": { "name": "Half Deck", "min": "~20 min" },
+    "len52": { "name": "Full Deck", "min": "~35 min" },
+    "cta": "SHUFFLE THE DECK"
+  },
+  "challengeMenu": {
+    "title": "Challenge"
   },
   "custom": {
     "repMultiplier": "Rep multiplier",
     "cardCount": "Card count",
     "cardsPerCategory": "{count} per category",
     "start": "Start",
-    "tierBadge": "Tier {tier}"
+    "tierBadge": "Tier {tier}",
+    "yourDeck": "YOUR DECK",
+    "warmUp": "WARM-UP",
+    "steady": "STEADY",
+    "raise": "RAISE",
+    "allIn": "ALL IN",
+    "repsInStack": "≈ {count} reps in the stack"
   },
   "points": {
     "label": "Points",
@@ -164,14 +205,108 @@
   "xp": {
     "label": "XP",
     "rankTitle": "Rank",
-    "explanation": "XP is the sum of points from all finished workouts — it only grows. Ranks: 2 (0), J (5,000), Q (15,000), K (40,000), A (100,000), 🃏 (250,000).",
+    "explanation": "XP is the sum of points from every finished workout — Quick Deal and Stack the Deck count too, not just Challenge. It only grows. 14 ranks from The Joker (0) to King (105,000) — see How to Play for the full ladder.",
     "rankUp": "NEW RANK: {symbol}"
+  },
+  "ranks": {
+    "r0": "The Joker",
+    "r1": "Ace",
+    "r2": "Deuce",
+    "r3": "Trey",
+    "r4": "Four",
+    "r5": "Five",
+    "r6": "Six",
+    "r7": "Lucky Seven",
+    "r8": "Eight",
+    "r9": "Nine",
+    "r10": "Ten",
+    "r11": "Jack",
+    "r12": "Queen",
+    "r13": "King"
+  },
+  "ranksDesc": {
+    "r0": "Everyone starts wild. About two workouts and you're an Ace.",
+    "r1": "Lowest card in the deck — but you're IN the deck now.",
+    "r2": "Two decks a week and it's becoming a habit.",
+    "r3": "The shuffle knows your name.",
+    "r4": "Steady hands. The streak barely flickers.",
+    "r5": "Halfway up the numbers.",
+    "r6": "Clean runs are your normal now.",
+    "r7": "Luck had nothing to do with it.",
+    "r8": "A pace most players never hold.",
+    "r9": "The court is watching.",
+    "r10": "Last number before the royals.",
+    "r11": "First royal. You have real mileage behind you.",
+    "r12": "Elite of the deck — quotas fall, streaks hold.",
+    "r13": "The crown. Hard to win, defended with every deck."
   },
   "history": {
     "exercises": "Exercises",
     "totalReps": "{count} reps",
     "beaten": "{score}/{total} beaten",
     "breakdown": "base {base} × {multiplier}"
+  },
+  "historyScreen": {
+    "title": "History",
+    "last14Days": "LAST 14 DAYS",
+    "sessions": "SESSIONS",
+    "calendar": "CALENDAR",
+    "best": "BEST",
+    "avgPerCard": "AVG PER CARD",
+    "deckClearedLegend": "deck cleared",
+    "today": "today",
+    "monthSessions": "{count, plural, one {# session} other {# sessions}}"
+  },
+  "howToPlay": {
+    "title": "How to Play",
+    "deckIsTrainer": "The deck is your trainer.",
+    "deckIsTrainerDesc": "Every card is an exercise — the number is your rep count. Do the work, tap the card, next one's dealt.",
+    "suitsExplainer": "A standard deck holds 52 cards and jokers. Suits are muscle groups: ♥ push, ♣ pull, ♠ legs, ♦ core. The Ace is 1 — the lightest card — and the royals carry J=11, Q=12, K=13. The deck runs empty, the session ends — time and points go straight to your history and XP.",
+    "modesTitle": "MODES",
+    "ranksTitle": "RANKS OF THE DECK",
+    "youBadge": "YOU",
+    "streakText": "Streak — the flame grows every day you clear a deck. Three skipped days in one week and it goes out.",
+    "jokersText": "Jokers up your sleeve — two a week. Need a rest day? One plays itself and the flame stays lit. Fresh pair every Monday — they don't stack.",
+    "aboutTitle": "ABOUT",
+    "aboutText": "SHUFFLE is free — training app made to promote healthy lifestyle",
+    "quickDeal": {
+      "short": "Pick your stakes, we build the deck.",
+      "long": "You pick the stakes and the deck size — we build the deck. No clocks here: Quick Deal and Stack the Deck run without them — just you and the stopwatch."
+    },
+    "stackTheDeck": {
+      "short": "Every exercise, every card — rig it your way.",
+      "long": "Pick the number of cards (12–52) and the rep multiplier (0.5×–2×). A taller stack pays more XP. Your setup is saved for next time."
+    },
+    "challenge": {
+      "short": "Five tables. Records on the line.",
+      "long": "Five modes: Perfect Deck, Blitz, The Court, On the Clock and Daily Deal. Clocks, runs and records — this is where the XP is made."
+    },
+    "jokerMode": {
+      "short": "A guided breather when a joker turns up.",
+      "long": "When a joker turns up: 30 seconds of guided breathing — in, out. The stopwatch keeps running and your run stays alive. Shorter decks carry one, longer ones carry two."
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "rank": "RANK",
+    "rankProgress": "Rank {current}/{total}",
+    "xpProgress": "{xp} / {threshold} XP",
+    "xpToNext": "{xp} XP to {name}",
+    "bestScore": "BEST SCORE",
+    "decksCleared": "DECKS CLEARED",
+    "longestStreak": "LONGEST STREAK",
+    "hoursAtTable": "HOURS AT THE TABLE",
+    "totalReps": "REPS",
+    "favoriteSuit": "FAVORITE SUIT",
+    "jokersTitle": "JOKERS UP YOUR SLEEVE",
+    "jokersDesc": "Two a week. Skip a day and one plays itself — the flame stays lit. Fresh pair every Monday.",
+    "sessionHistory": "SESSION HISTORY",
+    "guestCta": "Create an account to track your rank, streak and history.",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "languageHint": "More languages coming soon."
   },
   "language": {
     "label": "Language"
@@ -180,6 +315,12 @@
     "title": "🃏 Joker",
     "restLabel": "REST",
     "restCaption": "Breathe. Next card comes automatically.",
-    "explanation": "Draw a joker and you get 30 seconds of rest instead of an exercise — it moves on to the next card automatically. It never costs your per-card time or budget — rest is always free."
+    "explanation": "Draw a joker and you get 30 seconds of rest instead of an exercise — it moves on to the next card automatically. Shorter decks (12 cards) carry one joker, longer ones carry two. It never costs your per-card time or budget — rest is always free."
+  },
+  "joker": {
+    "breatherLabel": "JOKER · 30s BREATHER",
+    "breatheIn": "BREATHE IN",
+    "breatheOut": "BREATHE OUT",
+    "nextCardAuto": "Next card flips itself."
   }
 }

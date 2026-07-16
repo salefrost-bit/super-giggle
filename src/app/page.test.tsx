@@ -60,7 +60,7 @@ describe('Home (top-level state machine)', () => {
     expect(await screen.findByText(/Svaka karta ima svoju vremensku kvotu/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'finish-session' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Jasno, krećemo' }));
+    await user.click(screen.getByRole('button', { name: 'PROMEŠAJ I PODELI' }));
     expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
     expect(localStorage.getItem('explained.perfect_deck')).toBe('true');
 
@@ -84,7 +84,7 @@ describe('Home (top-level state machine)', () => {
     expect(await screen.findByText(/Ako izvučeš džoker/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'finish-session' })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Jasno, krećemo' }));
+    await user.click(screen.getByRole('button', { name: 'PROMEŠAJ I PODELI' }));
     expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
     expect(localStorage.getItem('explained.jokers')).toBe('true');
 
@@ -106,10 +106,10 @@ describe('Home (top-level state machine)', () => {
     await user.click(await screen.findByRole('button', { name: 'finish-setup-challenge' }));
 
     expect(await screen.findByText(/Ako izvučeš džoker/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Jasno, krećemo' }));
+    await user.click(screen.getByRole('button', { name: 'PROMEŠAJ I PODELI' }));
 
     expect(await screen.findByText(/Svaka karta ima svoju vremensku kvotu/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Jasno, krećemo' }));
+    await user.click(screen.getByRole('button', { name: 'PROMEŠAJ I PODELI' }));
 
     expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
   });

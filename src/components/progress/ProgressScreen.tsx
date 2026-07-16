@@ -175,7 +175,7 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
                 {t('progress.streak', { days: streak.days })}
               </p>
               <p className="text-xs text-muted font-semibold mt-1">
-                {t('progress.streakCaption', { freezes: '❄️'.repeat(streak.freezesLeftThisWeek) || '0' })}
+                {t('progress.streakCaption', { freezes: '🃏'.repeat(streak.freezesLeftThisWeek) || '0' })}
               </p>
             </div>
           </button>
