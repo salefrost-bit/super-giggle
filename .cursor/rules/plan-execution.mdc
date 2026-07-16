@@ -14,13 +14,14 @@ This repo's implementation is fully specified across a series of plan cycles, ea
 
 5. **Krug B "Igrivost" (v0.4.1–v0.4.3)** — Spec: `docs/superpowers/specs/2026-07-15-krug-b-design.md` · Plan: `docs/superpowers/plans/2026-07-15-krug-b-plan.md` — **DONE**, all 20 tasks, tags v0.4.1–v0.4.3.
 6. **Džokeri (v0.4.4)** — Spec: `docs/superpowers/specs/2026-07-15-dzokeri-design.md` · Plan: `docs/superpowers/plans/2026-07-15-dzokeri-plan.md` — **DONE**, tag v0.4.4.
-7. **SHUFFLE interfejs (v0.4.5)** — Spec: `docs/superpowers/specs/2026-07-16-shuffle-interfejs-design.md` · Plan: `docs/superpowers/plans/2026-07-16-shuffle-interfejs-plan.md` — **ACTIVE, execute now.** 20 tasks in 4 phases (A–D); design source is `docs/superpowers/specs/assets/shuffle-prototype.html` (read the referenced section before each visual task). Phase gates = suite + tsc + browser check; single tag v0.4.5 at Task 20 after the user's manual phone verification.
+7. **SHUFFLE interfejs (v0.4.5)** — Spec: `docs/superpowers/specs/2026-07-16-shuffle-interfejs-design.md` · Plan: `docs/superpowers/plans/2026-07-16-shuffle-interfejs-plan.md` — **DONE**, tag v0.4.5.
+8. **Next:** v0.4.6 Zvuk i ritam — requires its own short spec before any code (`docs/superpowers/strategy/2026-07-15-krug-b-revizija.md`).
 
 The development roadmap source of truth is
 `docs/superpowers/strategy/2026-07-15-krug-b-revizija.md` (which amends
 `2026-07-13-strategija-nastavka.md`). Read `docs/superpowers/README.md` for
 the current document index and reading order. Ignore completed cycles' plans
-except as historical reference for file locations and existing interfaces.
+except as historical reference for file locations and existing interfaces. There is no active implementation plan until v0.4.6 is specced.
 
 ## Rules
 

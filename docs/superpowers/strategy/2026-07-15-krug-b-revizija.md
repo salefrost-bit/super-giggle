@@ -44,7 +44,7 @@ Odluke koje su pale u brainstormu (izvor istine za buduće rasprave):
 | v0.4.2 | Sprint i Dvor | dva nova challenge moda |
 | v0.4.3 | Preživi i Karta dana | dva nova challenge moda + dnevna petlja |
 | v0.4.4 | Džokeri | odmor kao karta, svi modovi (kratak sopstveni spec) — ✅ Završen 2026-07-15 |
-| v0.4.5 | SHUFFLE interfejs | ceo novi UI iz Claude Design prototipa: rebrend, EN copy, 14 činova, nova biblioteka vežbi, Profile/History/How to Play, score ritual — spec `specs/2026-07-16-shuffle-interfejs-design.md`. ZAMENJUJE ranije planirane "Animacije vežbi" (odbačene 2026-07-16 kao prekomplikovane) i apsorbuje "Napredak" |
+| v0.4.5 | SHUFFLE interfejs | ceo novi UI iz Claude Design prototipa: rebrend, EN copy, 14 činova, nova biblioteka vežbi, Profile/History/How to Play, score ritual — spec `specs/2026-07-16-shuffle-interfejs-design.md`. ZAMENJUJE ranije planirane "Animacije vežbi" (odbačene 2026-07-16 kao prekomplikovane) i apsorbuje "Napredak" — ✅ Završen 2026-07-16 |
 | v0.4.6 | Zvuk i ritam | zvuk + vibracija (vizuali score rituala gotovi u v0.4.5) — kratak sopstveni spec |
 | v0.4.7 | PWA | manifest, SW, offline; poslednja — asset lista konačna; verzionisan keš obavezan (kratak sopstveni spec) |
 

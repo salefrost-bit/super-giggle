@@ -30,7 +30,7 @@ Ne čita se cela istorija — strategija + poslednji dokumenti su dovoljni.
 | `specs/2026-07-13-krug-a-design.md` | Krug A: Wake Lock, auto-pauza, zbir pauza, objašnjenja modova/streaka, meni jezika. | Završen (implementiran) |
 | `specs/2026-07-15-krug-b-design.md` | Krug B "Igrivost": tri vrata (Quick/Custom/Challenge), score/XP/zvanja, 24 vežbe + tier, 5 challenge modova, isporuka v0.4.1–v0.4.6. | **Na reviziji** |
 | `specs/2026-07-15-dzokeri-design.md` | v0.4.4 Džokeri: ugrađeni odmor (30s, automatski) u svim modovima, bez migracije šeme. | Završen (implementiran) |
-| `specs/2026-07-16-shuffle-interfejs-design.md` | v0.4.5 SHUFFLE: novi interfejs iz Claude Design prototipa — rebrend, EN copy, 14 činova, nova biblioteka, Profile/History/How to Play. | **Revidiran (S1–S12) — u implementaciji** |
+| `specs/2026-07-16-shuffle-interfejs-design.md` | v0.4.5 SHUFFLE: novi interfejs iz Claude Design prototipa — rebrend, EN copy, 14 činova, nova biblioteka, Profile/History/How to Play. | Završen (implementiran) |
 | `specs/assets/` | HTML prototipovi (Claude Design) za redizajn i gamifikaciju + istorijski SQL nacrt (`phase2_gamification.sql`, superseded). | Istorijska referenca |
 
 ## Planovi
@@ -42,7 +42,7 @@ Ne čita se cela istorija — strategija + poslednji dokumenti su dovoljni.
 | `plans/2026-07-09-gamification-phase2-plan.md` | 15 taskova gamifikacije. | Završen |
 | `plans/2026-07-13-krug-a-plan.md` | 12 taskova Kruga A + obavezna telefonska verifikacija. | Završen |
 | `plans/2026-07-15-dzokeri-plan.md` | 6 taskova v0.4.4 Džokeri: domenski modul, i18n, SessionScreen integracija, prvo objašnjenje, tag. | Završen |
-| `plans/2026-07-16-shuffle-interfejs-plan.md` | 20 taskova v0.4.5 SHUFFLE u 4 faze (temelj → setup → sesija → Profile/History/HowToPlay). | **AKTIVAN — spreman za Cursor** |
+| `plans/2026-07-16-shuffle-interfejs-plan.md` | 20 taskova v0.4.5 SHUFFLE u 4 faze (temelj → setup → sesija → Profile/History/HowToPlay). | Završen — tag v0.4.5 |
 
 ## Izveštaji
 

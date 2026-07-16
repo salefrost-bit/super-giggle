@@ -1,5 +1,9 @@
 # Šta je novo u ŠPIL-u
 
+## v0.4.5 — SHUFFLE (2026-07-16)
+
+Aplikacija se sada zove **SHUFFLE**. Ceo interfejs je nov: početni ekran sa čipovima (profil, streak, Daily Deal), Quick Deal na jednom ekranu, Build your hand, Challenge meni. Tokom treninga — prsten oko karte, boje grejanja, animacija deljenja, pauza overlay i vođeno disanje na džokeru. Na kraju — proslava poena sa RANK UP bedžom. Novi ekrani **Profil**, **Istorija** i **Kako se igra**. Lestvica od 14 kartaških činova (od Džokera do Kralja) i nova biblioteka vežbi.
+
 ## v0.4.4 — Džokeri (2026-07-15)
 
 Povremeno se, umesto prave karte, pojavi džoker — 30 sekundi ugrađenog odmora koji se sam završi i automatski nastavi na sledeću kartu. Radi u svim modovima i nikad ne troši vreme po karti niti budžet (Perfektan špil, Sprint, Dvor, Preživi špil, Karta dana).
@@ -18,7 +22,7 @@ Tri načina ulaska u trening: brzi (nivo + dužina), po meri (svih 24 vežbe, sl
 
 ## U pripremi
 
-Potpuno novi izgled aplikacije (SHUFFLE): novi ekrani Profil, Istorija i Kako se igra, lestvica od 14 kartaških činova, nova biblioteka vežbi i proslava rezultata. Zatim zvuk/vibracija i instalacija na telefon (PWA).
+Zvuk i vibracija tokom treninga (nova karta, rok, proslava). Zatim instalacija na telefon (PWA).
 
 ## v0.3 — Pošteno vreme (2026-07-14) — ranije zvano: Krug A
 
