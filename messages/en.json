@@ -86,6 +86,7 @@
     "newBestScore": "NEW BEST SCORE",
     "deckCleared": "DECK CLEARED",
     "newBest": "★ NEW BEST",
+    "suitLine": "{cards} cards · {reps} reps",
     "guestNote": "Guest results aren't saved. Create an account to track progress over time.",
     "createAccount": "Create account",
     "backHome": "Back to start"
@@ -219,7 +220,7 @@
     "label": "XP",
     "rankTitle": "Rank",
     "explanation": "XP is the sum of points from every finished workout — Quick Deal and Stack the Deck count too, not just Challenge. It only grows. 14 ranks from The Joker (0) to King (105,000) — see How to Play for the full ladder.",
-    "rankUp": "NEW RANK: {symbol}"
+    "rankUp": "RANK UP · {symbol} {name}"
   },
   "ranks": {
     "r0": "The Joker",

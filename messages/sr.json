@@ -86,6 +86,7 @@
     "newBestScore": "NOVI NAJBOLJI SKOR",
     "deckCleared": "ŠPIL SLOŽEN",
     "newBest": "★ NOVI REKORD",
+    "suitLine": "{cards} karata · {reps} ponavljanja",
     "guestNote": "Rezultati gostiju se ne čuvaju. Napravi nalog da pratiš napredak kroz vreme.",
     "createAccount": "Napravi nalog",
     "backHome": "Nazad na početak"
@@ -219,7 +220,7 @@
     "label": "XP",
     "rankTitle": "Zvanje",
     "explanation": "XP je zbir poena iz SVIH završenih treninga — računaju se i Brza podela i Složi špil, ne samo Challenge. Samo raste. 14 činova od Džokera (0) do Kralja (105.000) — kompletnu lestvicu vidi u Kako se igra.",
-    "rankUp": "NOVO ZVANJE: {symbol}"
+    "rankUp": "RANK UP · {symbol} {name}"
   },
   "ranks": {
     "r0": "The Joker",
