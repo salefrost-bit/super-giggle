@@ -1,5 +1,9 @@
 # Šta je novo u ŠPIL-u
 
+## v0.4.4 — Džokeri (2026-07-15)
+
+Povremeno se, umesto prave karte, pojavi džoker — 30 sekundi ugrađenog odmora koji se sam završi i automatski nastavi na sledeću kartu. Radi u svim modovima i nikad ne troši vreme po karti niti budžet (Perfektan špil, Sprint, Dvor, Preživi špil, Karta dana).
+
 ## v0.4.3 — Preživi i Karta dana (2026-07-15)
 
 Novi challenge mod **Preživi špil**: banka od 90 sekundi, svaka završena karta dopunjava kvotu, cilj je proći što više od 52 karata. **Karta dana** — jedinstveni dnevni špil od 20 karata (seed po datumu), tier vežbi rotira tokom nedelje; prvi pokušaj se čuva, replay ne utiče na rekord. Na početnom ekranu čip **🎴 Karta dana** (✓ kad je današnja odigrana).
@@ -11,10 +15,6 @@ Novi challenge mod **Preživi špil**: banka od 90 sekundi, svaka završena kart
 ## v0.4.1 — Temelj igrivosti (2026-07-15)
 
 Tri načina ulaska u trening: brzi (nivo + dužina), po meri (svih 24 vežbe, slajderi), i challenge meni. Biblioteka proširena na 24 vežbe sa nivoima težine. Poeni se računaju po završetku svakog treninga; XP i kartaška zvanja na ekranu Napredak. Istorija sa padajućim detaljima po sesiji. Dugme „Ponovi poslednji trening".
-
-## v0.4.4 — Džokeri (2026-07-15)
-
-Povremeno se, umesto prave karte, pojavi džoker — 30 sekundi ugrađenog odmora koji se sam završi i automatski nastavi na sledeću kartu. Radi u svim modovima i nikad ne troši vreme po karti niti budžet (Perfektan špil, Sprint, Dvor, Preživi špil, Karta dana).
 
 ## U pripremi
 

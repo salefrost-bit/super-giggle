@@ -193,28 +193,38 @@ describe('SetupScreen', () => {
   });
 
   it('daily staza startuje direktno bez izbora', async () => {
-    const tier3Exercises: Exercise[] = exercises.map((e) => ({ ...e, tier: 3 as const }));
-    vi.mocked(fetchCategories).mockResolvedValue(categories);
-    vi.mocked(fetchAllExercises).mockResolvedValue(tier3Exercises);
-    vi.mocked(fetchDifficultyLevels).mockResolvedValue([
-      { id: 'd0', name: 'Početnik', defaultRepMultiplier: 0.5, sortOrder: 1 },
-      { ...difficultyLevels[0], parSecondsPerRep: 3, parTransitionSeconds: 20 },
-      { id: 'd3', name: 'Napredni', defaultRepMultiplier: 1.5, sortOrder: 3, parSecondsPerRep: 3, parTransitionSeconds: 20 },
-    ]);
-    const onStart = vi.fn();
-    const user = userEvent.setup();
+    // Fiksiran datum: sreda 2026-07-15 => dailyTier() vraća 3 (v. src/lib/domain/daily.ts).
+    // Bez fiksiranja, test je flaky — pada svakog dana čiji tier != 3 (npr. pon/čet = tier 1).
+    // toFake: ['Date'] fiksira SAMO Date, ne i setTimeout/MutationObserver koje
+    // userEvent/findBy* koriste iznutra — pun useFakeTimers() ovde vodi u timeout.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-07-15T10:00:00'));
+    try {
+      const tier3Exercises: Exercise[] = exercises.map((e) => ({ ...e, tier: 3 as const }));
+      vi.mocked(fetchCategories).mockResolvedValue(categories);
+      vi.mocked(fetchAllExercises).mockResolvedValue(tier3Exercises);
+      vi.mocked(fetchDifficultyLevels).mockResolvedValue([
+        { id: 'd0', name: 'Početnik', defaultRepMultiplier: 0.5, sortOrder: 1 },
+        { ...difficultyLevels[0], parSecondsPerRep: 3, parTransitionSeconds: 20 },
+        { id: 'd3', name: 'Napredni', defaultRepMultiplier: 1.5, sortOrder: 3, parSecondsPerRep: 3, parTransitionSeconds: 20 },
+      ]);
+      const onStart = vi.fn();
+      const user = userEvent.setup();
 
-    renderWithIntl(<SetupScreen onStart={onStart} userId={null} />);
+      renderWithIntl(<SetupScreen onStart={onStart} userId={null} />);
 
-    await user.click(await screen.findByText(/Challenge/));
-    await user.click(await screen.findByRole('button', { name: /Karta dana/ }));
+      await user.click(await screen.findByText(/Challenge/));
+      await user.click(await screen.findByRole('button', { name: /Karta dana/ }));
 
-    expect(screen.queryByRole('button', { name: 'Srednji' })).not.toBeInTheDocument();
-    expect(onStart).toHaveBeenCalledTimes(1);
-    const [config, draws] = onStart.mock.calls[0];
-    expect(config.gameMode).toBe('daily');
-    expect(config.deckSize).toBe(20);
-    expect(config.parSource).toBe('par');
-    expect(draws).toHaveLength(20);
+      expect(screen.queryByRole('button', { name: 'Srednji' })).not.toBeInTheDocument();
+      expect(onStart).toHaveBeenCalledTimes(1);
+      const [config, draws] = onStart.mock.calls[0];
+      expect(config.gameMode).toBe('daily');
+      expect(config.deckSize).toBe(20);
+      expect(config.parSource).toBe('par');
+      expect(draws).toHaveLength(20);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
