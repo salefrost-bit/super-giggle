@@ -271,6 +271,8 @@
     "avgPerCard": "PROSEK PO KARTI",
     "deckClearedLegend": "špil složen",
     "today": "danas",
+    "prevMonth": "Prethodni mesec",
+    "nextMonth": "Sledeći mesec",
     "monthSessions": "{count, plural, one {# trening} few {# treninga} other {# treninga}}"
   },
   "howToPlay": {

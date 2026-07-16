@@ -207,7 +207,7 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  aria-label="previous month"
+                  aria-label={t('historyScreen.prevMonth')}
                   disabled={safeMonthIndex >= months.length - 1}
                   onClick={() => setMonthIndex((i) => Math.min(months.length - 1, i + 1))}
                   className="flex h-[26px] w-[26px] items-center justify-center rounded-lg border border-[#3a3a40] bg-[#232327] text-xs font-black text-muted disabled:opacity-30"
@@ -222,7 +222,7 @@ export function HistoryScreen({ userId, onBack }: HistoryScreenProps) {
                 </div>
                 <button
                   type="button"
-                  aria-label="next month"
+                  aria-label={t('historyScreen.nextMonth')}
                   disabled={safeMonthIndex <= 0}
                   onClick={() => setMonthIndex((i) => Math.max(0, i - 1))}
                   className="flex h-[26px] w-[26px] items-center justify-center rounded-lg border border-[#3a3a40] bg-[#232327] text-xs font-black text-muted disabled:opacity-30"

@@ -114,7 +114,9 @@ describe('HistoryScreen', () => {
     expect(screen.getByText(/1 trening/)).toBeInTheDocument();
     expect(screen.getByTestId('cal-day-15')).toHaveAttribute('data-trained');
 
-    await user.click(screen.getByRole('button', { name: 'previous month' }));
+    // Invarijanta 3: aria-label kroz i18n katalog, ne hardkodiran engleski
+    expect(screen.getByRole('button', { name: 'Sledeći mesec' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Prethodni mesec' }));
     await waitFor(() => expect(screen.getByTestId('cal-day-10')).toHaveAttribute('data-trained'));
   });
 
