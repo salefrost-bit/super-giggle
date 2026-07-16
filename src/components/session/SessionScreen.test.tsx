@@ -467,7 +467,7 @@ describe('SessionScreen — survive', () => {
     await vi.advanceTimersByTimeAsync(5_000);
     await user.click(screen.getByRole('button', { name: 'Pauza' }));
     await vi.advanceTimersByTimeAsync(30_000);
-    await user.click(screen.getByRole('button', { name: 'Nastavi trening' }));
+    await user.click(screen.getByRole('button', { name: 'NASTAVLJAM' }));
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
 
@@ -664,7 +664,7 @@ describe('SessionScreen — auto-pause on visibility loss', () => {
     setVisibility('visible');
     expect(screen.getByText('PAUZIRANO')).toBeInTheDocument(); // no auto-resume
 
-    await user.click(screen.getByRole('button', { name: 'Nastavi trening' }));
+    await user.click(screen.getByRole('button', { name: 'NASTAVLJAM' }));
     expect(screen.queryByText('PAUZIRANO')).not.toBeInTheDocument();
     expect(screen.queryByText('Automatski pauzirano')).not.toBeInTheDocument();
   });
@@ -681,7 +681,7 @@ describe('SessionScreen — auto-pause on visibility loss', () => {
     setVisibility('hidden');
     // Still exactly one overlay, still paused.
     expect(screen.getAllByText('PAUZIRANO')).toHaveLength(1);
-    await user.click(screen.getByRole('button', { name: 'Nastavi trening' }));
+    await user.click(screen.getByRole('button', { name: 'NASTAVLJAM' }));
     expect(screen.queryByText('PAUZIRANO')).not.toBeInTheDocument();
   });
 
@@ -724,7 +724,7 @@ describe('SessionScreen — pause persistence (all modes)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Pauza' }));
     await vi.advanceTimersByTimeAsync(5_000);
-    await user.click(screen.getByRole('button', { name: 'Nastavi trening' }));
+    await user.click(screen.getByRole('button', { name: 'NASTAVLJAM' }));
 
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
@@ -770,12 +770,12 @@ describe('SessionScreen — joker rest', () => {
       await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
     }
 
-    expect(await screen.findByText('ODMOR')).toBeInTheDocument();
+    expect(await screen.findByText('DŽOKER · 30s PREDAH')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sledeća karta' })).toBeDisabled();
 
     await vi.advanceTimersByTimeAsync(30_000);
 
-    await waitFor(() => expect(screen.queryByText('ODMOR')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('DŽOKER · 30s PREDAH')).not.toBeInTheDocument());
     expect(screen.getByRole('button', { name: 'Sledeća karta' })).not.toBeDisabled();
     vi.useRealTimers();
   });
@@ -798,7 +798,7 @@ describe('SessionScreen — joker rest', () => {
     for (let i = 0; i < 5; i++) {
       await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
     }
-    await screen.findByText('ODMOR');
+    await screen.findByText('DŽOKER · 30s PREDAH');
 
     await vi.advanceTimersByTimeAsync(10_000);
     await user.click(screen.getByRole('button', { name: 'Pauza' }));
@@ -806,12 +806,12 @@ describe('SessionScreen — joker rest', () => {
 
     // Well past 30s total if the rest countdown were still running unpaused.
     await vi.advanceTimersByTimeAsync(60_000);
-    await user.click(screen.getByRole('button', { name: 'Nastavi trening' }));
+    await user.click(screen.getByRole('button', { name: 'NASTAVLJAM' }));
     // Still resting — pause froze the rest countdown, it did not silently expire.
-    expect(await screen.findByText('ODMOR')).toBeInTheDocument();
+    expect(await screen.findByText('DŽOKER · 30s PREDAH')).toBeInTheDocument();
 
     await vi.advanceTimersByTimeAsync(20_000); // ~20s remained when paused
-    await waitFor(() => expect(screen.queryByText('ODMOR')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('DŽOKER · 30s PREDAH')).not.toBeInTheDocument());
     vi.useRealTimers();
   });
 
@@ -837,9 +837,9 @@ describe('SessionScreen — joker rest', () => {
     for (let i = 0; i < 5; i++) {
       await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
     }
-    await screen.findByText('ODMOR');
+    await screen.findByText('DŽOKER · 30s PREDAH');
     await vi.advanceTimersByTimeAsync(30_000);
-    await waitFor(() => expect(screen.queryByText('ODMOR')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('DŽOKER · 30s PREDAH')).not.toBeInTheDocument());
 
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
 

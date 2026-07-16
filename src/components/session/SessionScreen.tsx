@@ -719,17 +719,28 @@ export function SessionScreen({
       </div>
 
       {stopwatch.isPaused && (
-        <div className="absolute inset-0 bg-background/90 flex flex-col items-center justify-center gap-6 z-10">
-          <p className="text-[30px] font-black text-accent tracking-widest">{t('workout.paused')}</p>
+        <div
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-[18px] bg-[rgba(10,10,13,0.78)] backdrop-blur-[9px]"
+          data-testid="pause-overlay"
+        >
+          <div className="relative flex h-[170px] w-[170px] items-center justify-center">
+            <div
+              className="absolute inset-0 rounded-full border border-dashed motion-safe:animate-[spinK_32s_linear_infinite]"
+              style={{ borderColor: 'rgba(204,255,0,0.35)' }}
+            />
+            <p className="ml-[0.22em] text-[30px] font-black tracking-[0.22em] text-foreground motion-safe:animate-[pausebr_4.5s_ease-in-out_infinite]">
+              {t('workout.paused')}
+            </p>
+          </div>
+          <p className="text-sm font-bold text-muted">{t('pause.breathe')}</p>
           {pauseOrigin === 'auto' && (
-            <p className="text-sm font-semibold text-muted -mt-3">{t('pause.autoLabel')}</p>
+            <p className="text-sm font-semibold text-muted">{t('pause.autoLabel')}</p>
           )}
-          <StopwatchDisplay elapsedSeconds={stopwatch.elapsedSeconds} paused={stopwatch.isPaused} />
           <button
             onClick={handleResume}
-            className="bg-accent text-background rounded-[18px] px-10 py-[18px] font-extrabold text-base"
+            className="rounded-full bg-accent px-10 py-3.5 text-sm font-black tracking-[0.14em] text-background shadow-[0_0_34px_rgba(204,255,0,0.3)]"
           >
-            {t('workout.resumeWorkout')}
+            {t('pause.backIn')}
           </button>
         </div>
       )}
