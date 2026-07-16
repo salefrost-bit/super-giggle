@@ -158,19 +158,19 @@ describe('XP činovi (spec v0.4.5 §4)', () => {
 });
 ```
 
-- [ ] **Step 2:** Implementacija — `XP_RANKS` postaje 14 unosa `{ symbol, nameKey, threshold }` (simboli: 🃏,A,2,3,4,5,6,7,8,9,10,J,Q,K; pragovi: 0, 500, 1.500, 3.000, 5.500, 9.000, 14.000, 20.000, 27.000, 35.000, 45.000, 60.000, 80.000, 105.000; `nameKey: 'ranks.r0'…'ranks.r13'` — imena i opisi žive u i18n, Task 5). `rankForXp`/`nextRank` potpisi prošireni sa `nameKey`. Ažuriraj SVA mesta koja koriste rank objekat (`SummaryScreen`, Progress/Profile prikaz) — kompajler ih nalazi.
+- [ ] **Step 2:** Implementacija — `XP_RANKS` postaje 14 unosa `{ symbol, nameKey, threshold }` (simboli: 🃏,A,2,3,4,5,6,7,8,9,10,J,Q,K; pragovi: 0, 500, 1.500, 3.000, 5.500, 9.000, 14.000, 20.000, 27.000, 35.000, 45.000, 60.000, 80.000, 105.000; `nameKey: 'ranks.r0'…'ranks.r13'` — TOP-LEVEL i18n blok, Task 5). `rankForXp`/`nextRank` potpisi prošireni sa `nameKey`. Ažuriraj SVA mesta koja koriste rank objekat (`SummaryScreen`, Progress prikaz) — kompajler ih nalazi. PLUS (P2, E1 fixture — ne ponašajni assert): rank-up test u `SummaryScreen.test.tsx` mockuje XP vrednosti oko STARIH pragova (5100/300) — ažuriraj fixture na nove (npr. `getTotalXp → 600` uz `points 300`: pre = 300 → 🃏, posle = 600 → A, banner se prikazuje; negativan slučaj `getTotalXp → 1200` uz points 300: pre 900=A, posle 1200=A, bez bannera).
 - [ ] **Step 3:** Suita + tsc → Commit `feat: lestvica 14 činova (errata E1)`
 
 ### Task 5: i18n — kompletan SHUFFLE copy (EN + SR)
 
 **Files:** Modify `messages/en.json`, `messages/sr.json`
 
-**Interfaces — Produces:** novi/izmenjeni blokovi: `landing`, `entry`, `quick` (STAKES/DECK SIZE/nazivi nivoa po sort_order: `quick.level1..3` + `quick.len12/24/52`), `custom`, `challengeMenu`, `modes.*` (nova display imena + long opisi iz s19), `workout` (ON THE CLOCK, TOTAL, hint…), `pause`, `joker` (breather), `results` (DECK CLEARED, ★ NEW BEST, RANK UP…), `profile`, `historyScreen`, `howToPlay` (uklj. `ranks.r0`–`r13` imena + opisi iz s15 `rankInfo`), `auth`, `settings`. `landing.appName: "SHUFFLE"`.
+**Interfaces — Produces:** novi/izmenjeni blokovi: `landing`, `entry`, `quick` (STAKES/DECK SIZE/nazivi nivoa po sort_order: `quick.level1..3` + `quick.len12/24/52`), `custom`, `challengeMenu`, `modes.*` (nova display imena + long opisi iz s19), `workout` (ON THE CLOCK, TOTAL, hint…), `pause`, `joker` (breather), `results` (DECK CLEARED, ★ NEW BEST, RANK UP…), `profile`, `historyScreen`, `howToPlay`, **TOP-LEVEL blokovi `"ranks": {"r0"…"r13"}` (imena) i `"ranksDesc": {"r0"…"r13"}` (opisi iz s15 `rankInfo`)** — kanonske adrese koje koriste Taskovi 4/16/18 (P3), `auth`, `settings`. `landing.appName: "SHUFFLE"`.
 
 - [ ] **Step 1:** EN katalog: prepiši vrednosti IZ prototipa (s15 rankInfo, s19 chModes, s21, s22, s23…) uz činjenične korekcije iz Global Constraints. Kanonska imena iz spec §3 tabele. NE briši ključeve koje logika koristi (`pause.autoLabel`, `points.*`, `xp.*` — vrednosti se osvežavaju, semantika ista).
 - [ ] **Step 2:** SR katalog: iste ključeve, prevodi iz spec §3 + isti glas (Brza podela, Složi špil, Na satu, Nizak/Visok ulog, All-in, Presecanje/Pola špila/Ceo špil, PODELI MI, PROMEŠAJ I PODELI, Kako se igra, Složi ruku…). Imena činova se NE prevode (spec §4).
 - [ ] **Step 3:** `layout.tsx` metadata title → "SHUFFLE". Duboka parnost provera (node one-liner iz Kruga B plana Task 3 Step 3) → OK.
-- [ ] **Step 4:** `npm test` — padaju SAMO testovi sa starim stringovima; ažuriraj ih po errati E2 (vrednosti, ne ponašanje): `SetupScreen.test` ('Brzi trening'→'Quick Deal' itd.), `EntrySelector.test`, `LandingScreen.test`, `page.test`, `SessionScreen.test`, `CustomSetup.test`, `ExercisePicker.test`, `ModeSelector.test` (samo stringovi u ovom tasku — ponašanje u Task 10). Suita zelena → Commit `feat: SHUFFLE copy oba kataloga + rebrend (errata E2)`
+- [ ] **Step 4:** `npm test` — padaju testovi sa starim stringovima; ažuriraj ih po errati E2 (vrednosti, ne ponašanje): `SetupScreen.test`, `EntrySelector.test`, `LandingScreen.test`, `page.test`, `SessionScreen.test`, `CustomSetup.test`, `ExercisePicker.test`, `ModeSelector.test`, **plus (P5): `SummaryScreen.test` (poeni/gost/NOVO ZVANJE stringovi), `StreakInfoModal.test` (copy prelazi na džoker temu), `HistoryRow.test` (`history.totalReps`)**. PAŽNJA: `modes.sprint.duration`/`setup.chooseSprintDuration` ključeve OSTAVI žive do Task 10 (SprintSetup se tek tamo briše). Samo stringovi u ovom tasku — ponašanje u Task 10. Suita zelena → Commit `feat: SHUFFLE copy oba kataloga + rebrend (errata E2)`
 
 ### Task 6: Supabase sloj — is_active, profile statistike, suit detalji
 
@@ -190,6 +190,9 @@ export async function getProfileStats(userId: string): Promise<ProfileStats>;
 // - longestStreak: novi čist domen helper (streak.ts): longestStreak(dates: string[]): number
 //   — generalizacija postojeće logike na istorijski maksimum, unit test obavezan
 // sessions.ts: getSessionDetails select proširen sa 'suit' → SessionDetails dobija repsBySuit: Record<Suit, number>
+// sessions.ts (P9): SessionHistoryEntry/getUserSessions mapiranje prošireno sa
+//   cardsCompleted: number | null (settings.cards_completed) i
+//   survivedCards: number | null (settings.survived_cards) — treba ih AVG PER CARD u Task 17
 ```
 
 - [ ] **Step 1 (TDD):** unit `longestStreak` (prazno→0; niz sa rupom > 2 zamrzavanja/nedelji se seče; današnji dan ne mora biti uključen); mock test `getProfileStats` (sabiranje, favorite suit = max reps, tie → prva po SUIT_TO_CATEGORY redosledu); `getSessionDetails` vraća repsBySuit.
@@ -206,8 +209,8 @@ export async function getProfileStats(userId: string): Promise<ProfileStats>;
 
 **Files:** Modify `src/components/landing/LandingScreen.tsx` + test, `src/app/page.tsx`
 
-- [ ] **Step 1 (test):** renderuje Profile čip (simbol čina za ulogovanog; 🃏 za gosta — spec §9), "?" dugme (`onShowHowToPlay`), streak čip (samo ulogovan), Daily čip (✓/prigušen), CTA "DEAL ME IN" (`onStartWorkout`), "Run it back" sa kontekstom poslednje konfiguracije (`entry` display ime + dužina), gost red "Playing as guest · Sign in". Jezik-selektor VIŠE NIJE tu (errata E5.3 — taj test se seli u Task 19).
-- [ ] **Step 2:** Implementacija po s21 (raspored, čipovi, glow CTA). Props: `onShowProfile`, `onShowHowToPlay`. `page.tsx` u OVOM tasku dodaje screen stanja `profile` i `how-to-play` sa PRIVREMENIM sadržajem (`profile` → postojeći `ProgressScreen`; `how-to-play` → postojeći `StreakInfoModal` mehanizam) — Faza D (Taskovi 16/18) ih zamenjuje pravim ekranima. Time je landing odmah izvršiv i testabilan, a Faza D ne dira landing.
+- [ ] **Step 1 (test):** renderuje Profile čip (simbol čina za ulogovanog — `rankSymbol` prop koji `page.tsx` izvodi iz `getTotalXp` + `rankForXp`; 🃏 za gosta — spec §9), "?" dugme (`onShowHowToPlay`), streak čip (samo ulogovan), Daily čip (✓/prigušen), CTA "DEAL ME IN" (`onStartWorkout`), "Run it back" sa kontekstom iz `loadLastConfig()` (`entry` display ime + dužina), gost red "Playing as guest · Sign in". Jezik-selektor VIŠE NIJE tu (errata E5.3 — taj test se seli u Task 16).
+- [ ] **Step 2:** Implementacija po s21 (raspored, čipovi, glow CTA). Props: `onShowProfile`, `onShowHowToPlay`. `page.tsx` u OVOM tasku dodaje screen stanja `profile` i `how-to-play` sa PRIVREMENIM sadržajem (`profile` → postojeći `ProgressScreen` SAMO za ulogovanog, gost → povratak na landing; `how-to-play` → postojeći `StreakInfoModal` mehanizam) — Faza D (Taskovi 16/18) ih zamenjuje pravim ekranima. Time je landing odmah izvršiv i testabilan, a Faza D ne dira landing.
 - [ ] **Step 3:** Suita → Commit `feat: SHUFFLE landing (s21) — čipovi, DEAL ME IN, Run it back`
 
 ### Task 8: Tri vrata + Quick Deal jedan ekran (errata E4; s16, s17)
@@ -216,16 +219,17 @@ export async function getProfileStats(userId: string): Promise<ProfileStats>;
 
 **ERRATA CITAT (E4):** „koraci `quick-difficulty` + `quick-length` se spajaju u jedan ekran `quick` (STAKES + DECK SIZE + CTA); SetupScreen testovi Quick staze se ažuriraju na novi tok."
 
-- [ ] **Step 1 (test QuickDealSetup):** prikazuje 3 nivoa (i18n `quick.level1..3` po `sortOrder` — NE iz DB imena, spec S2) radio-stilom, 3 dužine kao kartice (12/24/52 + The Cut/Half Deck/Full Deck + ~min), CTA "SHUFFLE THE DECK" disabled dok oba izbora ne postoje (default: High Stakes + Half Deck predselektovani kao u s17), `onStart(level, deckSize)`.
-- [ ] **Step 2:** Implementacija po s17 (selekcija = volt border + glow; radio krug). `SetupScreen`: staza `entry → quick` (2 koraka, brojač 1/2, 2/2 — spec S10.4); `handleLengthSelect` logika ostaje, poziva se iz `onStart`. `DifficultySelector` ostaje SAMO za perfect_deck stazu (`mode-difficulty`) — u ovom tasku mu zameni `DESC_KEY_BY_NAME` mehanizam i18n ključevima po `sortOrder` (spec S2).
+- [ ] **Step 1 (test QuickDealSetup):** prikazuje 3 nivoa (i18n `quick.level1..3` po `sortOrder` — NE iz DB imena, spec S2) radio-stilom, 3 dužine kao kartice (12/24/52 + The Cut/Half Deck/Full Deck + ~min), CTA "SHUFFLE THE DECK". ODLUKA (P6): **High Stakes + Half Deck su predselektovani** (produkt odluka — najčešći slučaj; prototip predselektuje Low Stakes, odstupamo namerno) i CTA je UVEK aktivan. `onStart(level, deckSize)`.
+- [ ] **Step 2:** Implementacija po s17 (selekcija = volt border + glow; radio krug). `SetupScreen`: staza `entry → quick` (2 koraka, brojač 1/2, 2/2 — spec S10.4); `handleLengthSelect` logika ostaje, poziva se iz `onStart`. `DifficultySelector` ostaje za korak `mode-difficulty` (koriste ga perfect_deck, court I survive staze — P7) — u ovom tasku mu zameni `DESC_KEY_BY_NAME` mehanizam i18n ključevima po `sortOrder` (spec S2).
 - [ ] **Step 3:** EntrySelector reskin po s16 (ikona u pločici, boja po stazi, strelica, "Kako danas treniraš?" → i18n).
 - [ ] **Step 4:** Suita (E4 ažuriranja SetupScreen testova Quick staze) → Commit `feat: tri vrata reskin + Quick Deal jedan ekran (errata E4)`
 
 ### Task 9: Build your hand + Stack the Deck (s18, s7)
 
-**Files:** Modify `src/components/setup/ExercisePicker.tsx` + test, `CustomSetup.tsx` + test
+**Files:** Modify `src/components/setup/ExercisePicker.tsx` + test, `CustomSetup.tsx` + test, `SetupScreen.tsx` + test (P1: izvor vežbi za mode stazu)
 
-- [ ] **Step 1 (test):** ExercisePicker sa tier tabovima: po grupi tabovi Ⅰ/Ⅱ/Ⅲ (default tab = tier sa default vežbom), prikazuju se SAMO 2 vežbe aktivnog taba, grid 2 kolone, tier bedž na kartici; selekcija radi kroz tabove (izbor iz bilo kog tiera). Postojeći ponašajni assert (izbor 4 grupe → complete) ostaje.
+- [ ] **Step 0 (P1, KLJUČNO):** `mode-exercises` korak (perfect_deck/court/survive/sprint) prelazi sa `fetchExercisesByDifficulty` na **`fetchAllExercises()`** — tier tabovi zahtevaju CELU biblioteku (posle 0007 jedna težina = tačno 1 tier = 2 vežbe, pa bi 2 od 3 taba bila prazna). `fetchExercisesByDifficulty` posle ovoga koristi SAMO Quick staza (`pickDefaults`). Test: mode staza prosleđuje pickeru svih 24.
+- [ ] **Step 1 (test):** ExercisePicker sa tier tabovima: po grupi tabovi Ⅰ/Ⅱ/Ⅲ (default tab — P8: mode staza = tier izabrane težine; custom = tab trenutno izabrane vežbe, inače Ⅰ; prop `initialTier?: ExerciseTier`), prikazuju se SAMO 2 vežbe aktivnog taba, grid 2 kolone, tier bedž na kartici; selekcija radi kroz tabove (izbor iz bilo kog tiera). Postojeći ponašajni assert (izbor 4 grupe → complete) ostaje.
 - [ ] **Step 2:** Implementacija po s18; boje tier bedža: Ⅰ `#8fd14f`, Ⅱ heat-warn, Ⅲ heat-danger (iz prototipa). Suit ikona + naziv grupe iz i18n (PUSH/PULL/LEGS/CORE).
 - [ ] **Step 3:** CustomSetup reskin po s7: aura intenziteta (radial gradient iza, opacity/scale iz `inten`), tag WARM-UP/STEADY/RAISE/ALL IN (i18n), pips, "≈ N reps in the stack" (postojeći račun), slajderi ZADRŽAVAJU korake 0.25/4 (spec §9). `inten` formula iz prototipa (linija ~1054): `((mult−0.5)/1.5)*0.55 + ((cards−12)/40)*0.45`.
 - [ ] **Step 4:** Suita → Commit `feat: Build your hand tier tabovi + Stack the Deck aura`
@@ -237,12 +241,12 @@ export async function getProfileStats(userId: string): Promise<ProfileStats>;
 **ERRATA CITAT (E5):** „(1) ModeSelector — ⓘ više ne otvara dialog nego akordeon… (2) korak `sprint` se gasi, trajanje se bira pilulama u Challenge meniju (SprintSetup komponenta i njen test se BRIŠU)."
 
 - [ ] **Step 1 (test):** ModeSelector renderuje kartice sa bojom/glow po modu (Daily prvi — redosled: daily, perfect_deck, sprint, court, survive), ⓘ toggluje expand sa long opisom (bez `role="dialog"`), Blitz kartica ima pilule 3/5/10 (default 5) i `onSelect('sprint', { minutes })`.
-- [ ] **Step 2:** Implementacija po s19; boje modova iz prototipa (daily `#b9a8ff`, perfect `#ccff00`, blitz `#ffb340`, court `#ffd75e`, onclock `#ff5147`). SetupScreen: sprint staza = `challenge-menu` (sa pilulom) → `mode-exercises` → start (bez SprintSetup koraka); ostale staze nepromenjene. `SessionLengthSelector` reskin (The Cut/Half/Full — i18n iz Task 5) za perfect_deck stazu.
+- [ ] **Step 2:** Implementacija po s19; boje modova iz prototipa (daily `#b9a8ff`, perfect `#ccff00`, blitz `#ffb340`, court `#ffd75e`, onclock `#ff5147`). SetupScreen: sprint staza = `challenge-menu` (sa pilulom) → `mode-exercises` → start (bez SprintSetup koraka). P1: `handleExercisesComplete` dobija EKSPLICITNU sprint granu (`gameMode === 'sprint'` → postojeći `handleSprintStart` sa minutama iz pilule) — danas se sprint `exercises` state nikad ne puni i complete nema sprint granu, pa bez ovoga tok ćuti. Ostale staze nepromenjene. `SessionLengthSelector` reskin (The Cut/Half/Full — i18n iz Task 5) za perfect_deck stazu.
 - [ ] **Step 3:** Obriši `SprintSetup.tsx` + test. Suita → Commit `feat: Challenge meni akordeon + Blitz pilule (errata E5)`
 
 ### Task 11: First-time modal + auth reskin (s22, s23)
 
-**Files:** Modify `src/app/page.tsx` (first-run render), `src/components/auth/LoginForm.tsx`, `SignupForm.tsx` + postojeći testovi (samo stringovi)
+**Files:** Modify `src/app/page.tsx` (first-run render), `src/components/auth/LoginForm.tsx`, `SignupForm.tsx` (P10: auth testovi NE postoje u repou — nema test obaveza; opciono jedan smoke render test)
 
 - [ ] **Step 1:** First-time modal po s22: ikona moda u pločici, kicker "FIRST TIME AT THIS TABLE", long opis moda (isti i18n kao akordeon), CTA "SHUFFLE UP & DEAL" (`modes.firstRunCta`). Mehanizam `explained.ts` netaknut.
 - [ ] **Step 2:** Auth forme po s23 (input stil, fokus ring volt, "Keep playing as guest →"); gost-poeni banner na SummaryScreen linkuje na signup (postojeći tok) — banner tekst iz Task 5.
@@ -259,7 +263,7 @@ export async function getProfileStats(userId: string): Promise<ProfileStats>;
 **Files:** Modify `src/components/session/SessionScreen.tsx`, `CardDisplay.tsx`, `StopwatchDisplay.tsx` + testovi
 
 - [ ] **Step 1 (testovi):** (a) HeatRing oko karte prima `quota.fraction`; (b) veliki kvota brojač menja boju po `heatFor` (ok/warn/danger klase); (c) SegmentBar `total = draws.length`, `current = currentIndex`; (d) toast "HALF THE DECK DOWN" vidljiv tačno kad `currentIndex === Math.floor(draws.length/2)` prvi put (state flag, nestaje posle 2.3s — `setTimeout` za UI toast je dozvoljen, nije merenje vremena); (e) štoperica u čipu sa LiveDot; (f) pauza zamrzava LiveDot (`paused` prop).
-- [ ] **Step 2:** Implementacija po s12: header (LiveDot + "CARD X/Y" + stopwatch čip TOTAL), SegmentBar, veliki kvota brojač ("ON THE CLOCK" label), karta sa HeatRing (conic ring, boja/glow po heat), vinjeta `inset shadow` na danger (samo challenge modovi sa kvotom), hint tekst. Deal animacija: CSS tranzicija na promenu `currentIndex` (izleti levo rotate −16°, nova uleti odozdo — klase iz prototipa `dealPhase`; reduced-motion = bez leta). NE diraj: handleNext logiku, čuvanje, pauzu, wake lock, auto-pauzu.
+- [ ] **Step 2:** Implementacija po s12: header (LiveDot + "CARD X/Y" + stopwatch čip TOTAL), SegmentBar, veliki kvota brojač ("ON THE CLOCK" label), karta sa HeatRing (conic ring, boja/glow po heat), vinjeta `inset shadow` na danger (samo challenge modovi sa kvotom), hint tekst iz dizajna. ODLUKA (P11): karta postaje DODATNA tap-meta (isti `handleNext`, isti disabled uslovi) — dugme "Next card" OSTAJE, postojeći testovi klika na dugme prolaze netaknuti (aditivna kontrola, bez errate). Deal animacija: CSS tranzicija na promenu `currentIndex` (izleti levo rotate −16°, nova uleti odozdo — klase iz prototipa `dealPhase`; reduced-motion = bez leta). NE diraj: handleNext logiku, čuvanje, pauzu, wake lock, auto-pauzu.
 - [ ] **Step 3:** Suita → Commit `feat: live session — HeatRing, SegmentBar, deal animacija, heat vinjeta`
 
 ### Task 13: Mode varijante sesije (s20)
@@ -296,13 +300,13 @@ export async function getProfileStats(userId: string): Promise<ProfileStats>;
 
 **Files:** Create `src/components/profile/ProfileScreen.tsx` + test; Modify `src/app/page.tsx`
 
-- [ ] **Step 1 (test):** renderuje čin karticu (simbol, ime iz `ranks.rN`, XP progres bar `xp/nextThreshold`, "X XP to {nextName}"), 6 StatTile-ova iz `getProfileStats` (BEST SCORE, DECKS CLEARED, LONGEST STREAK, HOURS AT THE TABLE — format h:mm, TOTAL REPS, FAVORITE SUIT simbol), jokers karticu (❄️ stanje kroz džoker temu: "{n}/2" iz postojećeg `freezesLeftThisWeek`), dugme SESSION HISTORY, Settings red sa jezik dropdown-om (seli sa landinga — E5.3). Gost: CTA za nalog umesto statistika.
+- [ ] **Step 1 (test):** renderuje čin karticu (simbol, ime iz `ranks.rN`, XP progres bar `xp/nextThreshold`, "X XP to {nextName}"), 6 StatTile-ova iz `getProfileStats` (BEST SCORE, DECKS CLEARED, LONGEST STREAK, HOURS AT THE TABLE — format h:mm, TOTAL REPS, FAVORITE SUIT simbol), jokers karticu (❄️ stanje kroz džoker temu: "{n}/2" iz postojećeg `freezesLeftThisWeek`), dugme SESSION HISTORY, Settings red: jezik dropdown (seli sa landinga — E5.3, test se seli ovde) **+ Sign out dugme (P4 — odjava napušta landing, jedino mesto joj je ovde; `onSignOut` prop iz page.tsx)**. Gost: CTA za nalog umesto statistika, bez Sign out.
 - [ ] **Step 2:** Implementacija po s14. `page.tsx` screen `profile` renderuje pravi ekran (zamena placeholder-a iz Task 7).
 - [ ] **Step 3:** Suita → Commit `feat: ProfileScreen — čin, statistike, džokeri, settings`
 
 ### Task 17: HistoryScreen (s13)
 
-**Files:** Create `src/components/history/HistoryScreen.tsx` + test; Modify `src/components/progress/HistoryRow.tsx` (reskin + AVG PER CARD + repsBySuit) + test; Modify `src/app/page.tsx`
+**Files:** Create `src/components/history/HistoryScreen.tsx` + test; **Move** `src/components/progress/HistoryRow.tsx` (+ test) → `src/components/history/HistoryRow.tsx` uz reskin + AVG PER CARD + repsBySuit; Modify `src/app/page.tsx`
 
 - [ ] **Step 1 (test):** 14-dnevni bar graf (points po danu iz sesija; današnji bar volt), mesečna paginacija (‹ › klijentsko grupisanje, broj sesija), HistoryRow: mode ikona/boja, POINTS, BEST bedž (max points te dimenzije), expand → XP (+points), PAUSED (postojeće), AVG PER CARD (spec S6 formula po modu), repsBySuit pločice; kalendar meseca (trenirani dani iz `completed_at`, danas outline). Lazy backfill poziv ostaje pri učitavanju.
 - [ ] **Step 2:** Implementacija po s13. `page.tsx`: `history` ekran → HistoryScreen (dolazi se iz Profile).
