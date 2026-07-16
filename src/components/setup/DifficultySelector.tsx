@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { fetchDifficultyLevels } from '@/lib/supabase/queries';
-import { useLocaleSetting } from '@/i18n/LocaleProvider';
-import { localizedName } from '@/i18n/dbName';
 import type { DifficultyLevel } from '@/lib/domain/types';
 
-const DESC_KEY_BY_NAME: Record<string, string> = {
-  Početnik: 'diffDescBeginner',
-  Srednji: 'diffDescIntermediate',
-  Napredni: 'diffDescAdvanced',
+// S2: imena/opisi nivoa dolaze ISKLJUČIVO iz i18n ključeva mapiranih po sort_order,
+// ne iz DB imena (koja ostaju stabilna samo kao interni identifikator/aria-label).
+const LEVEL_KEY_BY_SORT_ORDER: Record<number, string> = {
+  1: 'level1',
+  2: 'level2',
+  3: 'level3',
 };
 
 interface DifficultySelectorProps {
@@ -19,7 +19,6 @@ interface DifficultySelectorProps {
 
 export function DifficultySelector({ onSelect }: DifficultySelectorProps) {
   const t = useTranslations();
-  const { locale } = useLocaleSetting();
   const [levels, setLevels] = useState<DifficultyLevel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +38,7 @@ export function DifficultySelector({ onSelect }: DifficultySelectorProps) {
       <h2 className="text-[28px] font-extrabold mb-6 leading-tight">{t('setup.chooseLevel')}</h2>
       <div className="flex flex-col gap-3.5 flex-1">
         {levels.map((level) => {
-          const descKey = DESC_KEY_BY_NAME[level.name];
+          const key = LEVEL_KEY_BY_SORT_ORDER[level.sortOrder];
           return (
             <button
               key={level.id}
@@ -48,10 +47,10 @@ export function DifficultySelector({ onSelect }: DifficultySelectorProps) {
               className="text-left bg-surface border-2 border-white/5 rounded-[18px] p-5 hover:border-accent/50"
             >
               <span className="block text-[19px] font-extrabold mb-1">
-                {localizedName(level, locale)}
+                {key ? t(`quick.${key}.name`) : level.name}
               </span>
               <span className="block text-sm font-semibold text-muted">
-                {descKey ? t(`setup.${descKey}`) : ''}
+                {key ? t(`quick.${key}.desc`) : ''}
               </span>
             </button>
           );

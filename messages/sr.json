@@ -178,6 +178,7 @@
     "len12": { "name": "Presecanje", "min": "~10 min" },
     "len24": { "name": "Pola špila", "min": "~20 min" },
     "len52": { "name": "Ceo špil", "min": "~35 min" },
+    "cardsLabel": "KARTE",
     "cta": "PROMEŠAJ ŠPIL"
   },
   "challengeMenu": {

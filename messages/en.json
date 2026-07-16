@@ -178,6 +178,7 @@
     "len12": { "name": "The Cut", "min": "~10 min" },
     "len24": { "name": "Half Deck", "min": "~20 min" },
     "len52": { "name": "Full Deck", "min": "~35 min" },
+    "cardsLabel": "CARDS",
     "cta": "SHUFFLE THE DECK"
   },
   "challengeMenu": {

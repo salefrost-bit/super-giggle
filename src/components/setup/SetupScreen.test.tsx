@@ -54,9 +54,11 @@ describe('SetupScreen', () => {
     renderWithIntl(<SetupScreen onStart={onStart} />);
 
     await user.click(await screen.findByText(/Brza podela/));
-    await user.click(await screen.findByRole('button', { name: 'Srednji' }));
+    // Task 8 (errata E4): quick-difficulty + quick-length su spojeni u jedan ekran (QuickDealSetup).
+    await user.click(await screen.findByText('Visok ulog'));
     expect(screen.queryByText(/Izaberi vežbu/)).not.toBeInTheDocument();
-    await user.click(await screen.findByRole('button', { name: 'Ceo špil (52 karte)' }));
+    await user.click(screen.getByText('Ceo špil'));
+    await user.click(await screen.findByRole('button', { name: 'PROMEŠAJ ŠPIL' }));
 
     expect(onStart).toHaveBeenCalledTimes(1);
     const [config, draws] = onStart.mock.calls[0];

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { EntrySelector } from './EntrySelector';
 import { ModeSelector } from './ModeSelector';
 import { DifficultySelector } from './DifficultySelector';
+import { QuickDealSetup } from './QuickDealSetup';
 import { ExercisePicker } from './ExercisePicker';
 import { SessionLengthSelector } from './SessionLengthSelector';
 import { CustomSetup } from './CustomSetup';
@@ -38,8 +39,7 @@ import type {
 
 type Step =
   | 'entry'
-  | 'quick-difficulty'
-  | 'quick-length'
+  | 'quick'
   | 'custom-exercises'
   | 'custom-sliders'
   | 'challenge-menu'
@@ -72,8 +72,7 @@ function pickDefaults(exercises: Exercise[], categories: Category[]): Record<Cat
 function stepNumberFor(step: Step, gameMode: GameMode): number {
   const map: Record<Step, number> = {
     entry: 1,
-    'quick-difficulty': 2,
-    'quick-length': 3,
+    quick: 2,
     'custom-exercises': 2,
     'custom-sliders': 2,
     'challenge-menu': 2,
@@ -88,7 +87,7 @@ function stepNumberFor(step: Step, gameMode: GameMode): number {
 
 function totalStepsFor(step: Step, entry: EntryPath | null, gameMode: GameMode): number {
   if (step === 'entry') return 3;
-  if (entry === 'quick') return 3;
+  if (entry === 'quick') return 2;
   if (entry === 'custom') return 2;
   if (entry === 'challenge') {
     if (gameMode === 'sprint' || gameMode === 'court' || gameMode === 'survive') return 4;
@@ -128,7 +127,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
   async function handleEntrySelect(path: EntryPath) {
     setEntry(path);
     if (path === 'quick') {
-      setStep('quick-difficulty');
+      setStep('quick');
     } else if (path === 'custom') {
       const fetched = await fetchAllExercises();
       setAllExercises(fetched);
@@ -138,11 +137,12 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
     }
   }
 
-  async function handleQuickDifficultySelect(level: DifficultyLevel) {
-    setDifficulty(level);
+  async function handleQuickStart(level: DifficultyLevel, deckSize: DeckSize) {
     const fetchedExercises = await fetchExercisesByDifficulty(level.id);
-    setExerciseByCategory(pickDefaults(fetchedExercises, categories));
-    setStep('quick-length');
+    const selection = pickDefaults(fetchedExercises, categories);
+    setDifficulty(level);
+    setExerciseByCategory(selection);
+    await handleLengthSelect(deckSize, level, selection, 'quick');
   }
 
   async function handleModeDifficultySelect(level: DifficultyLevel) {
@@ -279,36 +279,44 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
     );
   }
 
-  async function handleLengthSelect(deckSize: DeckSize) {
-    if (!difficulty || !exerciseByCategory || !entry) return;
+  async function handleLengthSelect(
+    deckSize: DeckSize,
+    levelOverride: DifficultyLevel | null = difficulty,
+    exerciseByCategoryOverride: Record<CategoryKey, Exercise> | null = exerciseByCategory,
+    entryOverride: EntryPath | null = entry
+  ) {
+    const level = levelOverride;
+    const selection = exerciseByCategoryOverride;
+    const currentEntry = entryOverride;
+    if (!level || !selection || !currentEntry) return;
     const cards = drawSessionCards(deckSize);
-    const mode = entry === 'quick' ? 'classic' : gameMode;
+    const mode = currentEntry === 'quick' ? 'classic' : gameMode;
     const sessionDraws = buildDraws(
       cards,
-      exerciseByCategory,
-      difficulty.defaultRepMultiplier,
+      selection,
+      level.defaultRepMultiplier,
       mode === 'perfect_deck' || mode === 'court'
     );
 
     const config: SessionConfig = {
-      difficultyLevelId: difficulty.id,
-      repMultiplier: difficulty.defaultRepMultiplier,
+      difficultyLevelId: level.id,
+      repMultiplier: level.defaultRepMultiplier,
       deckSize,
-      exerciseByCategory,
-      entry,
+      exerciseByCategory: selection,
+      entry: currentEntry,
       gameMode: mode,
     };
 
     if (mode === 'perfect_deck') {
       const totalReps = sessionDraws.reduce((sum, d) => sum + d.reps, 0);
-      const par = calculateParSeconds(totalReps, deckSize, difficulty);
+      const par = calculateParSeconds(totalReps, deckSize, level);
       let record: number | null = null;
       let bestScore: number | null = null;
       if (userId) {
         try {
           [record, bestScore] = await Promise.all([
-            getBestDurationSeconds(userId, difficulty.id, deckSize),
-            getBestScore(userId, difficulty.id, deckSize),
+            getBestDurationSeconds(userId, level.id, deckSize),
+            getBestScore(userId, level.id, deckSize),
           ]);
         } catch (err) {
           console.error('Failed to fetch record/best score, falling back to par', err);
@@ -318,8 +326,8 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
       config.budgetSeconds = budgetSeconds;
       config.parSource = parSource;
       config.bestScoreForCombo = bestScore;
-      config.parSecondsPerRep = difficulty.parSecondsPerRep;
-      config.parTransitionSeconds = difficulty.parTransitionSeconds;
+      config.parSecondsPerRep = level.parSecondsPerRep;
+      config.parTransitionSeconds = level.parTransitionSeconds;
     }
 
     onStart(config, sessionDraws);
@@ -330,11 +338,8 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
       case 'entry':
         onBack?.();
         break;
-      case 'quick-difficulty':
+      case 'quick':
         setStep('entry');
-        break;
-      case 'quick-length':
-        setStep('quick-difficulty');
         break;
       case 'custom-exercises':
       case 'custom-sliders':
@@ -391,10 +396,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
         ))}
       </div>
       {step === 'entry' && <EntrySelector onSelect={handleEntrySelect} />}
-      {step === 'quick-difficulty' && (
-        <DifficultySelector onSelect={handleQuickDifficultySelect} />
-      )}
-      {step === 'quick-length' && <SessionLengthSelector onSelect={handleLengthSelect} />}
+      {step === 'quick' && <QuickDealSetup onStart={handleQuickStart} />}
       {step === 'custom-exercises' && (
         <CustomSetup
           categories={categories}
