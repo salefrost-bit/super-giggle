@@ -14,7 +14,8 @@ import {
 } from '@/lib/supabase/sessions';
 import { StreakInfoModal } from '@/components/streak/StreakInfoModal';
 import { InfoModal } from '@/components/ui/InfoModal';
-import { HistoryRow } from '@/components/progress/HistoryRow';
+import { HistoryRow } from '@/components/history/HistoryRow';
+import { isBestInDimension } from '@/components/history/historyUtils';
 
 interface ProgressScreenProps {
   userId: string;
@@ -264,6 +265,8 @@ export function ProgressScreen({ userId, onBack }: ProgressScreenProps) {
                   key={session.id}
                   session={session}
                   details={expandedId === session.id ? detailsMap[session.id] ?? null : null}
+                  expanded={expandedId === session.id}
+                  isBest={isBestInDimension(session, sessions)}
                   onExpand={handleExpand}
                 />
               ))}

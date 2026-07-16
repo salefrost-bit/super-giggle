@@ -7,8 +7,8 @@ import { LandingScreen } from '@/components/landing/LandingScreen';
 import { SetupScreen } from '@/components/setup/SetupScreen';
 import { SessionScreen } from '@/components/session/SessionScreen';
 import { SummaryScreen } from '@/components/summary/SummaryScreen';
-import { ProgressScreen } from '@/components/progress/ProgressScreen';
 import { ProfileScreen } from '@/components/profile/ProfileScreen';
+import { HistoryScreen } from '@/components/history/HistoryScreen';
 import {
   fetchCategories,
   buildCategoryIdByKey,
@@ -463,9 +463,8 @@ export default function Home() {
       />
     );
   }
-  // Privremeno do Task 17 (HistoryScreen) — ProgressScreen drži istoriju.
   if (screen === 'history' && user) {
-    return <ProgressScreen userId={user.id} onBack={() => setScreen('profile')} />;
+    return <HistoryScreen userId={user.id} onBack={() => setScreen('profile')} />;
   }
   if (screen === 'how-to-play') {
     return (

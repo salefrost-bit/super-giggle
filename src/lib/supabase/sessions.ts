@@ -89,6 +89,7 @@ export async function completeSession(
 export interface SessionHistoryEntry {
   id: string;
   startedAt: string;
+  completedAt: string | null;
   totalDurationSeconds: number | null;
   totalCards: number;
   status: string;
@@ -126,7 +127,7 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
   const { data, error } = await supabase
     .from('sessions')
     .select(
-      'id, started_at, total_duration_seconds, total_cards, status, difficulty_levels(name), game_mode, settings'
+      'id, started_at, completed_at, total_duration_seconds, total_cards, status, difficulty_levels(name), game_mode, settings'
     )
     .eq('user_id', userId)
     .order('started_at', { ascending: false });
@@ -135,6 +136,7 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
     data as unknown as Array<{
       id: string;
       started_at: string;
+      completed_at: string | null;
       total_duration_seconds: number | null;
       total_cards: number;
       status: string;
@@ -145,6 +147,7 @@ export async function getUserSessions(userId: string): Promise<SessionHistoryEnt
   ).map((row) => ({
     id: row.id,
     startedAt: row.started_at,
+    completedAt: row.completed_at ?? null,
     totalDurationSeconds: row.total_duration_seconds,
     totalCards: row.total_cards,
     status: row.status,

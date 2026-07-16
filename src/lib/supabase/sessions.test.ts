@@ -114,6 +114,7 @@ describe('getUserSessions', () => {
         {
           id: 's1',
           started_at: '2026-07-08T10:00:00.000Z',
+          completed_at: '2026-07-08T10:03:00.000Z',
           total_duration_seconds: 180,
           total_cards: 13,
           status: 'completed',
@@ -135,6 +136,7 @@ describe('getUserSessions', () => {
       {
         id: 's1',
         startedAt: '2026-07-08T10:00:00.000Z',
+        completedAt: '2026-07-08T10:03:00.000Z',
         totalDurationSeconds: 180,
         totalCards: 13,
         status: 'completed',
