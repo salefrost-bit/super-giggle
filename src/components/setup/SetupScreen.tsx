@@ -31,6 +31,7 @@ import type {
   DeckSize,
   DifficultyLevel,
   Exercise,
+  ExerciseTier,
   CardDrawResult,
   SessionConfig,
   GameMode,
@@ -147,7 +148,10 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
 
   async function handleModeDifficultySelect(level: DifficultyLevel) {
     setDifficulty(level);
-    const fetchedExercises = await fetchExercisesByDifficulty(level.id);
+    // P1: tier tabovi u ExercisePicker-u zahtevaju CELU biblioteku (posle
+    // migracije 0007 jedna težina = tačno 1 tier = 2 vežbe po grupi, pa bi
+    // 2 od 3 taba bila prazna sa fetchExercisesByDifficulty).
+    const fetchedExercises = await fetchAllExercises();
     setExercises(fetchedExercises);
     setStep('mode-exercises');
   }
@@ -488,6 +492,7 @@ export function SetupScreen({ onStart, onBack, userId }: SetupScreenProps) {
           categories={categories}
           exercises={exercises}
           onComplete={handleExercisesComplete}
+          initialTier={difficulty?.sortOrder as ExerciseTier | undefined}
         />
       )}
       {step === 'mode-length' && <SessionLengthSelector onSelect={handleLengthSelect} />}

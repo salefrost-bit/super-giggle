@@ -47,7 +47,11 @@
     "chooseSprintDuration": "Choose duration",
     "diffDescBeginner": "Easier reps, ideal to start.",
     "diffDescIntermediate": "Balanced load.",
-    "diffDescAdvanced": "Maximum intensity."
+    "diffDescAdvanced": "Maximum intensity.",
+    "groupPush": "PUSH",
+    "groupPull": "PULL",
+    "groupLegs": "LEGS",
+    "groupCore": "CORE"
   },
   "workout": {
     "nextCard": "Next card",

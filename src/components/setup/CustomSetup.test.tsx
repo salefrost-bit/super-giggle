@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, within } from '@testing-library/react';
 import { renderWithIntl } from '@/test/renderWithIntl';
 import { CustomSetup } from './CustomSetup';
 import type { Category, Exercise } from '@/lib/domain/types';
@@ -38,6 +38,14 @@ const all24: Exercise[] = [
   { id: 'e12b', name: 'V-podizanja', categoryId: 'c4', difficultyLevelId: 'd3', tier: 3, isDefault: false },
 ];
 
+// Task 9 (s18): svaka grupa ima svoj tab Ⅰ/Ⅱ/Ⅲ, default Ⅰ (P8 — ništa nije
+// izabrano na startu), pa se do vežbi drugih tierova dolazi klikom na tab.
+function selectTier2Exercise(categoryKey: string, name: string) {
+  const group = screen.getByTestId(`exercise-group-${categoryKey}`);
+  fireEvent.click(within(group).getByRole('button', { name: 'Ⅱ' }));
+  fireEvent.click(screen.getByText(name));
+}
+
 describe('CustomSetup', () => {
   it('slajderi imaju spec §2.2 granice i korake', () => {
     renderWithIntl(<CustomSetup categories={cats} exercises={all24} onStart={vi.fn()} />);
@@ -51,13 +59,19 @@ describe('CustomSetup', () => {
     expect(cards.step).toBe('4');
   });
 
+  it('default tab je Ⅰ po grupi — vežbe drugih tierova se biraju kroz tabove', () => {
+    renderWithIntl(<CustomSetup categories={cats} exercises={all24} onStart={vi.fn()} />);
+    expect(screen.getByText('Sklekovi na kolenima')).toBeInTheDocument();
+    expect(screen.queryByText('Standardni sklekovi')).not.toBeInTheDocument();
+  });
+
   it('start šalje selekciju + vrednosti slajdera', () => {
     const onStart = vi.fn();
     renderWithIntl(<CustomSetup categories={cats} exercises={all24} onStart={onStart} />);
-    fireEvent.click(screen.getByText('Standardni sklekovi'));
-    fireEvent.click(screen.getByText('Zgibovi (asistirani)'));
-    fireEvent.click(screen.getByText('Iskoraci'));
-    fireEvent.click(screen.getByText('Standardni trbušnjaci'));
+    selectTier2Exercise('push', 'Standardni sklekovi');
+    selectTier2Exercise('pull', 'Zgibovi (asistirani)');
+    selectTier2Exercise('legs', 'Iskoraci');
+    selectTier2Exercise('core', 'Standardni trbušnjaci');
     fireEvent.change(screen.getByLabelText(/Množilac ponavljanja/), { target: { value: '1.5' } });
     fireEvent.change(screen.getByLabelText(/Broj karata/), { target: { value: '32' } });
     fireEvent.click(screen.getByText('Kreni'));
@@ -66,5 +80,17 @@ describe('CustomSetup', () => {
       1.5,
       32
     );
+  });
+
+  it('intenzitet tag i procena reps-a se menjaju sa slajderima (spec §9 koraci 0.25/4)', () => {
+    renderWithIntl(<CustomSetup categories={cats} exercises={all24} onStart={vi.fn()} />);
+    // default: mult 1, cards 24 → inten = ((1-.5)/1.5)*.55 + ((24-12)/40)*.45 ≈ .32 → STEADY
+    expect(screen.getByText('MIRNO')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Množilac ponavljanja/), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText(/Broj karata/), { target: { value: '52' } });
+    // mult 2, cards 52 → inten = 1 → ALL IN; procena reps-a = round(52 * 7 * 2)
+    expect(screen.getByText('ALL-IN')).toBeInTheDocument();
+    expect(screen.getByText(/728/)).toBeInTheDocument();
   });
 });

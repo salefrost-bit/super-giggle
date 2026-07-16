@@ -82,6 +82,7 @@ describe('SetupScreen', () => {
       { ...difficultyLevels[0], parSecondsPerRep: 3, parTransitionSeconds: 20 },
     ]);
     vi.mocked(fetchExercisesByDifficulty).mockResolvedValue(exercises);
+    vi.mocked(fetchAllExercises).mockResolvedValue(exercises);
     const onStart = vi.fn();
     const user = userEvent.setup();
 
@@ -90,10 +91,12 @@ describe('SetupScreen', () => {
     await user.click(await screen.findByText(/Challenge/));
     await user.click(await screen.findByRole('button', { name: /Perfektan špil/ }));
     await user.click(await screen.findByRole('button', { name: 'Srednji' }));
-    await user.click(await screen.findByRole('button', { name: 'Sklekovi' }));
-    await user.click(screen.getByRole('button', { name: 'Zgibovi' }));
-    await user.click(screen.getByRole('button', { name: 'Čučnjevi' }));
-    await user.click(screen.getByRole('button', { name: 'Trbušnjaci' }));
+    // Task 9 (P1): mode-exercises koristi fetchAllExercises + tier tabove (ExercisePicker);
+    // fixture je sav tier 2, initialTier = sortOrder izabrane težine (2), pa se odmah vidi.
+    await user.click(await screen.findByText('Sklekovi'));
+    await user.click(screen.getByText('Zgibovi'));
+    await user.click(screen.getByText('Čučnjevi'));
+    await user.click(screen.getByText('Trbušnjaci'));
     await user.click(await screen.findByRole('button', { name: 'Ceo špil (52 karte)' }));
 
     const [config, draws] = onStart.mock.calls[0];
@@ -110,6 +113,7 @@ describe('SetupScreen', () => {
       { ...difficultyLevels[0], parSecondsPerRep: 3, parTransitionSeconds: 20 },
     ]);
     vi.mocked(fetchExercisesByDifficulty).mockResolvedValue(exercises);
+    vi.mocked(fetchAllExercises).mockResolvedValue(exercises);
     const onStart = vi.fn();
     const user = userEvent.setup();
 
@@ -118,10 +122,10 @@ describe('SetupScreen', () => {
     await user.click(await screen.findByText(/Challenge/));
     await user.click(await screen.findByRole('button', { name: /Dvor/ }));
     await user.click(await screen.findByRole('button', { name: 'Srednji' }));
-    await user.click(await screen.findByRole('button', { name: 'Sklekovi' }));
-    await user.click(screen.getByRole('button', { name: 'Zgibovi' }));
-    await user.click(screen.getByRole('button', { name: 'Čučnjevi' }));
-    await user.click(screen.getByRole('button', { name: 'Trbušnjaci' }));
+    await user.click(await screen.findByText('Sklekovi'));
+    await user.click(screen.getByText('Zgibovi'));
+    await user.click(screen.getByText('Čučnjevi'));
+    await user.click(screen.getByText('Trbušnjaci'));
 
     expect(screen.queryByRole('button', { name: 'Ceo špil (52 karte)' })).not.toBeInTheDocument();
     expect(onStart).toHaveBeenCalledTimes(1);
@@ -143,6 +147,7 @@ describe('SetupScreen', () => {
       { ...difficultyLevels[0], parSecondsPerRep: 3, parTransitionSeconds: 20 },
     ]);
     vi.mocked(fetchExercisesByDifficulty).mockResolvedValue(exercises);
+    vi.mocked(fetchAllExercises).mockResolvedValue(exercises);
     const onStart = vi.fn();
     const user = userEvent.setup();
 
@@ -151,10 +156,10 @@ describe('SetupScreen', () => {
     await user.click(await screen.findByText(/Challenge/));
     await user.click(await screen.findByRole('button', { name: /Na satu/ }));
     await user.click(await screen.findByRole('button', { name: 'Srednji' }));
-    await user.click(await screen.findByRole('button', { name: 'Sklekovi' }));
-    await user.click(screen.getByRole('button', { name: 'Zgibovi' }));
-    await user.click(screen.getByRole('button', { name: 'Čučnjevi' }));
-    await user.click(screen.getByRole('button', { name: 'Trbušnjaci' }));
+    await user.click(await screen.findByText('Sklekovi'));
+    await user.click(screen.getByText('Zgibovi'));
+    await user.click(screen.getByText('Čučnjevi'));
+    await user.click(screen.getByText('Trbušnjaci'));
 
     expect(screen.queryByRole('button', { name: 'Ceo špil (52 karte)' })).not.toBeInTheDocument();
     expect(onStart).toHaveBeenCalledTimes(1);

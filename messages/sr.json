@@ -47,7 +47,11 @@
     "chooseSprintDuration": "Izaberi trajanje",
     "diffDescBeginner": "Lakše ponavljanja, idealno za start.",
     "diffDescIntermediate": "Uravnoteženo opterećenje.",
-    "diffDescAdvanced": "Maksimalan intenzitet."
+    "diffDescAdvanced": "Maksimalan intenzitet.",
+    "groupPush": "GURANJE",
+    "groupPull": "POVLAČENJE",
+    "groupLegs": "NOGE",
+    "groupCore": "CORE"
   },
   "workout": {
     "nextCard": "Sledeća karta",
