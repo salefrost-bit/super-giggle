@@ -22,3 +22,16 @@ by unit tests instead of manual verification.
   freezes per ISO week, streak must be anchored by a real workout.
 - `pauseLog.ts` — pause accounting from timestamps (count + total
   seconds); idempotent pause/resume, same timer invariant as `timer.ts`.
+- `draws.ts` — builds the `CardDrawResult[]` for a session from cards +
+  chosen exercises + rep multiplier.
+- `score.ts` — universal score formula (base × tier factor × mode
+  multipliers), XP totals, and the 14-rank card ladder (`rankForXp`).
+- `jokers.ts` — computes where joker rests fall in a deck (1–2 per
+  session, never during warm-up cards or on the last card) and the
+  30-second rest constant; rests never consume quota or budget.
+- `daily.ts` — Card of the Day: date-seeded 20-card deck, weekly tier
+  rotation, local done-flag for guests.
+- `bank.ts` — Survive mode time bank (90s start; balance changes only
+  on card completion: +quota −time spent), pure arithmetic.
+- `lastConfig.ts` — persistence and validation of the last session
+  config for "Run it back" (localStorage, guest-safe).

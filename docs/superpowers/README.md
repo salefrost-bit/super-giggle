@@ -28,7 +28,7 @@ Ne čita se cela istorija — strategija + poslednji dokumenti su dovoljni.
 | `specs/2026-07-09-gamification-phase2-design.md` | Perfektan špil, registar modova, rekordi, streak, Napredak, i18n SR/EN. | Završen (implementiran) |
 | `specs/2026-07-10-phase3-brainstorm-notes.md` | Brainstorm beleške za Fazu 3 (fiksan špil, Preživi špil, Sprint, džokeri). | **SUPERSEDED** strategijom od 2026-07-13 |
 | `specs/2026-07-13-krug-a-design.md` | Krug A: Wake Lock, auto-pauza, zbir pauza, objašnjenja modova/streaka, meni jezika. | Završen (implementiran) |
-| `specs/2026-07-15-krug-b-design.md` | Krug B "Igrivost": tri vrata (Quick/Custom/Challenge), score/XP/zvanja, 24 vežbe + tier, 5 challenge modova, isporuka v0.4.1–v0.4.6. | **Na reviziji** |
+| `specs/2026-07-15-krug-b-design.md` | Krug B "Igrivost": tri vrata (Quick/Custom/Challenge), score/XP/zvanja, 24 vežbe + tier, 5 challenge modova, isporuka v0.4.1–v0.4.6. | Završen (implementiran, v0.4.1–v0.4.3) |
 | `specs/2026-07-15-dzokeri-design.md` | v0.4.4 Džokeri: ugrađeni odmor (30s, automatski) u svim modovima, bez migracije šeme. | Završen (implementiran) |
 | `specs/2026-07-16-shuffle-interfejs-design.md` | v0.4.5 SHUFFLE: novi interfejs iz Claude Design prototipa — rebrend, EN copy, 14 činova, nova biblioteka, Profile/History/How to Play. | Završen (implementiran) |
 | `specs/assets/` | HTML prototipovi (Claude Design) za redizajn i gamifikaciju + istorijski SQL nacrt (`phase2_gamification.sql`, superseded). | Istorijska referenca |
@@ -50,6 +50,7 @@ Ne čita se cela istorija — strategija + poslednji dokumenti su dovoljni.
 |---|---|---|
 | `reports/2026-07-14-repo-audit.md` | Audit strukture, drifta i higijene repoa posle Kruga A. | Aktuelan |
 | `reports/2026-07-14-predlozi-higijene.md` | Konkretni predlozi higijenskih izmena (README, AGENTS, CI, verzionisanje…) — odobreni i primenjeni 2026-07-14. | Primenjen |
+| `reports/2026-07-16-higijena-posle-shuffle.md` | Čišćenje posle v0.4.5: 48 mrtvih i18n ključeva, Pill.tsx, dve dev-zavisnosti (N11/N12), statusi u docs, mcp.json u gitignore. | Primenjen |
 
 ## Prevod starih naziva u imenovanje po sadržaju
 

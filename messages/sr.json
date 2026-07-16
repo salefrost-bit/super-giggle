@@ -1,13 +1,13 @@
 {
-  "common": { "back": "Nazad", "loading": "Učitavanje...", "error": "Greška: {message}", "close": "Zatvori" },
+  "common": {
+    "back": "Nazad",
+    "loading": "Učitavanje...",
+    "error": "Greška: {message}",
+    "close": "Zatvori"
+  },
   "landing": {
     "appName": "SHUFFLE",
-    "tagline": "Trening bez opreme.\nIzvuci kartu, odradi seriju.",
-    "continueGuest": "Nastavi kao gost",
-    "login": "Prijavi se",
-    "signup": "Napravi nalog",
     "loggedIn": "Ulogovan · napredak se čuva",
-    "newWorkout": "Novi trening",
     "signOut": "Odjavi se",
     "streakDays": "{days, plural, one {# dan} few {# dana} other {# dana}}",
     "repeatLast": "Ponovi podelu",
@@ -29,24 +29,13 @@
     "classicDesc": "Svojim tempom, meri se ukupno vreme.",
     "challengeTitle": "⚡ Perfektan špil",
     "challengeDesc": "Svaka karta ima sat. Obori ih sve.",
-    "beatChip": "Obori: {time}",
     "chooseLevel": "Izaberi nivo",
     "levelsLoading": "Učitavanje nivoa...",
     "chooseExercises": "Složi ruku",
     "chooseLength": "Izaberi dužinu treninga",
     "quarterLabel": "Presecanje",
-    "quarterSub": "12 karata · ~10 min",
     "halfLabel": "Pola špila",
-    "halfSub": "24 karte · ~20 min",
     "fullLabel": "Ceo špil",
-    "fullSub": "52 karte · ~35 min",
-    "quarterAria": "Presecanje (12 karata)",
-    "halfAria": "Pola špila (24 karte)",
-    "fullAria": "Ceo špil (52 karte)",
-    "chooseSprintDuration": "Izaberi trajanje",
-    "diffDescBeginner": "Lakše ponavljanja, idealno za start.",
-    "diffDescIntermediate": "Uravnoteženo opterećenje.",
-    "diffDescAdvanced": "Maksimalan intenzitet.",
     "groupPush": "GURANJE",
     "groupPull": "POVLAČENJE",
     "groupLegs": "NOGE",
@@ -58,12 +47,10 @@
     "pause": "Pauza",
     "resume": "Nastavi",
     "paused": "PAUZIRANO",
-    "resumeWorkout": "Nastavi trening",
     "reps": "ponavljanja",
     "cardOf": "Karta {current}/{total}",
     "quotaCaption": "NA SATU",
     "bankCaption": "BANKA VREMENA",
-    "bankQuota": "+{seconds}s dopuna",
     "total": "UKUPNO",
     "hint": "Završio? Tapni kartu — sledeća već čeka.",
     "halfDeckDown": "POLA ŠPILA GOTOVO",
@@ -76,33 +63,18 @@
     "saveFailed": "Čuvanje treninga trenutno ne radi — rezultat možda neće biti sačuvan u istoriji."
   },
   "results": {
-    "workoutDone": "Trening završen",
-    "challengeDone": "Challenge završen",
-    "totalTime": "ukupno vreme",
     "score": "{score}/{total} oborenih karata",
     "perfectDeck": "PERFEKTAN ŠPIL!",
-    "newRecord": "NOVI REKORD",
-    "newBestScore": "NOVI NAJBOLJI SKOR",
     "deckCleared": "ŠPIL SLOŽEN",
     "newBest": "★ NOVI REKORD",
     "suitLine": "{cards} karata · {reps} ponavljanja",
-    "guestNote": "Rezultati gostiju se ne čuvaju. Napravi nalog da pratiš napredak kroz vreme.",
     "createAccount": "Napravi nalog",
     "backHome": "Nazad na početak"
   },
   "progress": {
-    "title": "Napredak",
     "streak": "{days, plural, one {# dan} few {# dana} other {# dana}}",
     "streakCaption": "niz · džokeri iz rukava ove nedelje: {freezes}",
-    "recordsTitle": "Rekordi",
-    "bestScore": "⚡ najbolje: {score}/{total}",
-    "historyTitle": "Istorija",
-    "classicTag": "🃏 klasično",
-    "durationLine": "{duration} trajanje",
-    "cardsLine": "{count, plural, one {# karta} few {# karte} other {# karata}}",
-    "empty": "Još nema treninga.\nZavrši jedan da se pojavi ovde.",
-    "pointsRecordsTitle": "Rekordi (poeni)",
-    "sprintDim": "{minutes} min"
+    "cardsLine": "{count, plural, one {# karta} few {# karte} other {# karata}}"
   },
   "auth": {
     "loginTitle": "Prijava",
@@ -117,7 +89,6 @@
     "successTitle": "Registracija uspešna!",
     "successNote": "Proveri email da potvrdiš nalog pre prijave.",
     "goLogin": "Idi na prijavu",
-    "backHome": "← Nazad na početak",
     "guestBanner": "Osvojio si {points} poena za gostinskim stolom — napravi nalog da ih zadržiš, zajedno sa nizom i činom.",
     "keepGuest": "Nastavi kao gost →",
     "joinTable": "Pridruži se stolu",
@@ -129,7 +100,6 @@
   "pause": {
     "autoLabel": "Automatski pauzirano",
     "summary": "Pauze: {count} · ukupno {duration}",
-    "historyLabel": "⏸ {duration}",
     "breathe": "Diši. Špil može da sačeka.",
     "backIn": "NASTAVLJAM"
   },
@@ -181,12 +151,30 @@
   "quick": {
     "stakes": "ULOG",
     "deckSize": "VELIČINA ŠPILA",
-    "level1": { "name": "Nizak ulog", "desc": "Lakše ruke · ×0,75" },
-    "level2": { "name": "Visok ulog", "desc": "Standardni sto · ×1,0" },
-    "level3": { "name": "All-in", "desc": "Teške ruke · ×1,25" },
-    "len12": { "name": "Presecanje", "min": "~10 min" },
-    "len24": { "name": "Pola špila", "min": "~20 min" },
-    "len52": { "name": "Ceo špil", "min": "~35 min" },
+    "level1": {
+      "name": "Nizak ulog",
+      "desc": "Lakše ruke · ×0,75"
+    },
+    "level2": {
+      "name": "Visok ulog",
+      "desc": "Standardni sto · ×1,0"
+    },
+    "level3": {
+      "name": "All-in",
+      "desc": "Teške ruke · ×1,25"
+    },
+    "len12": {
+      "name": "Presecanje",
+      "min": "~10 min"
+    },
+    "len24": {
+      "name": "Pola špila",
+      "min": "~20 min"
+    },
+    "len52": {
+      "name": "Ceo špil",
+      "min": "~35 min"
+    },
     "cardsLabel": "KARTE",
     "cta": "PROMEŠAJ ŠPIL"
   },
@@ -198,7 +186,6 @@
     "cardCount": "Broj karata",
     "cardsPerCategory": "{count} po kategoriji",
     "start": "Kreni",
-    "tierBadge": "Nivo {tier}",
     "yourDeck": "TVOJ ŠPIL",
     "warmUp": "ZAGREVANJE",
     "steady": "MIRNO",
@@ -210,15 +197,10 @@
     "label": "Poeni",
     "base": "baza {base}",
     "multiplierLabel": "množilac ×{multiplier}",
-    "total": "{points} poena",
-    "guestKeep": "Osvojeno {points} poena — napravi nalog da ih zadržiš.",
     "formulaTitle": "Kako se računaju poeni",
     "formula": "Poeni = zbir (ponavljanja × faktor vežbe) za svaku završenu kartu. Faktor: nivo Ⅰ ×1, nivo Ⅱ ×1.5, nivo Ⅲ ×2. U challenge modovima množilac na kraju uvećava zbir — do ×2."
   },
   "xp": {
-    "label": "XP",
-    "rankTitle": "Zvanje",
-    "explanation": "XP je zbir poena iz SVIH završenih treninga — računaju se i Brza podela i Složi špil, ne samo Challenge. Samo raste. 14 činova od Džokera (0) do Kralja (105.000) — kompletnu lestvicu vidi u Kako se igra.",
     "rankUp": "RANK UP · {symbol} {name}"
   },
   "ranks": {
@@ -252,12 +234,6 @@
     "r11": "Prva dvorska karta. Iza tebe je prava kilometraža.",
     "r12": "Elita špila — kvote padaju, nizovi drže.",
     "r13": "Kruna. Teško se osvaja, brani se svakim špilom."
-  },
-  "history": {
-    "exercises": "Vežbe",
-    "totalReps": "{count} ponavljanja",
-    "beaten": "{score}/{total} oborenih",
-    "breakdown": "baza {base} × {multiplier}"
   },
   "historyScreen": {
     "title": "Istorija",
@@ -326,7 +302,6 @@
     "settings": "Podešavanja"
   },
   "settings": {
-    "title": "Podešavanja",
     "languageHint": "Više jezika stiže uskoro."
   },
   "language": {
@@ -334,8 +309,6 @@
   },
   "jokers": {
     "title": "🃏 Džoker",
-    "restLabel": "ODMOR",
-    "restCaption": "Diši. Sledeća karta stiže automatski.",
     "explanation": "Ako izvučeš džoker, dobijaš 30 sekundi odmora umesto vežbe — automatski se nastavlja na sledeću kartu. Kraći špilovi (12 karata) imaju jedan džoker, duži imaju dva. Ne troši tvoje vreme po karti niti budžet — odmor je uvek besplatan."
   },
   "joker": {

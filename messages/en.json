@@ -1,13 +1,13 @@
 {
-  "common": { "back": "Back", "loading": "Loading...", "error": "Error: {message}", "close": "Close" },
+  "common": {
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "Error: {message}",
+    "close": "Close"
+  },
   "landing": {
     "appName": "SHUFFLE",
-    "tagline": "No-equipment training.\nDraw a card, do the set.",
-    "continueGuest": "Continue as guest",
-    "login": "Log in",
-    "signup": "Create account",
     "loggedIn": "Logged in · progress is saved",
-    "newWorkout": "New workout",
     "signOut": "Sign out",
     "streakDays": "{days, plural, one {# day} other {# days}}",
     "repeatLast": "Run it back",
@@ -29,24 +29,13 @@
     "classicDesc": "Your own pace, total time is tracked.",
     "challengeTitle": "⚡ Perfect Deck",
     "challengeDesc": "Every card has a clock. Clear them all.",
-    "beatChip": "Beat: {time}",
     "chooseLevel": "Choose your level",
     "levelsLoading": "Loading levels...",
     "chooseExercises": "Build your hand",
     "chooseLength": "Choose workout length",
     "quarterLabel": "The Cut",
-    "quarterSub": "12 cards · ~10 min",
     "halfLabel": "Half Deck",
-    "halfSub": "24 cards · ~20 min",
     "fullLabel": "Full Deck",
-    "fullSub": "52 cards · ~35 min",
-    "quarterAria": "The Cut (12 cards)",
-    "halfAria": "Half Deck (24 cards)",
-    "fullAria": "Full Deck (52 cards)",
-    "chooseSprintDuration": "Choose duration",
-    "diffDescBeginner": "Easier reps, ideal to start.",
-    "diffDescIntermediate": "Balanced load.",
-    "diffDescAdvanced": "Maximum intensity.",
     "groupPush": "PUSH",
     "groupPull": "PULL",
     "groupLegs": "LEGS",
@@ -58,12 +47,10 @@
     "pause": "Pause",
     "resume": "Resume",
     "paused": "PAUSED",
-    "resumeWorkout": "Resume workout",
     "reps": "reps",
     "cardOf": "Card {current}/{total}",
     "quotaCaption": "ON THE CLOCK",
     "bankCaption": "TIME BANK",
-    "bankQuota": "+{seconds}s refill",
     "total": "TOTAL",
     "hint": "Done? Tap the card — the next one's already waiting.",
     "halfDeckDown": "HALF THE DECK DOWN",
@@ -76,33 +63,18 @@
     "saveFailed": "Saving isn't working right now — this workout may not appear in your history."
   },
   "results": {
-    "workoutDone": "Workout complete",
-    "challengeDone": "Challenge complete",
-    "totalTime": "total time",
     "score": "{score}/{total} cards beaten",
     "perfectDeck": "PERFECT DECK!",
-    "newRecord": "NEW RECORD",
-    "newBestScore": "NEW BEST SCORE",
     "deckCleared": "DECK CLEARED",
     "newBest": "★ NEW BEST",
     "suitLine": "{cards} cards · {reps} reps",
-    "guestNote": "Guest results aren't saved. Create an account to track progress over time.",
     "createAccount": "Create account",
     "backHome": "Back to start"
   },
   "progress": {
-    "title": "Progress",
     "streak": "{days, plural, one {# day} other {# days}}",
     "streakCaption": "streak · jokers up your sleeve this week: {freezes}",
-    "recordsTitle": "Records",
-    "bestScore": "⚡ best: {score}/{total}",
-    "historyTitle": "History",
-    "classicTag": "🃏 classic",
-    "durationLine": "{duration} duration",
-    "cardsLine": "{count, plural, one {# card} other {# cards}}",
-    "empty": "No workouts yet.\nFinish one and it shows up here.",
-    "pointsRecordsTitle": "Records (points)",
-    "sprintDim": "{minutes} min"
+    "cardsLine": "{count, plural, one {# card} other {# cards}}"
   },
   "auth": {
     "loginTitle": "Log in",
@@ -117,7 +89,6 @@
     "successTitle": "Registration successful!",
     "successNote": "Check your email to confirm your account before logging in.",
     "goLogin": "Go to login",
-    "backHome": "← Back to start",
     "guestBanner": "You banked {points} points at the guest table — make an account and they're yours for keeps, streak and rank included.",
     "keepGuest": "Keep playing as guest →",
     "joinTable": "Join the table",
@@ -129,7 +100,6 @@
   "pause": {
     "autoLabel": "Paused automatically",
     "summary": "Pauses: {count} · total {duration}",
-    "historyLabel": "⏸ {duration}",
     "breathe": "Breathe. The deck can wait.",
     "backIn": "BACK IN"
   },
@@ -181,12 +151,30 @@
   "quick": {
     "stakes": "STAKES",
     "deckSize": "DECK SIZE",
-    "level1": { "name": "Low Stakes", "desc": "Lighter hands · ×0.75" },
-    "level2": { "name": "High Stakes", "desc": "The standard table · ×1.0" },
-    "level3": { "name": "All In", "desc": "Heavy hands · ×1.25" },
-    "len12": { "name": "The Cut", "min": "~10 min" },
-    "len24": { "name": "Half Deck", "min": "~20 min" },
-    "len52": { "name": "Full Deck", "min": "~35 min" },
+    "level1": {
+      "name": "Low Stakes",
+      "desc": "Lighter hands · ×0.75"
+    },
+    "level2": {
+      "name": "High Stakes",
+      "desc": "The standard table · ×1.0"
+    },
+    "level3": {
+      "name": "All In",
+      "desc": "Heavy hands · ×1.25"
+    },
+    "len12": {
+      "name": "The Cut",
+      "min": "~10 min"
+    },
+    "len24": {
+      "name": "Half Deck",
+      "min": "~20 min"
+    },
+    "len52": {
+      "name": "Full Deck",
+      "min": "~35 min"
+    },
     "cardsLabel": "CARDS",
     "cta": "SHUFFLE THE DECK"
   },
@@ -198,7 +186,6 @@
     "cardCount": "Card count",
     "cardsPerCategory": "{count} per category",
     "start": "Start",
-    "tierBadge": "Tier {tier}",
     "yourDeck": "YOUR DECK",
     "warmUp": "WARM-UP",
     "steady": "STEADY",
@@ -210,15 +197,10 @@
     "label": "Points",
     "base": "base {base}",
     "multiplierLabel": "multiplier ×{multiplier}",
-    "total": "{points} points",
-    "guestKeep": "You earned {points} points — create an account to keep them.",
     "formulaTitle": "How points are calculated",
     "formula": "Points = sum of (reps × exercise factor) for every finished card. Factor: tier Ⅰ ×1, tier Ⅱ ×1.5, tier Ⅲ ×2. In challenge modes a final multiplier boosts the total — up to ×2."
   },
   "xp": {
-    "label": "XP",
-    "rankTitle": "Rank",
-    "explanation": "XP is the sum of points from every finished workout — Quick Deal and Stack the Deck count too, not just Challenge. It only grows. 14 ranks from The Joker (0) to King (105,000) — see How to Play for the full ladder.",
     "rankUp": "RANK UP · {symbol} {name}"
   },
   "ranks": {
@@ -252,12 +234,6 @@
     "r11": "First royal. You have real mileage behind you.",
     "r12": "Elite of the deck — quotas fall, streaks hold.",
     "r13": "The crown. Hard to win, defended with every deck."
-  },
-  "history": {
-    "exercises": "Exercises",
-    "totalReps": "{count} reps",
-    "beaten": "{score}/{total} beaten",
-    "breakdown": "base {base} × {multiplier}"
   },
   "historyScreen": {
     "title": "History",
@@ -326,7 +302,6 @@
     "settings": "Settings"
   },
   "settings": {
-    "title": "Settings",
     "languageHint": "More languages coming soon."
   },
   "language": {
@@ -334,8 +309,6 @@
   },
   "jokers": {
     "title": "🃏 Joker",
-    "restLabel": "REST",
-    "restCaption": "Breathe. Next card comes automatically.",
     "explanation": "Draw a joker and you get 30 seconds of rest instead of an exercise — it moves on to the next card automatically. Shorter decks (12 cards) carry one joker, longer ones carry two. It never costs your per-card time or budget — rest is always free."
   },
   "joker": {
