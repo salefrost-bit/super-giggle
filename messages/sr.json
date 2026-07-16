@@ -8,7 +8,6 @@
     "signup": "Napravi nalog",
     "loggedIn": "Ulogovan · napredak se čuva",
     "newWorkout": "Novi trening",
-    "viewProgress": "Vidi napredak →",
     "signOut": "Odjavi se",
     "streakDays": "{days, plural, one {# dan} few {# dana} other {# dana}}",
     "repeatLast": "Ponovi podelu",

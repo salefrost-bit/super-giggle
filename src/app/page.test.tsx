@@ -1,11 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderWithIntl } from '@/test/renderWithIntl';
 import Home from './page';
 
 vi.mock('@/lib/auth/AuthContext', () => ({
-  useAuth: () => ({ user: null, isLoading: false, signOut: vi.fn() }),
+  useAuth: vi.fn(() => ({ user: null, isLoading: false, signOut: vi.fn() })),
 }));
 
 vi.mock('@/components/setup/SetupScreen', () => ({
@@ -32,6 +32,81 @@ vi.mock('@/components/session/SessionScreen', () => ({
 vi.mock('@/components/summary/SummaryScreen', () => ({
   SummaryScreen: ({ onDone }: { onDone: () => void }) => <button onClick={onDone}>finish-summary</button>,
 }));
+
+vi.mock('@/components/profile/ProfileScreen', () => ({
+  ProfileScreen: ({
+    onBack,
+    onShowHistory,
+  }: {
+    onBack: () => void;
+    onShowHistory: () => void;
+  }) => (
+    <div>
+      <span>mock-profile</span>
+      <button type="button" onClick={onShowHistory}>
+        mock-show-history
+      </button>
+      <button type="button" onClick={onBack}>
+        mock-back-profile
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('@/components/history/HistoryScreen', () => ({
+  HistoryScreen: ({ onBack }: { onBack: () => void }) => (
+    <div>
+      <span>mock-history</span>
+      <button type="button" onClick={onBack}>
+        mock-back-history
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('@/components/howtoplay/HowToPlayScreen', () => ({
+  HowToPlayScreen: ({ onBack }: { onBack: () => void }) => (
+    <div>
+      <span>mock-howtoplay</span>
+      <button type="button" onClick={onBack}>
+        mock-back-howtoplay
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('@/lib/supabase/records', () => ({
+  getTotalXp: vi.fn().mockResolvedValue(0),
+  getCompletedSessionDates: vi.fn().mockResolvedValue([]),
+  getBestDurationSeconds: vi.fn().mockResolvedValue(null),
+  getBestScore: vi.fn().mockResolvedValue(null),
+  getProfileStats: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock('@/lib/supabase/sessions', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/supabase/sessions')>(
+    '@/lib/supabase/sessions'
+  );
+  return {
+    ...actual,
+    hasDailyForDate: vi.fn().mockResolvedValue(false),
+  };
+});
+
+import { useAuth } from '@/lib/auth/AuthContext';
+import type { User } from '@supabase/supabase-js';
+
+const guestAuth = {
+  user: null,
+  isLoading: false,
+  signUp: vi.fn(),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+};
+
+beforeEach(() => {
+  vi.mocked(useAuth).mockReturnValue(guestAuth);
+});
 
 describe('Home (top-level state machine)', () => {
   it('walks a guest through landing -> setup -> session -> summary -> back to landing', async () => {
@@ -112,5 +187,48 @@ describe('Home (top-level state machine)', () => {
     await user.click(screen.getByRole('button', { name: 'PROMEŠAJ I PODELI' }));
 
     expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
+  });
+});
+
+describe('Home navigacija (E5.4 — bez ProgressScreen)', () => {
+  it('landing → how-to-play → landing', async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<Home />);
+
+    await user.click(screen.getByRole('button', { name: 'Kako se igra' }));
+    expect(screen.getByText('mock-howtoplay')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'mock-back-howtoplay' }));
+    expect(screen.getByRole('button', { name: 'PODELI MI' })).toBeInTheDocument();
+  });
+
+  it('landing → profile → landing (gost)', async () => {
+    const user = userEvent.setup();
+    renderWithIntl(<Home />);
+
+    await user.click(screen.getByRole('button', { name: /🃏/ }));
+    expect(screen.getByText('mock-profile')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'mock-back-profile' }));
+    expect(screen.getByRole('button', { name: 'PODELI MI' })).toBeInTheDocument();
+  });
+
+  it('landing → profile → history → profile (ulogovan)', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      ...guestAuth,
+      user: { id: 'user-1' } as User,
+    });
+
+    const user = userEvent.setup();
+    renderWithIntl(<Home />);
+
+    await user.click(screen.getByRole('button', { name: /🃏|ČIN/i }));
+    expect(await screen.findByText('mock-profile')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'mock-show-history' }));
+    expect(screen.getByText('mock-history')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'mock-back-history' }));
+    expect(screen.getByText('mock-profile')).toBeInTheDocument();
   });
 });

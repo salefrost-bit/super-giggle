@@ -8,7 +8,6 @@
     "signup": "Create account",
     "loggedIn": "Logged in · progress is saved",
     "newWorkout": "New workout",
-    "viewProgress": "View progress →",
     "signOut": "Sign out",
     "streakDays": "{days, plural, one {# day} other {# days}}",
     "repeatLast": "Run it back",
