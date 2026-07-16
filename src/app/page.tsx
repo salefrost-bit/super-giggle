@@ -16,8 +16,8 @@ import {
   fetchDifficultyLevels,
 } from '@/lib/supabase/queries';
 import { getBestDurationSeconds, getBestScore, getTotalXp } from '@/lib/supabase/records';
-import { InfoModal } from '@/components/ui/InfoModal';
 import { hasSeenExplanation, markExplained } from '@/lib/modes/explained';
+import { HowToPlayScreen } from '@/components/howtoplay/HowToPlayScreen';
 import { MODES } from '@/lib/modes/registry';
 import { loadLastConfig, validateLastConfig } from '@/lib/domain/lastConfig';
 import type { LastConfig } from '@/lib/domain/lastConfig';
@@ -468,10 +468,10 @@ export default function Home() {
   }
   if (screen === 'how-to-play') {
     return (
-      <InfoModal title={t('howToPlay.title')} closeLabel={t('common.close')} onClose={() => setScreen('landing')}>
-        <p className="mb-3">{t('howToPlay.deckIsTrainerDesc')}</p>
-        <p>{t('howToPlay.suitsExplainer')}</p>
-      </InfoModal>
+      <HowToPlayScreen
+        userId={user?.id ?? null}
+        onBack={() => setScreen('landing')}
+      />
     );
   }
   return null;

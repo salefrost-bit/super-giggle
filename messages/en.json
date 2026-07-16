@@ -281,6 +281,8 @@
     "suitsExplainer": "A standard deck holds 52 cards and jokers. Suits are muscle groups: ♥ push, ♣ pull, ♠ legs, ♦ core. The Ace is 1 — the lightest card — and the royals carry J=11, Q=12, K=13. The deck runs empty, the session ends — time and points go straight to your history and XP.",
     "modesTitle": "MODES",
     "ranksTitle": "RANKS OF THE DECK",
+    "yourRank": "your rank: {symbol} · {current}/{total}",
+    "rankHeading": "{name} · RANK {n}",
     "youBadge": "YOU",
     "streakText": "Streak — the flame grows every day you clear a deck. Three skipped days in one week and it goes out.",
     "jokersText": "Jokers up your sleeve — two a week. Need a rest day? One plays itself and the flame stays lit. Fresh pair every Monday — they don't stack.",
@@ -299,6 +301,7 @@
       "long": "Five modes: Perfect Deck, Blitz, The Court, On the Clock and Daily Deal. Clocks, runs and records — this is where the XP is made."
     },
     "jokerMode": {
+      "name": "Joker",
       "short": "A guided breather when a joker turns up.",
       "long": "When a joker turns up: 30 seconds of guided breathing — in, out. The stopwatch keeps running and your run stays alive. Shorter decks carry one, longer ones carry two."
     }

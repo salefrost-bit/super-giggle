@@ -281,6 +281,8 @@
     "suitsExplainer": "Standardni špil ima 52 karte i džokere. Boje su grupe mišića: ♥ guranje, ♣ povlačenje, ♠ noge, ♦ core. As je 1 — najlakša karta — a dvorske karte nose J=11, Q=12, K=13. Kad se špil isprazni, trening se završava — vreme i poeni idu pravo u istoriju i XP.",
     "modesTitle": "MODOVI",
     "ranksTitle": "ČINOVI ŠPILA",
+    "yourRank": "tvoj čin: {symbol} · {current}/{total}",
+    "rankHeading": "{name} · RANK {n}",
     "youBadge": "TI",
     "streakText": "Niz — vatra raste za svaki dan kad složiš špil. Tri propuštena dana u istoj nedelji i gasi se.",
     "jokersText": "Džokeri iz rukava — dva nedeljno. Treba ti slobodan dan? Jedan se odigra sam i vatra ostaje. Svež par svakog ponedeljka — ne gomilaju se.",
@@ -299,6 +301,7 @@
       "long": "Pet modova: Perfektan špil, Blic, Dvor, Na satu i Dnevna podela. Satovi, nizovi i rekordi — ovde se pravi XP."
     },
     "jokerMode": {
+      "name": "Džoker",
       "short": "Vođeni predah kad izvučeš džoker.",
       "long": "Kad izvučeš džoker: 30 sekundi vođenog disanja — udah, izdah. Štoperica i dalje radi, tvoja podela ostaje živa. Kraći špilovi imaju jedan, duži imaju dva."
     }
