@@ -3,8 +3,10 @@
 Datum: 2026-07-16
 Status: Revidiran — nalazi nezavisne revizije S1–S12 primenjeni; spreman za plan
 Izvor dizajna: Claude Design handoff prototip (finalna verzija, EN copy),
-sekcije 1–24 — lokalna kopija se drži VAN repoa (dizajn se održava u Claude
-Design alatu; ovaj spec je prevod dizajna u zahteve).
+sekcije 1–24. Snapshot HTML-a se commituje u
+`docs/superpowers/specs/assets/shuffle-prototype.html` (presedan: assets/
+već čuva Claude Design prototipove) — izvršilac plana čita dizajn odatle;
+ŽIVI dizajn se i dalje održava u Claude Design alatu.
 Odnos prema planu Kruga B: ZAMENJUJE faze v0.4.5 (animacije — odbačene) i
 v0.4.6 (Napredak — apsorbovan ovde); v. §12.
 

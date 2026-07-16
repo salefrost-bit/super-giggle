@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0d0d0f;}
+a{color:#ccff00;text-decoration:none} a:hover{color:#e2ff66}
+@keyframes rippleK{0%{transform:scale(1);opacity:.6}100%{transform:scale(3.4);opacity:0}}
+@keyframes pulseSoft{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes swayK{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes floatK{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes sheenK{0%{transform:translateX(-160%) skewX(-18deg)}14%{transform:translateX(260%) skewX(-18deg)}100%{transform:translateX(260%) skewX(-18deg)}}
+@keyframes flickK{0%,100%{transform:scale(1) rotate(-3deg)}28%{transform:scale(1.14) rotate(3deg)}55%{transform:scale(.94) rotate(-1deg)}80%{transform:scale(1.06) rotate(2deg)}}
+@keyframes panicK{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes popA{0%{transform:translate(-50%,0) scale(.5);opacity:0}18%{opacity:1;transform:translate(-50%,-14px) scale(1.2)}100%{transform:translate(-50%,-72px) scale(1);opacity:0}}
+@keyframes popB{0%{transform:translate(-50%,0) scale(.5);opacity:0}18%{opacity:1;transform:translate(-50%,-14px) scale(1.2)}100%{transform:translate(-50%,-72px) scale(1);opacity:0}}
+@keyframes bumpA{0%{transform:scale(1)}35%{transform:scale(1.16)}100%{transform:scale(1)}}
+@keyframes bumpB{0%{transform:scale(1)}35%{transform:scale(1.16)}100%{transform:scale(1)}}
+@keyframes ringA{0%{box-shadow:0 0 0 0 rgba(204,255,0,.55)}100%{box-shadow:0 0 0 30px rgba(204,255,0,0)}}
+@keyframes ringB{0%{box-shadow:0 0 0 0 rgba(204,255,0,.55)}100%{box-shadow:0 0 0 30px rgba(204,255,0,0)}}
+@keyframes shardK{0%{transform:translate(0,0) rotate(0deg);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
+@keyframes flashK{0%{opacity:.85}100%{opacity:0}}
+@keyframes badgeK{0%{transform:scale(.4);opacity:0}55%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes spinK{to{transform:rotate(360deg)}}
+@keyframes flameK{0%,100%{transform:scale(1,1) rotate(-2deg)}30%{transform:scale(1.08,.92) rotate(2.5deg)}55%{transform:scale(.94,1.1) rotate(-1.5deg)}80%{transform:scale(1.04,.96) rotate(1deg)}}
+@keyframes bounceDot{0%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}55%{transform:translateY(0)}70%{transform:translateY(-2px)}85%{transform:translateY(0)}}
+@keyframes peekK{0%,55%,100%{transform:translateY(0) rotate(0deg)}68%{transform:translateY(-16px) rotate(-3deg)}82%{transform:translateY(-10px) rotate(-2deg)}}
+@keyframes pausebr{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.07);opacity:1}}
+@media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
+</style>
+</helmet>
+<div style="display:grid;grid-template-columns:repeat(3,390px);gap:64px 48px;padding:64px;width:max-content;font-family:Nunito,sans-serif;align-items:start">
+  <div style="grid-column:1/-1;max-width:900px">
+    <div style="font-weight:900;font-size:40px;color:#fafafa;letter-spacing:.02em">SHUFFLE <span style="color:#ccff00">·</span> micro-animations and effects</div>
+    <div style="font-weight:600;font-size:15px;color:#a1a1aa;margin-top:8px;text-wrap:pretty">Every frame is a live demo — tap, drag, pause. All animations respect prefers-reduced-motion.</div>
+  </div>
+
+  <section id="s16" data-screen-label="Tri vrata">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">16</span> · THREE DOORS</h2>
+    <div style="width:390px;height:640px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button style="width:38px;height:38px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#fafafa;cursor:pointer;font-weight:900;font-size:16px;flex:none" style-active="transform:scale(.94)">←</button>
+        <div style="flex:1;display:flex;gap:4px">
+          <div style="flex:1;height:4px;border-radius:2px;background:#ccff00;box-shadow:0 0 8px rgba(204,255,0,.5)"></div>
+          <div style="flex:1;height:4px;border-radius:2px;background:#2c2c31"></div>
+          <div style="flex:1;height:4px;border-radius:2px;background:#2c2c31"></div>
+        </div>
+        <div style="font-weight:800;font-size:11px;letter-spacing:.12em;color:#71717a">1/3</div>
+      </div>
+      <div style="font-weight:900;font-size:26px;color:#fafafa;line-height:1.2">How are you<br>playing today?</div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:12px;justify-content:center">
+        <div style="display:flex;align-items:center;gap:16px;background:linear-gradient(160deg,#26262b,#1e1e21);border:1px solid rgba(204,255,0,.35);border-radius:20px;padding:18px;cursor:pointer" style-hover="border-color:#ccff00;box-shadow:0 0 24px rgba(204,255,0,.15)" style-active="transform:scale(.98)">
+          <div style="width:46px;height:46px;border-radius:14px;background:radial-gradient(circle at 50% 34%, rgba(204,255,0,.2), rgba(0,0,0,.15) 78%),#1d1d20;border:1px solid rgba(204,255,0,.35);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none">🏃</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:900;font-size:16px;color:#fafafa">Quick Deal</div>
+            <div style="font-weight:700;font-size:12px;color:#71717a;margin-top:2px;line-height:1.4">Pick your stakes, we build the deck.</div>
+          </div>
+          <span style="font-weight:900;font-size:16px;color:#ccff00;flex:none">→</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;background:linear-gradient(160deg,#26262b,#1e1e21);border:1px solid #303036;border-radius:20px;padding:18px;cursor:pointer" style-hover="border-color:rgba(185,168,255,.6);box-shadow:0 0 24px rgba(185,168,255,.12)" style-active="transform:scale(.98)">
+          <div style="width:46px;height:46px;border-radius:14px;background:radial-gradient(circle at 50% 34%, rgba(185,168,255,.2), rgba(0,0,0,.15) 78%),#1d1d20;border:1px solid rgba(185,168,255,.35);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none">🎛</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:900;font-size:16px;color:#fafafa">Stack the Deck</div>
+            <div style="font-weight:700;font-size:12px;color:#71717a;margin-top:2px;line-height:1.4">Every exercise, every card — rig it your way.</div>
+          </div>
+          <span style="font-weight:900;font-size:16px;color:#b9a8ff;flex:none">→</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;background:linear-gradient(160deg,#26262b,#1e1e21);border:1px solid #303036;border-radius:20px;padding:18px;cursor:pointer" style-hover="border-color:rgba(255,179,64,.6);box-shadow:0 0 24px rgba(255,179,64,.12)" style-active="transform:scale(.98)">
+          <div style="width:46px;height:46px;border-radius:14px;background:radial-gradient(circle at 50% 34%, rgba(255,179,64,.2), rgba(0,0,0,.15) 78%),#1d1d20;border:1px solid rgba(255,179,64,.35);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none">⚡</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:900;font-size:16px;color:#fafafa">Challenge</div>
+            <div style="font-weight:700;font-size:12px;color:#71717a;margin-top:2px;line-height:1.4">Five tables. Records on the line.</div>
+          </div>
+          <span style="font-weight:900;font-size:16px;color:#ffb340;flex:none">→</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s17" data-screen-label="Brzi trening — nivo i duzina">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">17</span> · QUICK DEAL — STAKES AND DECK SIZE</h2>
+    <div style="width:390px;height:640px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button style="width:38px;height:38px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#fafafa;cursor:pointer;font-weight:900;font-size:16px;flex:none" style-active="transform:scale(.94)">←</button>
+        <div style="flex:1;display:flex;gap:4px">
+          <div style="flex:1;height:4px;border-radius:2px;background:#ccff00"></div>
+          <div style="flex:1;height:4px;border-radius:2px;background:#ccff00;box-shadow:0 0 8px rgba(204,255,0,.5)"></div>
+          <div style="flex:1;height:4px;border-radius:2px;background:#2c2c31"></div>
+        </div>
+        <div style="font-weight:800;font-size:11px;letter-spacing:.12em;color:#71717a">2/3</div>
+      </div>
+      <div>
+        <div style="font-weight:800;font-size:11px;letter-spacing:.16em;color:#71717a;margin-bottom:10px">STAKES</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{qtLevels}}" as="lv" hint-placeholder-count="3">
+            <div onClick="{{lv.pick}}" style="display:flex;align-items:center;gap:12px;background:#212124;border:1px solid {{lv.border}};border-radius:14px;padding:12px 16px;cursor:pointer;box-shadow:{{lv.sh}};transition:border-color .25s,box-shadow .25s" style-active="transform:scale(.98)">
+              <span style="font-weight:900;font-size:14px;color:{{lv.tc}};width:20px;text-align:center">{{lv.tier}}</span>
+              <div style="flex:1">
+                <div style="font-weight:800;font-size:14px;color:{{lv.nc}}">{{lv.name}}</div>
+                <div style="font-weight:700;font-size:11px;color:#71717a;margin-top:1px">{{lv.desc}}</div>
+              </div>
+              <span style="width:18px;height:18px;border-radius:50%;border:2px solid {{lv.rb}};background:{{lv.rbg}};flex:none;box-sizing:border-box;transition:all .25s"></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:800;font-size:11px;letter-spacing:.16em;color:#71717a;margin-bottom:10px">DECK SIZE</div>
+        <div style="display:flex;gap:8px">
+          <sc-for list="{{qtLens}}" as="ln" hint-placeholder-count="3">
+            <div onClick="{{ln.pick}}" style="flex:1;background:#212124;border:1px solid {{ln.border}};border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;box-shadow:{{ln.sh}};transition:border-color .25s,box-shadow .25s" style-active="transform:scale(.97)">
+              <div style="font-weight:900;font-size:20px;color:{{ln.nc}};font-variant-numeric:tabular-nums">{{ln.cards}}</div>
+              <div style="font-weight:800;font-size:9px;letter-spacing:.1em;color:#52525b">CARDS</div>
+              <div style="font-weight:800;font-size:12px;color:{{ln.nc}};margin-top:6px">{{ln.name}}</div>
+              <div style="font-weight:700;font-size:10px;color:#71717a">~{{ln.min}} min</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="flex:1"></div>
+      <button style="width:100%;font-family:Nunito,sans-serif;font-weight:900;font-size:15px;letter-spacing:.12em;padding:16px;border-radius:16px;border:none;background:#ccff00;color:#18181b;cursor:pointer;box-shadow:0 0 30px rgba(204,255,0,.25)" style-active="transform:scale(.97)">SHUFFLE THE DECK</button>
+    </div>
+  </section>
+
+  <section id="s18" data-screen-label="Izbor vezbi po grupi">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">18</span> · BUILD YOUR HAND — EXERCISE PICKER</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button style="width:38px;height:38px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#fafafa;cursor:pointer;font-weight:900;font-size:16px;flex:none" style-active="transform:scale(.94)">←</button>
+        <div style="flex:1">
+          <div style="font-weight:900;font-size:20px;color:#fafafa">Build your hand</div>
+          <div style="font-weight:700;font-size:11px;color:#71717a">One exercise per suit — suit = muscle group.</div>
+        </div>
+      </div>
+
+      <sc-for list="{{exGroups}}" as="g" hint-placeholder-count="4">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <span style="font-size:15px;color:{{g.c}}">{{g.suit}}</span>
+            <span style="font-weight:800;font-size:12px;letter-spacing:.14em;color:#a1a1aa;flex:1">{{g.name}}</span>
+            <div style="display:flex;gap:5px;background:#1d1d20;border:1px solid #2c2c31;border-radius:999px;padding:4px 7px">
+              <sc-for list="{{g.tiers}}" as="td" hint-placeholder-count="3">
+                <span onClick="{{td.pick}}" style="width:17px;height:17px;border-radius:50%;background:{{td.bg}};border:1px solid {{td.border}};box-shadow:{{td.sh}};display:flex;align-items:center;justify-content:center;font-weight:900;font-size:9px;color:{{td.c}};cursor:pointer;transition:all .22s" style-active="transform:scale(.9)">{{td.g}}</span>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+            <sc-for list="{{g.items}}" as="ex" hint-placeholder-count="6">
+              <div onClick="{{ex.pick}}" style="display:flex;align-items:center;gap:8px;background:{{ex.bg}};border:1px solid {{ex.border}};border-radius:12px;padding:10px 12px;cursor:pointer;box-shadow:{{ex.sh}};transition:all .22s" style-active="transform:scale(.97)">
+                <span style="flex:1;font-weight:800;font-size:12px;color:{{ex.nc}};line-height:1.3">{{ex.name}}</span>
+                <span style="font-weight:900;font-size:10px;color:{{ex.tierC}};border:1px solid {{ex.tierC}};border-radius:6px;padding:2px 6px;flex:none">{{ex.tier}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+      <button style="width:100%;font-family:Nunito,sans-serif;font-weight:900;font-size:15px;letter-spacing:.12em;padding:16px;border-radius:16px;border:none;background:#ccff00;color:#18181b;cursor:pointer;box-shadow:0 0 30px rgba(204,255,0,.25)" style-active="transform:scale(.97)">DEAL</button>
+    </div>
+  </section>
+
+  <section id="s19" data-screen-label="Challenge meni">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">19</span> · CHALLENGE MENU — FIVE TABLES</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:4px">
+        <button style="width:38px;height:38px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#fafafa;cursor:pointer;font-weight:900;font-size:16px;flex:none" style-active="transform:scale(.94)">←</button>
+        <div style="font-weight:900;font-size:24px;color:#fafafa">Challenge</div>
+      </div>
+      <sc-for list="{{chModes}}" as="ch" hint-placeholder-count="5">
+        <div style="background:linear-gradient(160deg,#242428,#1d1d20);border:1px solid {{ch.border}};border-radius:18px;padding:14px 16px;box-shadow:0 0 20px {{ch.glow}};transition:box-shadow .3s">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:40px;height:40px;border-radius:12px;background:radial-gradient(circle at 50% 34%, {{ch.soft}}, rgba(0,0,0,.15) 78%),#1d1d20;border:1px solid {{ch.border}};display:flex;align-items:center;justify-content:center;font-size:19px;flex:none">{{ch.g}}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:900;font-size:15px;color:{{ch.c}}">{{ch.name}}</div>
+              <div style="font-weight:700;font-size:11px;color:#71717a;line-height:1.4;margin-top:1px">{{ch.short}}</div>
+            </div>
+            <button onClick="{{ch.info}}" style="width:26px;height:26px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#a1a1aa;cursor:pointer;font-family:Nunito,sans-serif;font-weight:900;font-size:12px;flex:none;display:flex;align-items:center;justify-content:center" style-hover="color:{{ch.c}};border-color:{{ch.border}}">i</button>
+          </div>
+          <sc-if value="{{ch.sprint}}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:7px;margin-top:11px;margin-left:52px">
+              <sc-for list="{{sprintPills}}" as="sp" hint-placeholder-count="3">
+                <div onClick="{{sp.pick}}" style="flex:1;text-align:center;font-weight:900;font-size:12px;color:{{sp.c}};background:{{sp.bg}};border:1px solid {{sp.border}};border-radius:999px;padding:7px 0;cursor:pointer;transition:all .22s" style-active="transform:scale(.95)">{{sp.label}}</div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="max-height:{{ch.detH}};opacity:{{ch.detO}};overflow:hidden;transition:max-height .35s ease,opacity .3s ease">
+            <div style="margin-top:10px;margin-left:52px;padding:10px 12px;background:#1b1b1e;border-radius:10px;font-weight:700;font-size:11px;color:#a1a1aa;line-height:1.5;text-wrap:pretty">{{ch.long}}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="s20" data-screen-label="Sesija — mode varijante" style="grid-column:1/-1">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">20</span> · SESSION — MODE VARIANTS</h2>
+    <div style="display:flex;gap:48px;align-items:flex-start">
+      <div style="width:390px;height:560px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:26px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:14px" data-screen-label="Sprint sesija">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="position:relative;width:9px;height:9px;display:inline-block;animation:bounceDot 1.8s ease-in-out infinite"><span style="position:absolute;inset:0;border-radius:50%;background:#ffb340"></span><span style="position:absolute;inset:0;border-radius:50%;background:rgba(255,179,64,.5);animation:rippleK 1.8s ease-out infinite"></span></span>
+            <span style="font-weight:800;font-size:12px;letter-spacing:.14em;color:#ffb340;white-space:nowrap;flex:none">🏃 BLITZ · 5 MIN</span>
+          </div>
+          <span style="font-weight:800;font-size:12px;color:#71717a;font-variant-numeric:tabular-nums">{{swDisp}}</span>
+        </div>
+        <div style="text-align:center;margin-top:4px">
+          <div style="font-weight:900;font-size:72px;line-height:1;color:{{spColor}};font-variant-numeric:tabular-nums;transition:color .3s;animation:{{spAnim}}">{{spDisp}}</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.24em;color:#71717a;margin-top:5px">TIME LEFT</div>
+        </div>
+        <div style="height:6px;border-radius:3px;background:#26262a;overflow:hidden"><div style="width:{{spPct}}%;height:100%;border-radius:3px;background:{{spColor}};transition:width .3s linear,background .3s"></div></div>
+        <div style="flex:1;border-radius:24px;background:linear-gradient(160deg,#2c2c30,#212124);border:1px solid rgba(255,179,64,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer" style-active="filter:brightness(1.15)">
+          <div style="font-weight:900;font-size:64px;line-height:1;color:#fafafa">8</div>
+          <div style="font-weight:800;font-size:16px;color:#ffb340">Squats</div>
+          <div style="font-weight:800;font-size:11px;color:#52525b">8 ♠ · tap it when it's done</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:#232327;border:1px solid rgba(255,179,64,.3);border-radius:999px;padding:9px 18px;align-self:center">
+          <span style="font-weight:900;font-size:17px;color:#ffb340;font-variant-numeric:tabular-nums">{{spCards}}</span>
+          <span style="font-weight:800;font-size:10px;letter-spacing:.14em;color:#71717a">CARDS CLEARED</span>
+        </div>
+      </div>
+      <div style="width:390px;height:560px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:26px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden" data-screen-label="Prezivi sesija">
+        <div style="position:absolute;inset:0;border-radius:44px;box-shadow:inset 0 0 80px rgba(255,64,52,{{bankVig}});pointer-events:none;transition:box-shadow .3s"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-weight:800;font-size:12px;letter-spacing:.14em;color:#ff5147;white-space:nowrap;flex:none">⏳ ON THE CLOCK</span>
+          <span style="font-weight:800;font-size:12px;color:#71717a;font-variant-numeric:tabular-nums">CARD 21/52</span>
+        </div>
+        <div style="text-align:center;margin-top:4px">
+          <div style="font-weight:900;font-size:72px;line-height:1;color:{{bankColor}};font-variant-numeric:tabular-nums;transition:color .3s">{{bankDisp}}<span style="font-size:30px">s</span></div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.24em;color:#71717a;margin-top:5px">TIME BANK</div>
+        </div>
+        <div style="height:14px;border-radius:7px;background:#26262a;overflow:hidden;border:1px solid #2e2e33">
+          <div style="width:{{bankPct}}%;height:100%;border-radius:7px;background:linear-gradient(90deg,{{bankColor}},{{bankColor}});box-shadow:0 0 14px {{bankGlow}};transition:width .3s linear,background .3s"></div>
+        </div>
+        <div style="display:flex;justify-content:center;gap:14px">
+          <span style="font-weight:800;font-size:11px;color:#ccff00">+every card feeds the bank</span>
+          <span style="font-weight:800;font-size:11px;color:#71717a">·</span>
+          <span style="font-weight:800;font-size:11px;color:#ff5147">empty bank = game over</span>
+        </div>
+        <div style="flex:1;border-radius:24px;background:linear-gradient(160deg,#2c2c30,#212124);border:1px solid rgba(255,81,71,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer" style-active="filter:brightness(1.15)">
+          <div style="font-weight:900;font-size:64px;line-height:1;color:#fafafa">11</div>
+          <div style="font-weight:800;font-size:16px;color:#ff5a6e">Push-ups</div>
+          <div style="font-weight:800;font-size:11px;color:#52525b">J ♥ · clear it, feed the bank</div>
+        </div>
+      </div>
+      <div style="width:390px;height:560px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:26px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:14px" data-screen-label="Karta dana sesija">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;align-items:center;gap:8px;background:#232327;border:1px solid rgba(185,168,255,.4);border-radius:999px;padding:6px 13px">
+            <span style="font-size:13px">🎲</span>
+            <span style="font-weight:800;font-size:11px;letter-spacing:.1em;color:#b9a8ff">DAILY DEAL · JUL 16</span>
+          </div>
+          <span style="font-weight:800;font-size:12px;color:#71717a;font-variant-numeric:tabular-nums">{{swDisp}}</span>
+        </div>
+        <div style="text-align:center;margin-top:2px">
+          <div style="font-weight:900;font-size:54px;line-height:1;color:{{qColor}};font-variant-numeric:tabular-nums;transition:color .3s">{{qDisp}}</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.24em;color:#71717a;margin-top:4px">ON THE CLOCK</div>
+        </div>
+        <div style="flex:1;border-radius:27px;padding:3px;background:conic-gradient({{qColor}} {{qDeg}}deg, #2a2a2e 0deg);box-shadow:0 0 30px {{qGlow}};transition:box-shadow .3s">
+          <div style="height:100%;border-radius:24px;background:linear-gradient(160deg,#2c2c30,#212124);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer" style-active="filter:brightness(1.15)">
+            <div style="font-weight:900;font-size:64px;line-height:1;color:#fafafa">12</div>
+            <div style="font-weight:800;font-size:16px;color:#b9a8ff">Lunges</div>
+            <div style="font-weight:800;font-size:11px;color:#52525b">Q ♠ · same deck for everyone today</div>
+          </div>
+        </div>
+        <div style="text-align:center;font-weight:700;font-size:11px;color:#71717a">20 cards · same deck for everyone · new deal tomorrow</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s21" data-screen-label="Landing dopune">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">21</span> · LANDING ADD-ONS</h2>
+    <div style="width:390px;height:640px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:26px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;position:relative;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <button style="display:flex;align-items:center;gap:8px;border:1px solid #3f3f46;background:#232327;border-radius:999px;padding:5px 12px 5px 6px;cursor:pointer" style-hover="border-color:rgba(204,255,0,.4)" style-active="transform:scale(.95)">
+          <span style="width:26px;height:26px;border-radius:50%;background:linear-gradient(160deg,#31313a,#232327);border:1px solid rgba(204,255,0,.5);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;color:#ccff00">Q</span>
+          <span style="font-family:Nunito,sans-serif;font-weight:800;font-size:11px;color:#a1a1aa">Rank</span>
+        </button>
+        <button style="width:34px;height:34px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#a1a1aa;cursor:pointer;font-family:Nunito,sans-serif;font-weight:900;font-size:14px" style-hover="color:#ccff00" style-active="transform:scale(.92)">?</button>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+        <div style="font-weight:900;font-size:42px;letter-spacing:.3em;margin-left:.3em;color:#fafafa">SHUFFLE</div>
+        <div style="display:flex;gap:8px">
+          <div style="display:flex;align-items:center;gap:6px;background:#232327;border:1px solid rgba(255,179,64,.35);border-radius:999px;padding:7px 13px">
+            <svg viewBox="0 0 24 28" style="width:11px;height:13px;animation:flameK 2.2s ease-in-out infinite;transform-origin:50% 95%"><path d="M12 1 C13.5 7.5 19 10.5 19 17 a7 7 0 0 1 -14 0 C5 11.5 10.5 8 12 1 Z" fill="#ffb340"></path><path d="M12 12 C12.8 15.8 15.5 17.2 15.5 20.4 a3.5 3.5 0 0 1 -7 0 C8.5 17.4 11.2 15.6 12 12 Z" fill="#ffe1a1"></path></svg>
+            <span style="font-weight:800;font-size:12px;color:#ffcf87">5-day streak</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;background:#232327;border:1px solid rgba(185,168,255,.35);border-radius:999px;padding:7px 13px">
+            <span style="font-size:12px">🎲</span>
+            <span style="font-weight:800;font-size:12px;color:#b9a8ff">Daily Deal</span>
+            <span style="font-weight:900;font-size:12px;color:#ccff00">✓</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button style="width:100%;font-family:Nunito,sans-serif;font-weight:900;font-size:15px;letter-spacing:.12em;padding:17px;border-radius:16px;border:none;background:#ccff00;color:#18181b;cursor:pointer;box-shadow:0 0 30px rgba(204,255,0,.22)" style-active="transform:scale(.97)" style-hover="box-shadow:0 0 44px rgba(204,255,0,.45)">DEAL ME IN</button>
+        <button style="width:100%;font-family:Nunito,sans-serif;font-weight:800;font-size:12px;letter-spacing:.08em;padding:13px;border-radius:16px;border:1px solid #303036;background:transparent;color:#a1a1aa;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="color:#fafafa;border-color:#3f3f46" style-active="transform:scale(.97)"><span style="font-size:13px">↻</span> Run it back · Quick Deal, Half Deck</button>
+        <div style="text-align:center;font-weight:700;font-size:11px;color:#52525b;margin-top:2px">Playing as guest · <span style="color:#ccff00;cursor:pointer">Sign in</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s22" data-screen-label="Prvi put objasnjenje moda">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">22</span> · FIRST-TIME MODE MODAL</h2>
+    <div style="width:390px;height:560px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;padding:26px 22px;display:flex;flex-direction:column;gap:14px;filter:blur(3px);opacity:.5">
+        <div style="display:flex;justify-content:space-between"><span style="font-weight:800;font-size:12px;color:#a1a1aa">CARD 1/52</span><span style="font-weight:800;font-size:12px;color:#a1a1aa">0:00</span></div>
+        <div style="flex:1;border-radius:24px;background:linear-gradient(160deg,#2b2b2f,#202023);border:1px solid rgba(204,255,0,.2)"></div>
+      </div>
+      <div style="position:absolute;inset:0;background:rgba(10,10,13,.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:26px;box-sizing:border-box">
+        <sc-if value="{{modal22}}" hint-placeholder-val="{{ true }}">
+        <div style="width:100%;background:linear-gradient(160deg,#26262b,#1d1d20);border:1px solid rgba(204,255,0,.4);border-radius:24px;padding:24px;box-sizing:border-box;box-shadow:0 0 50px rgba(204,255,0,.15),0 24px 50px rgba(0,0,0,.6);animation:badgeK .45s cubic-bezier(.2,.9,.3,1.3)">
+          <div style="width:52px;height:52px;border-radius:16px;background:radial-gradient(circle at 50% 34%, rgba(204,255,0,.25), rgba(0,0,0,.15) 78%),#1d1d20;border:1px solid rgba(204,255,0,.45);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto">⚡</div>
+          <div style="font-weight:900;font-size:22px;color:#fafafa;text-align:center;margin-top:14px">Perfect Deck</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.2em;color:#ccff00;text-align:center;margin-top:4px">FIRST TIME AT THIS TABLE</div>
+          <div style="font-weight:700;font-size:13px;color:#a1a1aa;line-height:1.6;text-align:center;margin-top:14px;text-wrap:pretty">Every card has a clock. Clear it before it runs out and the deck stays clean — one blown clock spoils the perfect run. Jokers are a breather, not a break.</div>
+          <button onClick="{{closeModal22}}" style="width:100%;font-family:Nunito,sans-serif;font-weight:900;font-size:14px;letter-spacing:.12em;padding:15px;border-radius:14px;border:none;background:#ccff00;color:#18181b;cursor:pointer;margin-top:18px;box-shadow:0 0 26px rgba(204,255,0,.3)" style-active="transform:scale(.97)">SHUFFLE UP &amp; DEAL</button>
+        </div>
+        </sc-if>
+        <sc-if value="{{modal22Closed}}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{closeModal22}}" style="font-family:Nunito,sans-serif;font-weight:800;font-size:12px;letter-spacing:.1em;padding:11px 22px;border-radius:999px;border:1px solid #3f3f46;background:#232327;color:#a1a1aa;cursor:pointer">SHOW MODAL AGAIN</button>
+        </sc-if>
+      </div>
+    </div>
+  </section>
+
+  <section id="s23" data-screen-label="Prijava registracija">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">23</span> · SIGN IN / JOIN</h2>
+    <div style="width:390px;height:640px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button style="width:38px;height:38px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#fafafa;cursor:pointer;font-weight:900;font-size:16px;flex:none" style-active="transform:scale(.94)">←</button>
+        <div style="font-weight:900;font-size:24px;color:#fafafa">Sign in</div>
+      </div>
+      <div style="background:linear-gradient(160deg,#26262b,#1d1d20);border:1px solid rgba(204,255,0,.35);border-radius:18px;padding:16px;display:flex;gap:12px;align-items:center">
+        <div style="font-weight:900;font-size:26px;color:#ccff00;font-variant-numeric:tabular-nums;flex:none">1,860</div>
+        <div style="font-weight:700;font-size:12px;color:#a1a1aa;line-height:1.45;text-wrap:pretty">You banked <span style="color:#fafafa;font-weight:800">1,860 points</span> at the guest table — make an account and they're yours for keeps, streak and rank included.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px">
+        <div>
+          <div style="font-weight:800;font-size:11px;letter-spacing:.12em;color:#71717a;margin-bottom:6px">EMAIL</div>
+          <input type="email" placeholder="you@example.com" style="width:100%;box-sizing:border-box;font-family:Nunito,sans-serif;font-weight:700;font-size:14px;color:#fafafa;background:#212124;border:1px solid #303036;border-radius:14px;padding:14px 16px;outline:none" style-focus="border-color:#ccff00;box-shadow:0 0 0 3px rgba(204,255,0,.12)">
+        </div>
+        <div>
+          <div style="font-weight:800;font-size:11px;letter-spacing:.12em;color:#71717a;margin-bottom:6px">PASSWORD</div>
+          <input type="password" placeholder="••••••••" style="width:100%;box-sizing:border-box;font-family:Nunito,sans-serif;font-weight:700;font-size:14px;color:#fafafa;background:#212124;border:1px solid #303036;border-radius:14px;padding:14px 16px;outline:none" style-focus="border-color:#ccff00;box-shadow:0 0 0 3px rgba(204,255,0,.12)">
+        </div>
+      </div>
+      <button style="width:100%;font-family:Nunito,sans-serif;font-weight:900;font-size:15px;letter-spacing:.12em;padding:16px;border-radius:16px;border:none;background:#ccff00;color:#18181b;cursor:pointer;box-shadow:0 0 30px rgba(204,255,0,.25)" style-active="transform:scale(.97)">SIGN IN</button>
+      <div style="text-align:center;font-weight:700;font-size:12px;color:#71717a">No account? <span style="color:#ccff00;cursor:pointer;font-weight:800">Join the table</span></div>
+      <div style="flex:1"></div>
+      <div style="text-align:center;font-weight:700;font-size:12px;color:#52525b;cursor:pointer" style-hover="color:#a1a1aa">Keep playing as guest →</div>
+    </div>
+  </section>
+
+  <section id="s24" data-screen-label="Meni jezika">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">24</span> · LANGUAGE MENU</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:900;font-size:20px;color:#fafafa">Settings</div>
+        <div style="position:relative">
+          <button onClick="{{toggleLang}}" style="display:flex;align-items:center;gap:8px;font-family:Nunito,sans-serif;font-weight:800;font-size:12px;color:#fafafa;background:#232327;border:1px solid #3a3a40;border-radius:999px;padding:8px 14px;cursor:pointer" style-hover="border-color:rgba(204,255,0,.4)">
+            <span style="font-size:12px">🌐</span> {{lang}}
+            <span style="font-weight:900;font-size:10px;color:#71717a;transform:{{langChev}};transition:transform .3s;display:inline-block">▾</span>
+          </button>
+          <div style="position:absolute;right:0;top:calc(100% + 6px);width:170px;background:#232327;border:1px solid #3a3a40;border-radius:14px;padding:6px;box-shadow:0 14px 34px rgba(0,0,0,.6);z-index:5;opacity:{{langO}};pointer-events:{{langPe}};transform:{{langT}};transition:all .25s cubic-bezier(.2,.9,.3,1.1)">
+            <sc-for list="{{langs}}" as="lg" hint-placeholder-count="4">
+              <div onClick="{{lg.pick}}" style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:9px;cursor:{{lg.cur}};opacity:{{lg.op}}" style-hover="background:rgba(255,255,255,.04)">
+                <span style="font-weight:800;font-size:12px;color:{{lg.c}}">{{lg.name}}</span>
+                <sc-if value="{{lg.on}}" hint-placeholder-val="{{ false }}"><span style="font-weight:900;font-size:12px;color:#ccff00">✓</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="font-weight:700;font-size:12px;color:#71717a;line-height:1.5;text-wrap:pretty">Suggested home: a row in Profile (above "Session history") — the landing stays clean. The list extends to more languages.</div>
+    </div>
+  </section>
+
+  <section id="s12" data-screen-label="Ekran treninga uzivo">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">12</span> · LIVE SESSION — ALL TOGETHER</h2>
+    <div style="width:390px;height:760px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;border-radius:44px;box-shadow:inset 0 0 90px rgba(255,64,52,{{qVig}});pointer-events:none;transition:box-shadow .3s;z-index:3"></div>
+      <div style="position:absolute;inset:0;padding:26px 22px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="position:relative;width:10px;height:10px;display:inline-block;animation:bounceDot 1.8s ease-in-out infinite;animation-play-state:{{liveState2}}">
+              <span style="position:absolute;inset:0;border-radius:50%;background:#ccff00"></span>
+              <span style="position:absolute;inset:0;border-radius:50%;background:rgba(204,255,0,.5);animation:rippleK 1.8s ease-out infinite;animation-play-state:{{liveState2}}"></span>
+            </span>
+            <span style="font-weight:800;font-size:12px;letter-spacing:.14em;color:#a1a1aa">CARD {{dealNo}}/24</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;background:#232327;border:1px solid #3a3a40;border-radius:999px;padding:6px 13px">
+            <span style="width:5px;height:5px;border-radius:50%;background:#ccff00;animation:pulseSoft 2.4s ease-in-out infinite;animation-play-state:{{liveState2}};display:inline-block"></span>
+            <span style="font-weight:800;font-size:14px;color:#d4d4d8;font-variant-numeric:tabular-nums">{{swDisp}}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:3px;align-items:flex-end;height:18px">
+          <sc-for list="{{segs}}" as="sg" hint-placeholder-count="32">
+            <div style="flex:1;height:{{sg.h}}px;border-radius:2px;background:{{sg.bg}};box-shadow:{{sg.sh}};transition:background .25s,height .25s;transform:scale(.85)"></div>
+          </sc-for>
+        </div>
+        <div style="text-align:center;margin-top:2px">
+          <div style="font-weight:900;font-size:54px;line-height:1;color:{{qColor}};font-variant-numeric:tabular-nums;transition:color .3s;animation:{{qAnim}}">{{qDisp}}</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.24em;color:#71717a;margin-top:4px">ON THE CLOCK</div>
+        </div>
+        <div onClick="{{onDeal}}" style="flex:1;border-radius:31px;padding:3px;background:conic-gradient({{qColor}} {{qDeg}}deg, #2a2a2e 0deg);box-shadow:0 0 34px {{qGlow}};cursor:pointer;user-select:none;transform:{{cardT}};opacity:{{cardO}};transition:{{cardTr}}" style-active="filter:brightness(1.18)">
+          <div style="height:100%;border-radius:28px;background:linear-gradient(160deg,#2c2c30,#212124 60%,#1e1e21);display:flex;flex-direction:column;justify-content:space-between;padding:18px;box-sizing:border-box">
+            <div style="font-weight:900;font-size:22px;line-height:1;color:{{cardColor}}">{{cardR}} <span style="font-size:18px">{{cardS}}</span></div>
+            <div style="text-align:center">
+              <div style="font-weight:900;font-size:92px;line-height:1;color:#fafafa;text-shadow:0 0 36px rgba(204,255,0,.22)">{{cardReps}}</div>
+              <div style="font-weight:800;font-size:11px;letter-spacing:.24em;color:#a1a1aa;margin-top:4px">REPS</div>
+              <div style="font-weight:800;font-size:23px;color:#ccff00;margin-top:10px">{{cardName}}</div>
+            </div>
+            <div style="align-self:flex-end;transform:rotate(180deg);font-weight:900;font-size:22px;line-height:1;color:{{cardColor}}">{{cardR}} <span style="font-size:18px">{{cardS}}</span></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <button onClick="{{togglePause2}}" style="width:54px;height:54px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#fafafa;cursor:pointer;font-weight:900;font-size:15px;letter-spacing:2px;flex:none" style-active="transform:scale(.94)">▐▐</button>
+          <div style="font-weight:700;font-size:13px;color:#71717a;text-wrap:pretty">Done? Tap the card — the next one's already waiting.</div>
+        </div>
+      </div>
+      <div style="position:absolute;inset:0;background:rgba(10,10,13,.78);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:{{pOv2}};pointer-events:{{pPe2}};transition:opacity .4s;z-index:4">
+        <div style="position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center">
+          <div style="position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(204,255,0,.35);animation:spinK 32s linear infinite"></div>
+          <div style="font-weight:900;font-size:30px;letter-spacing:.22em;margin-left:.22em;color:#fafafa;animation:pausebr 4.5s ease-in-out infinite">PAUSED</div>
+        </div>
+        <div style="font-weight:700;font-size:14px;color:#a1a1aa">Breathe. The deck can wait.</div>
+        <button onClick="{{togglePause2}}" style="font-family:Nunito,sans-serif;font-weight:900;font-size:14px;letter-spacing:.14em;padding:14px 40px;border-radius:999px;border:none;background:#ccff00;color:#18181b;cursor:pointer;box-shadow:0 0 34px rgba(204,255,0,.3)" style-active="transform:scale(.96)">BACK IN</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="s10d" data-screen-label="Pocetni ekran — minimal">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">10</span> · LANDING — MINIMAL (ADOPTED)</h2>
+    <div style="width:390px;height:640px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:34px 26px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden">
+      <button title="How to play" style="position:absolute;top:22px;right:22px;width:38px;height:38px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#a1a1aa;cursor:pointer;font-family:Nunito,sans-serif;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center" style-hover="color:#ccff00;border-color:rgba(204,255,0,.4)" style-active="transform:scale(.92)">?</button>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px">
+        <div style="text-align:center">
+          <div style="font-weight:900;font-size:42px;letter-spacing:.3em;margin-left:.3em;color:#fafafa">SHUFFLE</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:7px;font-weight:700;font-size:13px;letter-spacing:.08em;color:#71717a;margin-top:10px">
+            <svg viewBox="0 0 24 28" style="width:13px;height:15px;animation:flameK 2.2s ease-in-out infinite;transform-origin:50% 95%"><path d="M12 1 C13.5 7.5 19 10.5 19 17 a7 7 0 0 1 -14 0 C5 11.5 10.5 8 12 1 Z" fill="#ffb340"></path><path d="M12 12 C12.8 15.8 15.5 17.2 15.5 20.4 a3.5 3.5 0 0 1 -7 0 C8.5 17.4 11.2 15.6 12 12 Z" fill="#ffe1a1"></path></svg>
+            <span>5-day streak</span>
+          </div>
+        </div>
+      </div>
+      <button style="width:100%;font-family:Nunito,sans-serif;font-weight:900;font-size:15px;letter-spacing:.12em;padding:17px;border-radius:16px;border:none;background:#ccff00;color:#18181b;cursor:pointer;box-shadow:0 0 30px rgba(204,255,0,.22)" style-active="transform:scale(.97)" style-hover="box-shadow:0 0 44px rgba(204,255,0,.45)">DEAL ME IN</button>
+      <button style="width:100%;font-family:Nunito,sans-serif;font-weight:800;font-size:13px;letter-spacing:.12em;padding:14px;border-radius:16px;border:none;background:transparent;color:#a1a1aa;cursor:pointer;margin-top:6px" style-hover="color:#fafafa">CHALLENGE</button>
+    </div>
+  </section>
+
+  <section id="s15" data-screen-label="Pravila i objasnjenja">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">15</span> · HOW TO PLAY</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button style="width:38px;height:38px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#fafafa;cursor:pointer;font-weight:900;font-size:16px;flex:none" style-active="transform:scale(.94)">←</button>
+        <div style="font-weight:900;font-size:24px;color:#fafafa">How to Play</div>
+      </div>
+      <div style="background:#212124;border:1px solid #303036;border-radius:16px;padding:16px">
+        <div onClick="{{toggleGame}}" style="display:flex;gap:14px;align-items:flex-start;cursor:pointer;user-select:none">
+          <div style="width:34px;height:46px;border-radius:7px;background:linear-gradient(160deg,#31313a,#232327);border:1px solid rgba(204,255,0,.45);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#ccff00;flex:none">7</div>
+          <div style="flex:1;font-weight:700;font-size:13px;color:#a1a1aa;line-height:1.5;text-wrap:pretty"><span style="color:#fafafa;font-weight:800">The deck is your trainer.</span> Every card is an exercise — the number is your rep count. Do the work, tap the card, next one's dealt.</div>
+          <span style="font-weight:900;font-size:12px;color:#ccff00;transform:{{gameChev}};transition:transform .3s;flex:none;margin-top:2px">▾</span>
+        </div>
+        <div style="max-height:{{gameH}};opacity:{{gameO}};overflow:hidden;transition:max-height .35s ease,opacity .3s ease">
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid #2e2e33;font-weight:700;font-size:12px;color:#a1a1aa;line-height:1.55;text-wrap:pretty">A standard deck holds 52 cards and 2 jokers. Suits are muscle groups: <span style="color:#ff5a6e">♥</span> push, <span style="color:#fafafa">♣</span> pull, <span style="color:#ccff00">♠</span> legs, <span style="color:#ffb340">♦</span> core. The Ace is 1 — the lightest card — and the royals carry J=11, Q=12, K=13. The deck runs empty, the session ends — time and points go straight to your history and XP.</div>
+        </div>
+      </div>
+      <div style="background:#212124;border:1px solid #303036;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="font-weight:800;font-size:11px;letter-spacing:.16em;color:#71717a">MODES</div>
+        <sc-for list="{{modes}}" as="m" hint-placeholder-count="4">
+          <div>
+            <div onClick="{{m.toggle}}" style="display:flex;gap:12px;align-items:center;cursor:pointer;user-select:none">
+              <div style="width:30px;height:30px;border-radius:10px;background:radial-gradient(circle at 50% 34%, {{m.soft}}, rgba(0,0,0,.15) 78%),#1d1d20;border:1px solid {{m.border}};box-shadow:0 0 12px {{m.glow}};display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:{{m.color}};flex:none">{{m.g}}</div>
+              <div style="flex:1;font-weight:700;font-size:12px;color:#a1a1aa;line-height:1.45"><span style="color:#fafafa;font-weight:800">{{m.name}}</span> — {{m.short}}</div>
+              <span style="font-weight:900;font-size:11px;color:#71717a;transform:{{m.chev}};transition:transform .3s;flex:none">▾</span>
+            </div>
+            <div style="max-height:{{m.detH}};opacity:{{m.detO}};overflow:hidden;transition:max-height .35s ease,opacity .3s ease">
+              <div style="margin-top:9px;margin-left:42px;padding:10px 12px;background:#1b1b1e;border-radius:10px;font-weight:700;font-size:11px;color:#a1a1aa;line-height:1.55;text-wrap:pretty">{{m.long}}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:#212124;border:1px solid #303036;border-radius:16px;padding:16px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div style="font-weight:800;font-size:11px;letter-spacing:.16em;color:#71717a">RANKS OF THE DECK</div>
+          <div style="font-weight:700;font-size:10px;color:#52525b">your rank: Q · 12/13</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:16px">
+          <sc-for list="{{ranks}}" as="rk" hint-placeholder-count="14">
+            <div onClick="{{rk.pick}}" style="aspect-ratio:3/4;border-radius:9px;background:{{rk.bg}};border:1px solid {{rk.border}};box-shadow:{{rk.sh}};display:flex;align-items:center;justify-content:center;transform:{{rk.tf}};position:relative;cursor:pointer;transition:transform .2s,box-shadow .25s,border-color .25s">
+              <sc-if value="{{rk.crown}}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:-9px;font-size:12px;color:#ccff00;text-shadow:0 0 10px rgba(204,255,0,.8);line-height:1">♚</span></sc-if>
+              <sc-if value="{{rk.you}}" hint-placeholder-val="{{ false }}"><span style="position:absolute;bottom:-7px;font-weight:900;font-size:7px;letter-spacing:.08em;color:#18181b;background:#ccff00;border-radius:999px;padding:2px 6px;line-height:1;box-shadow:0 0 10px rgba(204,255,0,.6)">YOU</span></sc-if>
+              <span style="font-weight:900;font-size:15px;line-height:1;color:{{rk.color}}">{{rk.g}}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:16px;background:#1b1b1e;border-radius:12px;padding:12px 14px;min-height:52px;box-sizing:border-box">
+          <div style="font-weight:900;font-size:12px;color:{{rankSelColor}};letter-spacing:.08em">{{rankSelName}}</div>
+          <div style="font-weight:700;font-size:11px;color:#a1a1aa;line-height:1.5;margin-top:3px;text-wrap:pretty">{{rankSelDesc}}</div>
+        </div>
+      </div>
+      <div style="background:#212124;border:1px solid #303036;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <svg viewBox="0 0 24 28" style="width:16px;height:19px;flex:none;animation:flameK 2.2s ease-in-out infinite;transform-origin:50% 95%"><path d="M12 1 C13.5 7.5 19 10.5 19 17 a7 7 0 0 1 -14 0 C5 11.5 10.5 8 12 1 Z" fill="#ffb340"></path><path d="M12 12 C12.8 15.8 15.5 17.2 15.5 20.4 a3.5 3.5 0 0 1 -7 0 C8.5 17.4 11.2 15.6 12 12 Z" fill="#ffe1a1"></path></svg>
+          <div style="font-weight:700;font-size:12px;color:#a1a1aa;line-height:1.45;text-wrap:pretty"><span style="color:#fafafa;font-weight:800">Streak</span> — the flame grows every day you clear a deck. Three skipped days in one week and it goes out.</div>
+        </div>
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <span style="font-size:18px;flex:none;display:inline-block;animation:swayK 6s ease-in-out infinite">🃏</span>
+          <div style="font-weight:700;font-size:12px;color:#a1a1aa;line-height:1.45;text-wrap:pretty"><span style="color:#fafafa;font-weight:800">Jokers up your sleeve</span> — two a week. Need a rest day? One plays itself and the flame stays lit. Fresh pair every Monday — they don't stack.</div>
+        </div>
+      </div>
+      <div style="border:1px solid #2c2c31;border-radius:16px;padding:16px;text-align:center">
+        <div style="font-size:16px;color:#ccff00">♠</div>
+        <div style="font-weight:800;font-size:11px;letter-spacing:.16em;color:#71717a;margin-top:6px">ABOUT</div>
+        <div style="font-weight:700;font-size:11px;color:#71717a;line-height:1.6;margin-top:8px;text-wrap:pretty">SHUFFLE is free — training app made to promote healthy lifestyle</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s14" data-screen-label="Profil">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">14</span> · PROFILE — XP, RANK, STATS</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:900;font-size:24px;color:#fafafa">Profile</div>
+        <div style="display:flex;align-items:center;gap:7px;background:#232327;border:1px solid rgba(255,179,64,.35);border-radius:999px;padding:7px 14px">
+          <svg viewBox="0 0 24 28" style="width:12px;height:14px;animation:flameK 2.2s ease-in-out infinite;transform-origin:50% 95%"><path d="M12 1 C13.5 7.5 19 10.5 19 17 a7 7 0 0 1 -14 0 C5 11.5 10.5 8 12 1 Z" fill="#ffb340"></path><path d="M12 12 C12.8 15.8 15.5 17.2 15.5 20.4 a3.5 3.5 0 0 1 -7 0 C8.5 17.4 11.2 15.6 12 12 Z" fill="#ffe1a1"></path></svg>
+          <span style="font-weight:800;font-size:13px;color:#ffcf87">5-day streak</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:18px;background:linear-gradient(160deg,#26262b,#1d1d20);border:1px solid rgba(204,255,0,.3);border-radius:22px;padding:18px;position:relative;overflow:hidden">
+        <div style="position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(204,255,0,.14),transparent 70%)"></div>
+        <div style="width:64px;height:90px;border-radius:10px;background:linear-gradient(160deg,#31313a,#232327);border:1px solid rgba(204,255,0,.5);box-shadow:0 0 24px rgba(204,255,0,.18);display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none">
+          <span style="font-weight:900;font-size:26px;color:#ccff00;line-height:1">Q</span>
+        </div>
+        <div style="flex:1;min-width:0;position:relative">
+          <div style="font-weight:800;font-size:11px;letter-spacing:.18em;color:#a1a1aa">RANK</div>
+          <div style="font-weight:900;font-size:22px;color:#fafafa;line-height:1.15">QUEEN</div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px">
+            <span style="font-weight:800;font-size:11px;color:#71717a">Rank 12/13</span>
+            <span style="font-weight:800;font-size:11px;color:#ccff00;font-variant-numeric:tabular-nums">1,840 / 2,500 XP</span>
+          </div>
+          <div style="height:7px;border-radius:4px;background:#2c2c31;margin-top:6px;overflow:hidden">
+            <div style="width:74%;height:100%;border-radius:4px;background:linear-gradient(90deg,#8fb300,#ccff00);box-shadow:0 0 10px rgba(204,255,0,.5)"></div>
+          </div>
+          <div style="font-weight:700;font-size:10px;color:#52525b;margin-top:5px">660 XP to KING ♠</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;background:#212124;border:1px solid #303036;border-radius:16px;padding:14px;text-align:center">
+          <div style="font-weight:900;font-size:24px;color:#ccff00;font-variant-numeric:tabular-nums">2,480</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.14em;color:#71717a;margin-top:2px">BEST SCORE</div>
+        </div>
+        <div style="flex:1;background:#212124;border:1px solid #303036;border-radius:16px;padding:14px;text-align:center">
+          <div style="font-weight:900;font-size:24px;color:#fafafa;font-variant-numeric:tabular-nums">23</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.14em;color:#71717a;margin-top:2px">DECKS CLEARED</div>
+        </div>
+        <div style="flex:1;background:#212124;border:1px solid #303036;border-radius:16px;padding:14px;text-align:center">
+          <div style="display:flex;align-items:center;justify-content:center;gap:5px;font-weight:900;font-size:24px;color:#fafafa;font-variant-numeric:tabular-nums"><svg viewBox="0 0 24 28" style="width:15px;height:18px;animation:flameK 2.2s ease-in-out infinite;transform-origin:50% 95%"><path d="M12 1 C13.5 7.5 19 10.5 19 17 a7 7 0 0 1 -14 0 C5 11.5 10.5 8 12 1 Z" fill="#ffb340"></path><path d="M12 12 C12.8 15.8 15.5 17.2 15.5 20.4 a3.5 3.5 0 0 1 -7 0 C8.5 17.4 11.2 15.6 12 12 Z" fill="#ffe1a1"></path></svg>12</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.14em;color:#71717a;margin-top:2px">LONGEST STREAK</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;background:#212124;border:1px solid #303036;border-radius:16px;padding:14px;text-align:center">
+          <div style="font-weight:900;font-size:24px;color:#fafafa;font-variant-numeric:tabular-nums">7:12</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.14em;color:#71717a;margin-top:2px">HOURS AT THE TABLE</div>
+        </div>
+        <div style="flex:1;background:#212124;border:1px solid #303036;border-radius:16px;padding:14px;text-align:center">
+          <div style="font-weight:900;font-size:24px;color:#fafafa;font-variant-numeric:tabular-nums">4,812</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.14em;color:#71717a;margin-top:2px">REPS</div>
+        </div>
+        <div style="flex:1;background:#212124;border:1px solid #303036;border-radius:16px;padding:14px;text-align:center">
+          <div style="font-weight:900;font-size:24px;color:#fafafa;font-variant-numeric:tabular-nums">♥</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.14em;color:#71717a;margin-top:2px">FAVORITE SUIT</div>
+        </div>
+      </div>
+      <div style="background:#212124;border:1px solid #303036;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px">
+        <div style="position:relative;width:56px;height:50px;flex:none">
+          <div style="position:absolute;left:0;top:2px;width:34px;height:46px;border-radius:8px;background:linear-gradient(160deg,#2b2b36,#222228);border:1px solid rgba(185,168,255,.35);transform:rotate(-8deg);display:flex;align-items:center;justify-content:center;font-size:14px;opacity:.7">🃏</div>
+          <div style="position:absolute;left:18px;top:0;width:34px;height:46px;border-radius:8px;background:linear-gradient(160deg,#31313e,#242429);border:1px solid rgba(185,168,255,.55);box-shadow:0 0 16px rgba(185,168,255,.3);transform:rotate(7deg);display:flex;align-items:center;justify-content:center;font-size:15px;animation:swayK 6s ease-in-out infinite">🃏</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <span style="font-weight:800;font-size:12px;letter-spacing:.1em;color:#fafafa">JOKERS UP YOUR SLEEVE</span>
+            <span style="font-weight:900;font-size:12px;color:#b9a8ff;font-variant-numeric:tabular-nums">2/2</span>
+          </div>
+          <div style="font-weight:700;font-size:11px;color:#71717a;line-height:1.45;margin-top:3px;text-wrap:pretty">Two a week. Skip a day and one plays itself — the flame stays lit. Fresh pair every Monday.</div>
+        </div>
+      </div>
+      <button style="width:100%;font-family:Nunito,sans-serif;font-weight:900;font-size:13px;letter-spacing:.14em;padding:15px;border-radius:16px;border:1px solid rgba(204,255,0,.4);background:transparent;color:#ccff00;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px" style-active="transform:scale(.98)" style-hover="background:rgba(204,255,0,.07)">SESSION HISTORY <span style="font-size:16px">→</span></button>
+    </div>
+  </section>
+
+  <section id="s13" data-screen-label="Istorija treninga">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">13</span> · HISTORY — LIST, CHART, CALENDAR</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:center;gap:14px">
+        <button style="width:38px;height:38px;border-radius:50%;border:1px solid #3f3f46;background:#232327;color:#fafafa;cursor:pointer;font-weight:900;font-size:16px;flex:none" style-active="transform:scale(.94)">←</button>
+        <div style="font-weight:900;font-size:24px;color:#fafafa">History</div>
+      </div>
+      <div>
+        <div style="font-weight:800;font-size:11px;letter-spacing:.16em;color:#71717a;margin-bottom:10px">LAST 14 DAYS</div>
+        <div style="display:flex;gap:4px;align-items:flex-end;height:56px">
+          <sc-for list="{{histBars}}" as="hb" hint-placeholder-count="14">
+            <div style="flex:1;height:{{hb.h}}px;border-radius:3px 3px 2px 2px;background:{{hb.bg}};box-shadow:{{hb.sh}}"></div>
+          </sc-for>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px">
+          <span style="font-weight:700;font-size:10px;color:#52525b">Jul 1</span>
+          <span style="font-weight:700;font-size:10px;color:#52525b">today</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:800;font-size:11px;letter-spacing:.16em;color:#71717a">SESSIONS</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button onClick="{{monthPrev}}" style="width:26px;height:26px;border-radius:8px;border:1px solid #3a3a40;background:#232327;color:#a1a1aa;cursor:pointer;font-weight:900;font-size:12px;line-height:1;opacity:{{monthPrevO}};display:flex;align-items:center;justify-content:center" style-active="transform:scale(.92)">‹</button>
+            <div style="font-weight:800;font-size:12px;color:#fafafa;min-width:74px;text-align:center">{{monthLabel}}</div>
+            <button onClick="{{monthNext}}" style="width:26px;height:26px;border-radius:8px;border:1px solid #3a3a40;background:#232327;color:#a1a1aa;cursor:pointer;font-weight:900;font-size:12px;line-height:1;opacity:{{monthNextO}};display:flex;align-items:center;justify-content:center" style-active="transform:scale(.92)">›</button>
+          </div>
+        </div>
+        <div style="font-weight:700;font-size:10px;color:#52525b;text-align:right;margin-top:-4px">{{monthCount}} sessions</div>
+        <div style="display:flex;flex-direction:column;gap:8px;max-height:430px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3a3a40 transparent;mask-image:linear-gradient(to bottom,black 88%,transparent);-webkit-mask-image:linear-gradient(to bottom,black 88%,transparent);padding-bottom:26px">
+        <sc-for list="{{histRows}}" as="h" hint-placeholder-count="8">
+          <div style="background:#212124;border:1px solid {{h.border}};border-radius:14px;overflow:hidden;transition:border-color .25s;flex:none">
+            <div onClick="{{h.toggle}}" style="display:flex;align-items:center;gap:12px;padding:9px 14px;cursor:pointer;user-select:none" style-hover="background:rgba(255,255,255,.02)">
+              <div style="width:36px;height:36px;border-radius:12px;background:radial-gradient(circle at 50% 34%, {{h.modeSoft}}, rgba(0,0,0,.15) 78%),#1d1d20;border:1px solid {{h.modeBorder}};box-shadow:0 0 14px {{h.modeGlow}};display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:{{h.modeColor}};flex:none">{{h.suit}}</div>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-weight:800;font-size:13px;color:#fafafa">{{h.title}}</span>
+                  <sc-if value="{{h.pb}}" hint-placeholder-val="{{ false }}"><span style="font-weight:900;font-size:8px;letter-spacing:.1em;color:#18181b;background:#ccff00;border-radius:999px;padding:2px 7px">BEST</span></sc-if>
+                </div>
+                <div style="font-weight:700;font-size:11px;color:#71717a;margin-top:2px">{{h.date}} · {{h.cards}} cards · ⏱ {{h.dur}}</div>
+              </div>
+              <div style="text-align:right;flex:none">
+                <div style="font-weight:900;font-size:16px;color:{{h.scoreColor}};font-variant-numeric:tabular-nums">{{h.score}}</div>
+                <div style="font-weight:800;font-size:8px;letter-spacing:.14em;color:#52525b">POINTS</div>
+              </div>
+              <div style="flex:none;font-weight:900;font-size:12px;color:#71717a;transform:{{h.chev}};transition:transform .3s">▾</div>
+            </div>
+            <div style="max-height:{{h.detH}};opacity:{{h.detO}};overflow:hidden;transition:max-height .35s ease,opacity .3s ease">
+              <div style="padding:2px 14px 13px;display:flex;flex-direction:column;gap:10px">
+                <div style="height:1px;background:#2e2e33"></div>
+                <div style="display:flex;gap:8px">
+                  <div style="flex:1;background:#1b1b1e;border-radius:10px;padding:9px;text-align:center">
+                    <div style="font-weight:900;font-size:15px;color:#ccff00;font-variant-numeric:tabular-nums">{{h.xp}}</div>
+                    <div style="font-weight:800;font-size:8px;letter-spacing:.12em;color:#52525b;margin-top:1px">XP</div>
+                  </div>
+                  <div style="flex:1;background:#1b1b1e;border-radius:10px;padding:9px;text-align:center">
+                    <div style="font-weight:900;font-size:15px;color:#fafafa;font-variant-numeric:tabular-nums">{{h.pauza}}</div>
+                    <div style="font-weight:800;font-size:8px;letter-spacing:.12em;color:#52525b;margin-top:1px">PAUSED</div>
+                  </div>
+                  <div style="flex:1;background:#1b1b1e;border-radius:10px;padding:9px;text-align:center">
+                    <div style="font-weight:900;font-size:15px;color:#fafafa;font-variant-numeric:tabular-nums">{{h.prosek}}s</div>
+                    <div style="font-weight:800;font-size:8px;letter-spacing:.12em;color:#52525b;margin-top:1px">AVG PER CARD</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <sc-for list="{{h.suits}}" as="su" hint-placeholder-count="4">
+                    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:#1b1b1e;border-radius:10px;padding:8px">
+                      <span style="font-size:13px;color:{{su.c}}">{{su.s}}</span>
+                      <span style="font-weight:800;font-size:12px;color:#a1a1aa;font-variant-numeric:tabular-nums">{{su.reps}}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-weight:800;font-size:11px;letter-spacing:.16em;color:#71717a">CALENDAR</div>
+          <div style="font-weight:800;font-size:12px;color:#a1a1aa">{{monthLabel}}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">
+          <sc-for list="{{calHead}}" as="ch" hint-placeholder-count="7">
+            <div style="text-align:center;font-weight:800;font-size:9px;letter-spacing:.1em;color:#52525b;padding:2px 0">{{ch.d}}</div>
+          </sc-for>
+          <sc-for list="{{calDays}}" as="cd" hint-placeholder-count="33">
+            <div style="aspect-ratio:1;border-radius:9px;background:{{cd.bg}};border:1px solid {{cd.border}};box-shadow:{{cd.sh}};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:{{cd.color}}">{{cd.n}}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:14px;margin-top:10px;justify-content:center">
+          <span style="display:flex;align-items:center;gap:5px;font-weight:700;font-size:10px;color:#71717a"><span style="width:9px;height:9px;border-radius:3px;background:#ccff00;display:inline-block"></span> deck cleared</span>
+          <span style="display:flex;align-items:center;gap:5px;font-weight:700;font-size:10px;color:#71717a"><span style="width:9px;height:9px;border-radius:3px;background:#232327;border:1px solid #ccff00;box-sizing:border-box;display:inline-block"></span> today</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+
+  
+
+  
+
+  <section id="s1">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">1</span> · MAIN EXERCISE CARD</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:26px 22px;box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div style="font-weight:800;font-size:12px;letter-spacing:.14em;color:#a1a1aa">CARD {{dealNo}}/24</div>
+        <div style="font-weight:800;font-size:12px;letter-spacing:.14em;color:#ccff00">QUICK DEAL</div>
+      </div>
+      <div style="position:relative;height:430px">
+        <div style="position:absolute;inset:0;border-radius:28px;background:#1e1e21;border:1px solid rgba(255,255,255,.05);transform:translateY(16px) scale(.93) rotate(2deg)"></div>
+        <div style="position:absolute;inset:0;border-radius:28px;background:#232327;border:1px solid rgba(255,255,255,.07);transform:translateY(8px) scale(.965) rotate(-1deg)"></div>
+        <div onClick="{{onDeal}}" style="position:absolute;inset:0;border-radius:28px;background:linear-gradient(160deg,#2f2f33,#232326 60%,#1f1f22);border:1px solid rgba(204,255,0,.28);box-shadow:0 0 0 1px rgba(204,255,0,.05),0 0 44px rgba(204,255,0,.07),0 18px 40px rgba(0,0,0,.5);cursor:pointer;user-select:none;display:flex;flex-direction:column;justify-content:space-between;padding:20px;box-sizing:border-box;transform:{{cardT}};opacity:{{cardO}};transition:{{cardTr}}" style-active="filter:brightness(1.18)">
+          <div style="font-weight:900;font-size:24px;line-height:1;color:{{cardColor}}">{{cardR}} <span style="font-size:20px">{{cardS}}</span></div>
+          <div style="text-align:center">
+            <div style="font-weight:900;font-size:110px;line-height:1;color:#fafafa;text-shadow:0 0 36px rgba(204,255,0,.22)">{{cardReps}}</div>
+            <div style="font-weight:800;font-size:12px;letter-spacing:.24em;color:#a1a1aa;margin-top:4px">REPS</div>
+            <div style="font-weight:800;font-size:26px;color:#ccff00;margin-top:14px">{{cardName}}</div>
+          </div>
+          <div style="align-self:flex-end;transform:rotate(180deg);font-weight:900;font-size:24px;line-height:1;color:{{cardColor}}">{{cardR}} <span style="font-size:20px">{{cardS}}</span></div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:16px;font-weight:700;font-size:13px;color:#71717a">Tap the card — the next one deals itself</div>
+    </div>
+  </section>
+
+  <section id="s2">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">2</span> · CHALLENGE — TIME PER CARD</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:30px 22px;box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div style="position:absolute;inset:0;border-radius:44px;box-shadow:inset 0 0 90px rgba(255,64,52,{{qVig}});pointer-events:none;transition:box-shadow .3s"></div>
+      <div style="font-weight:800;font-size:12px;letter-spacing:.16em;color:#a1a1aa">CHALLENGE · {{qMax}}s CLOCK</div>
+      <div style="width:200px;height:200px;border-radius:50%;background:conic-gradient({{qColor}} {{qDeg}}deg, #26262a 0deg);display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px {{qGlow}};animation:{{qAnim}};transition:box-shadow .3s">
+        <div style="width:176px;height:176px;border-radius:50%;background:#18181b;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-weight:900;font-size:56px;line-height:1;color:{{qColor}};font-variant-numeric:tabular-nums;transition:color .3s">{{qDisp}}</div>
+          <div style="font-weight:800;font-size:10px;letter-spacing:.22em;color:#71717a;margin-top:6px">ON THE CLOCK</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:#232327;border:1px solid #3a3a40;border-radius:14px;padding:10px 16px">
+        <span style="font-weight:900;font-size:18px;color:#fafafa">♠ K</span>
+        <span style="font-weight:800;font-size:14px;color:#a1a1aa">Push-ups · 13 reps</span>
+      </div>
+      <div style="text-align:center;font-weight:700;font-size:13px;color:#71717a;text-wrap:pretty">The ring melts, the color heats up, and under 25% the whole screen breathes red — you feel the time without reading it.</div>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">3</span> · JOKER BREATHER</h2>
+    <div style="width:390px;border-radius:44px;background:radial-gradient(circle at 50% 26%, rgba(122,104,255,.22), transparent 62%),#16161d;border:1px solid #34343f;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:30px 22px;box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:14px">
+      <div style="font-weight:800;font-size:12px;letter-spacing:.16em;color:#b9a8ff">JOKER · 30s BREATHER</div>
+      <div style="position:relative;width:240px;height:240px;display:flex;align-items:center;justify-content:center">
+        <div style="position:absolute;inset:0;border-radius:50%;border:1px solid rgba(150,160,255,.10);transform:{{br3}};transition:transform .14s linear"></div>
+        <div style="position:absolute;inset:22px;border-radius:50%;border:1px solid rgba(150,160,255,.18);transform:{{br2}};transition:transform .14s linear"></div>
+        <div style="position:absolute;inset:44px;border-radius:50%;border:1px solid rgba(150,160,255,.28);transform:{{br1}};transition:transform .14s linear"></div>
+        <div style="width:118px;height:118px;border-radius:50%;background:radial-gradient(circle at 50% 38%, rgba(140,120,255,.45), rgba(80,90,200,.15) 70%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 50px rgba(122,104,255,.35);transform:{{br1}};transition:transform .14s linear">
+          <span style="font-size:54px;animation:swayK 6s ease-in-out infinite;display:inline-block">🃏</span>
+        </div>
+      </div>
+      <div style="position:relative;height:22px;width:100%;text-align:center">
+        <span style="position:absolute;left:0;right:0;font-weight:800;font-size:15px;letter-spacing:.34em;color:#cfd6ff;opacity:{{inO}};transition:opacity .7s">BREATHE IN</span>
+        <span style="position:absolute;left:0;right:0;font-weight:800;font-size:15px;letter-spacing:.34em;color:#8f9bd8;opacity:{{outO}};transition:opacity .7s">BREATHE OUT</span>
+      </div>
+      <div style="font-weight:900;font-size:58px;line-height:1;color:#e6e9ff;font-variant-numeric:tabular-nums">{{jT}}</div>
+      <div style="font-weight:700;font-size:13px;color:#71717a">Next card flips itself</div>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">4</span> · TOTAL-TIME STOPWATCH</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:26px 22px;box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:900;font-size:16px;letter-spacing:.18em;color:#fafafa">SHUFFLE</div>
+        <div style="display:flex;align-items:center;gap:8px;background:#232327;border:1px solid #3a3a40;border-radius:999px;padding:7px 14px">
+          <span style="width:6px;height:6px;border-radius:50%;background:#ccff00;animation:pulseSoft 2.4s ease-in-out infinite;display:inline-block"></span>
+          <span style="font-weight:800;font-size:16px;color:#d4d4d8;font-variant-numeric:tabular-nums">{{swDisp}}</span>
+          <span style="font-weight:800;font-size:10px;letter-spacing:.16em;color:#71717a">TOTAL</span>
+        </div>
+      </div>
+      <div style="text-align:center;margin:26px 0 8px">
+        <div style="font-weight:900;font-size:84px;line-height:1;color:{{qColor}};font-variant-numeric:tabular-nums;transition:color .3s">{{qDisp}}</div>
+        <div style="font-weight:800;font-size:11px;letter-spacing:.22em;color:#71717a;margin-top:6px">THE CLOCK OWNS THE SCREEN</div>
+      </div>
+      <div style="text-align:center;font-weight:700;font-size:13px;color:#71717a;margin-top:14px;text-wrap:pretty">The stopwatch lives in the chip up top — a quiet pulse says it's running, but it never competes with the clock.</div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">5</span> · LIVE-SESSION INDICATOR</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:30px 22px;box-sizing:border-box;color:#fafafa;display:flex;flex-direction:column;gap:22px;align-items:center">
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="position:relative;width:12px;height:12px;display:inline-block;animation:bounceDot 1.8s ease-in-out infinite;animation-play-state:{{liveState}}">
+          <span style="position:absolute;inset:0;border-radius:50%;background:{{liveDotBg}};transition:background .3s"></span>
+          <span style="position:absolute;inset:0;border-radius:50%;background:rgba(204,255,0,.5);animation:rippleK 1.8s ease-out infinite;animation-play-state:{{liveState}}"></span>
+        </span>
+        <span style="font-weight:800;font-size:15px;letter-spacing:.2em;color:{{liveTextColor}};transition:color .3s">{{liveLabel}}</span>
+      </div>
+      <button onClick="{{toggleLive}}" style="font-family:Nunito,sans-serif;font-weight:900;font-size:14px;letter-spacing:.1em;padding:14px 30px;border-radius:999px;border:1px solid #3f3f46;background:#232327;color:#fafafa;cursor:pointer" style-active="transform:scale(.96)">{{liveBtn}}</button>
+      <div style="text-align:center;font-weight:700;font-size:13px;color:#71717a;text-wrap:pretty">A ripple spreads from the dot while the deal is in play; on pause it freezes mid-spread — the screen holds its breath.</div>
+    </div>
+  </section>
+
+  <section id="s6">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">6</span> · DECK PROGRESS <span style="color:#71717a;letter-spacing:.06em">+ BONUS: MILESTONE</span></h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px">
+        <div style="font-weight:800;font-size:12px;letter-spacing:.16em;color:#a1a1aa">DECK</div>
+        <div style="font-weight:900;font-size:18px;color:#fafafa;font-variant-numeric:tabular-nums">{{prog}}<span style="color:#71717a;font-size:14px">/32</span></div>
+      </div>
+      <div style="display:flex;gap:3px;align-items:flex-end;height:22px">
+        <sc-for list="{{segs}}" as="sg" hint-placeholder-count="32">
+          <div style="flex:1;height:{{sg.h}}px;border-radius:2px;background:{{sg.bg}};box-shadow:{{sg.sh}};transition:background .25s,height .25s"></div>
+        </sc-for>
+      </div>
+      <div style="margin-top:14px;font-weight:700;font-size:13px;color:#71717a;text-align:center;text-wrap:pretty">Every card is one sliver of the deck — cleared ones glow volt, the next waits raised.</div>
+      <div style="position:absolute;left:50%;bottom:18px;transform:translateX(-50%) translateY({{toastT}});opacity:{{toastO}};transition:all .35s cubic-bezier(.2,.9,.3,1.2);background:#232327;border:1px solid rgba(204,255,0,.4);border-radius:999px;padding:9px 18px;font-weight:900;font-size:13px;letter-spacing:.08em;color:#ccff00;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.5)">HALF THE DECK DOWN</div>
+    </div>
+  </section>
+
+  <section id="s7">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">7</span> · STACK THE DECK — SLIDERS</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden">
+      <div style="position:absolute;left:50%;top:-90px;width:340px;height:280px;transform:translateX(-50%) scale({{aurS}});background:radial-gradient(ellipse at center, {{intenColor}}, transparent 65%);opacity:{{aurO}};transition:opacity .4s,transform .4s,background .4s;pointer-events:none"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;position:relative">
+        <div style="font-weight:800;font-size:12px;letter-spacing:.16em;color:#a1a1aa">YOUR DECK</div>
+        <div style="font-weight:900;font-size:12px;letter-spacing:.12em;color:{{intenColor}};border:1px solid {{intenColor}};border-radius:999px;padding:6px 14px;box-shadow:0 0 {{tagGlow}}px {{intenColor}};transition:all .35s">{{intenLabel}}</div>
+      </div>
+      <div style="margin-top:26px;position:relative">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-weight:800;font-size:13px;color:#d4d4d8">Rep multiplier</span>
+          <span style="font-weight:900;font-size:15px;color:#ccff00;font-variant-numeric:tabular-nums">{{multDisp}}×</span>
+        </div>
+        <div onPointerDown="{{onMultDrag}}" onPointerMove="{{onMultDrag}}" style="position:relative;height:40px;cursor:pointer;touch-action:none">
+          <div style="position:absolute;left:0;right:0;top:17px;height:6px;border-radius:3px;background:#33333a"></div>
+          <div style="position:absolute;left:0;top:17px;height:6px;border-radius:3px;background:linear-gradient(90deg,#8fb300,{{intenColor}});width:{{multPct}}%"></div>
+          <div style="position:absolute;top:7px;left:{{multPct}}%;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;background:{{intenColor}};box-shadow:0 0 {{thumbGlow}}px {{intenColor}};transition:box-shadow .35s,background .35s"></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;position:relative">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-weight:800;font-size:13px;color:#d4d4d8">Cards in deck</span>
+          <span style="font-weight:900;font-size:15px;color:#ccff00;font-variant-numeric:tabular-nums">{{cardsDisp}}</span>
+        </div>
+        <div onPointerDown="{{onCardsDrag}}" onPointerMove="{{onCardsDrag}}" style="position:relative;height:40px;cursor:pointer;touch-action:none">
+          <div style="position:absolute;left:0;right:0;top:17px;height:6px;border-radius:3px;background:#33333a"></div>
+          <div style="position:absolute;left:0;top:17px;height:6px;border-radius:3px;background:linear-gradient(90deg,#8fb300,{{intenColor}});width:{{cardsPct}}%"></div>
+          <div style="position:absolute;top:7px;left:{{cardsPct}}%;transform:translateX(-50%);width:26px;height:26px;border-radius:50%;background:{{intenColor}};box-shadow:0 0 {{thumbGlow}}px {{intenColor}};transition:box-shadow .35s,background .35s"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:20px;position:relative">
+        <div style="display:flex;gap:5px">
+          <sc-for list="{{pips}}" as="pp" hint-placeholder-count="5">
+            <span style="width:16px;height:6px;border-radius:3px;background:{{pp.bg}};transition:background .3s;display:inline-block"></span>
+          </sc-for>
+        </div>
+        <div style="font-weight:800;font-size:13px;color:#a1a1aa">≈ <span style="color:#fafafa;font-weight:900">{{estReps}}</span> reps in the stack</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s8">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">8</span> · SCORE RITUAL</h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:28px 22px;box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden">
+      <sc-if value="{{jackpot}}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 34%, rgba(204,255,0,.3), transparent 70%);animation:flashK .7s ease-out forwards;pointer-events:none"></div>
+        <sc-for list="{{shards}}" as="sh" hint-placeholder-count="0">
+          <div style="position:absolute;left:{{sh.l}}%;top:34%;width:{{sh.w}}px;height:4px;border-radius:2px;background:{{sh.bg}};--dx:{{sh.dx}};--dy:{{sh.dy}};--rot:{{sh.rot}};animation:shardK .8s cubic-bezier(.2,.7,.4,1) forwards;animation-delay:{{sh.dl}};pointer-events:none"></div>
+        </sc-for>
+      </sc-if>
+      <div style="text-align:center;opacity:{{st1o}};transform:{{st1t}};transition:all .4s">
+        <div style="display:inline-block;font-weight:800;font-size:11px;letter-spacing:.24em;color:#a1a1aa;border:1px solid #3a3a40;border-radius:999px;padding:7px 16px">DECK CLEARED</div>
+        <div style="font-weight:900;font-size:66px;line-height:1.05;color:#ccff00;font-variant-numeric:tabular-nums;margin-top:14px;text-shadow:0 0 40px rgba(204,255,0,.3)">{{scoreDisp}}</div>
+        <div style="font-weight:800;font-size:11px;letter-spacing:.24em;color:#71717a;margin-top:2px">POINTS</div>
+        <div style="display:flex;justify-content:center;gap:10px;margin-top:12px">
+          <span style="font-weight:800;font-size:12px;color:#a1a1aa;background:#232327;border-radius:999px;padding:6px 12px">⏱ 18:42</span>
+          <span style="font-weight:800;font-size:12px;color:#a1a1aa;background:#232327;border-radius:999px;padding:6px 12px">32 cards</span>
+        </div>
+      </div>
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{sumRows}}" as="r" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:12px;background:#212124;border:1px solid #303036;border-radius:14px;padding:11px 16px;opacity:{{r.o}};transform:{{r.t}};transition:all .4s cubic-bezier(.2,.8,.3,1.1)">
+            <span style="font-size:20px;color:{{r.c}};width:24px;text-align:center">{{r.suit}}</span>
+            <span style="font-weight:800;font-size:14px;color:#fafafa;flex:1">{{r.name}}</span>
+            <span style="font-weight:700;font-size:13px;color:#a1a1aa">{{r.cards}} cards · {{r.reps}} reps</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="height:52px;display:flex;align-items:center;justify-content:center;margin-top:14px">
+        <sc-if value="{{jackpot}}" hint-placeholder-val="{{ false }}">
+          <div style="background:#ccff00;color:#18181b;font-weight:900;font-size:14px;letter-spacing:.12em;border-radius:999px;padding:11px 24px;animation:badgeK .55s cubic-bezier(.2,.9,.3,1.4) forwards;box-shadow:0 0 34px rgba(204,255,0,.5)">★ NEW BEST</div>
+        </sc-if>
+      </div>
+      <button onClick="{{replay}}" style="width:100%;font-family:Nunito,sans-serif;font-weight:900;font-size:13px;letter-spacing:.14em;padding:13px;border-radius:14px;border:1px solid rgba(204,255,0,.4);background:transparent;color:#ccff00;cursor:pointer;margin-top:6px" style-active="transform:scale(.98)" style-hover="background:rgba(204,255,0,.07)">REPLAY DEMO</button>
+    </div>
+  </section>
+
+  <section id="s9">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">9</span> · CHALLENGE FEEDBACK <span style="color:#71717a;letter-spacing:.06em">+ BONUS: RUN</span></h2>
+    <div style="width:390px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);padding:26px 22px;box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;height:36px">
+        <div style="opacity:{{comboO}};transform:{{comboScale}};transition:all .25s cubic-bezier(.2,.9,.3,1.3);font-weight:900;font-size:13px;letter-spacing:.1em;color:{{comboColor}};border:1px solid {{comboColor}};border-radius:999px;padding:7px 14px">RUN ×{{combo}}</div>
+        <div style="font-weight:900;font-size:14px;color:#fafafa;background:#232327;border:1px solid rgba(204,255,0,.35);border-radius:999px;padding:8px 16px;font-variant-numeric:tabular-nums;animation:{{bumpAnim}}">SCORE <span style="color:#ccff00">{{fbScore}}</span></div>
+      </div>
+      <div style="position:relative;display:flex;justify-content:center;margin:24px 0 8px">
+        <sc-if value="{{fbShow}}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;left:50%;top:-8px;font-weight:900;font-size:28px;color:#ccff00;text-shadow:0 0 20px rgba(204,255,0,.6);animation:{{popAnim}};pointer-events:none;z-index:2">+{{fbAmt}}</div>
+        </sc-if>
+        <div onClick="{{fbHit}}" style="width:160px;height:210px;border-radius:20px;background:linear-gradient(160deg,#2d2d31,#212124);border:1px solid rgba(204,255,0,.3);cursor:pointer;user-select:none;display:flex;flex-direction:column;justify-content:space-between;padding:14px;box-sizing:border-box;animation:{{ringAnim}}" style-active="filter:brightness(1.2)">
+          <div style="font-weight:900;font-size:17px;color:#ff5a6e">9 ♥</div>
+          <div style="text-align:center">
+            <div style="font-weight:900;font-size:44px;line-height:1;color:#fafafa">18</div>
+            <div style="font-weight:800;font-size:13px;color:#ccff00;margin-top:4px">Squats</div>
+          </div>
+          <div style="align-self:flex-end;transform:rotate(180deg);font-weight:900;font-size:17px;color:#ff5a6e">9 ♥</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-weight:700;font-size:13px;color:#71717a;text-wrap:pretty">Tap the card: cleared on the clock. Points fly out, the chip pops, and back-to-back clears heat up the RUN.</div>
+    </div>
+  </section>
+
+  
+
+  <section id="s11">
+    <h2 style="margin:0 0 14px;font-weight:800;font-size:13px;letter-spacing:.16em;color:#a1a1aa"><span style="color:#ccff00">11</span> · PAUSE OVERLAY</h2>
+    <div style="width:390px;height:560px;border-radius:44px;background:#18181b;border:1px solid #34343a;box-shadow:0 24px 60px rgba(0,0,0,.55);box-sizing:border-box;color:#fafafa;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;padding:26px 22px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:800;font-size:12px;letter-spacing:.14em;color:#a1a1aa">CARD 12/24</div>
+          <div style="font-weight:800;font-size:14px;color:#d4d4d8;font-variant-numeric:tabular-nums">{{swDisp}}</div>
+        </div>
+        <div style="flex:1;border-radius:24px;background:linear-gradient(160deg,#2b2b2f,#202023);border:1px solid rgba(204,255,0,.2);display:flex;align-items:center;justify-content:center">
+          <div style="font-weight:900;font-size:90px;color:#3f3f46">12</div>
+        </div>
+        <button onClick="{{togglePause}}" style="font-family:Nunito,sans-serif;font-weight:900;font-size:13px;letter-spacing:.14em;padding:13px;border-radius:14px;border:1px solid #3f3f46;background:#232327;color:#fafafa;cursor:pointer;opacity:{{pBtnO}};transition:opacity .3s">PAUSE</button>
+      </div>
+      <div style="position:absolute;inset:0;background:rgba(10,10,13,.78);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;opacity:{{pOv}};pointer-events:{{pPe}};transition:opacity .4s">
+        <div style="position:relative;width:170px;height:170px;display:flex;align-items:center;justify-content:center">
+          <div style="position:absolute;inset:0;border-radius:50%;border:1px dashed rgba(204,255,0,.35);animation:spinK 32s linear infinite"></div>
+          <div style="font-weight:900;font-size:30px;letter-spacing:.22em;margin-left:.22em;color:#fafafa;animation:pausebr 4.5s ease-in-out infinite">PAUSED</div>
+        </div>
+        <div style="font-weight:700;font-size:14px;color:#a1a1aa">Breathe. The deck can wait.</div>
+        <button onClick="{{togglePause}}" style="font-family:Nunito,sans-serif;font-weight:900;font-size:14px;letter-spacing:.14em;padding:14px 40px;border-radius:999px;border:none;background:#ccff00;color:#18181b;cursor:pointer;box-shadow:0 0 34px rgba(204,255,0,.3)" style-active="transform:scale(.96)">BACK IN</button>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;quotaSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:12,&quot;min&quot;:6,&quot;max&quot;:20,&quot;step&quot;:1,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Challenge&quot;},&quot;jokerSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:30,&quot;min&quot;:15,&quot;max&quot;:60,&quot;step&quot;:5,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Džoker&quot;}}">
+class Component extends DCLogic {
+  cards = [
+    {s:'♠',r:'K',n:'Push-ups',reps:13,red:false},
+    {s:'♥',r:'9',n:'Squats',reps:18,red:true},
+    {s:'♦',r:'7',n:'Crunches',reps:14,red:true},
+    {s:'♣',r:'J',n:'Lunges',reps:11,red:false},
+    {s:'♥',r:'A',n:'Burpees',reps:10,red:true}
+  ];
+  state = {
+    dealIdx:0, dealPhase:'idle',
+    quotaT:12, jokerT:30, jokerEl:0,
+    sw:751.2, livePaused:false,
+    prog:11, progAcc:0, toastUntil:0,
+    mult:1, cards:24,
+    sumStep:0, sumScore:0,
+    fbScore:1240, fbKey:0, fbAmt:0, combo:0, comboExp:0,
+    paused:true, paused2:false, histOpen:0, histMonth:0, ranksOpen:true, gameOpen:false, modeOpen:-1, rankSel:12,
+    clock:0, qtLevel:0, qtLen:1, exTierG:{0:1,1:0,2:1,3:2}, exSel:{0:0,1:0,2:1,3:0}, chInfo:-1, sprintDur:5, modal22:true, langOpen:false, lang:'EN'
+  };
+  toggleRanks = () => this.setState(s => ({ranksOpen: !s.ranksOpen}));
+  rankInfo = [
+    {name:'THE JOKER · RANK 0', desc:'Everyone starts wild. One cleared deck makes you an Ace.'},
+    {name:'ACE · RANK 1', desc:'Lowest card in the deck — but you are IN the deck now.'},
+    {name:'DEUCE · RANK 2', desc:'Two decks a week and it is becoming a habit.'},
+    {name:'TREY · RANK 3', desc:'The shuffle knows your name.'},
+    {name:'FOUR · RANK 4', desc:'Steady hands. The streak barely flickers.'},
+    {name:'FIVE · RANK 5', desc:'Halfway up the numbers.'},
+    {name:'SIX · RANK 6', desc:'Clean runs are your normal now.'},
+    {name:'LUCKY SEVEN · RANK 7', desc:'Luck had nothing to do with it.'},
+    {name:'EIGHT · RANK 8', desc:'A pace most players never hold.'},
+    {name:'NINE · RANK 9', desc:'The court is watching.'},
+    {name:'TEN · RANK 10', desc:'Last number before the royals.'},
+    {name:'JACK · RANK 11', desc:'First royal. You have real mileage behind you.'},
+    {name:'QUEEN · RANK 12', desc:'Elite of the deck — quotas fall, streaks hold. Your current rank.'},
+    {name:'KING · RANK 13', desc:'The crown. Hard to win, defended with every deck.'}
+  ];
+  toggleGame = () => this.setState(s => ({gameOpen: !s.gameOpen}));
+  toggleMode = (i) => this.setState(s => ({modeOpen: s.modeOpen === i ? -1 : i}));
+  pickRank = (i) => this.setState({rankSel: i});
+  toggleHist = (i) => this.setState(s => ({histOpen: s.histOpen === i ? -1 : i}));
+  monthShift = (d) => this.setState(s => ({histMonth: Math.max(0, Math.min(this.histMonths.length - 1, s.histMonth + d)), histOpen: -1}));
+  histMonths = [
+    {label:'July 2026', days:31, offset:2, today:16, trained:[1,3,4,6,8,10,12,13,14,15,16], rows:[
+      {mode:'ch', suit:'♠', title:'Perfect Deck', date:'today', cards:32, dur:'18:42', score:'2,480', pb:true, scoreColor:'#ccff00', xp:'+320', pauza:'1:30', prosek:'11.2', suits:[{s:'♥',c:'#ff5a6e',reps:74},{s:'♣',c:'#fafafa',reps:96},{s:'♠',c:'#ccff00',reps:61},{s:'♦',c:'#ffb340',reps:49}]},
+      {mode:'br', suit:'♦', title:'Quick Deal', date:'yesterday', cards:24, dur:'14:05', score:'1,860', pb:false, scoreColor:'#fafafa', xp:'+215', pauza:'0:45', prosek:'12.8', suits:[{s:'♥',c:'#ff5a6e',reps:52},{s:'♣',c:'#fafafa',reps:60},{s:'♠',c:'#ccff00',reps:44},{s:'♦',c:'#ffb340',reps:38}]},
+      {mode:'cu', suit:'♣', title:'Stack the Deck', date:'Jul 12', cards:40, dur:'26:31', score:'2,140', pb:false, scoreColor:'#fafafa', xp:'+240', pauza:'2:10', prosek:'13.4', suits:[{s:'♥',c:'#ff5a6e',reps:88},{s:'♣',c:'#fafafa',reps:102},{s:'♠',c:'#ccff00',reps:79},{s:'♦',c:'#ffb340',reps:66}]},
+      {mode:'br', suit:'♦', title:'Quick Deal', date:'Jul 11', cards:24, dur:'15:48', score:'1,720', pb:false, scoreColor:'#fafafa', xp:'+190', pauza:'1:05', prosek:'14.1', suits:[{s:'♥',c:'#ff5a6e',reps:48},{s:'♣',c:'#fafafa',reps:55},{s:'♠',c:'#ccff00',reps:41},{s:'♦',c:'#ffb340',reps:36}]},
+      {mode:'ch', suit:'♠', title:'Perfect Deck', date:'Jul 10', cards:32, dur:'19:56', score:'2,010', pb:false, scoreColor:'#fafafa', xp:'+265', pauza:'1:50', prosek:'12.0', suits:[{s:'♥',c:'#ff5a6e',reps:70},{s:'♣',c:'#fafafa',reps:88},{s:'♠',c:'#ccff00',reps:58},{s:'♦',c:'#ffb340',reps:45}]},
+      {mode:'cu', suit:'♣', title:'Stack the Deck', date:'Jul 8', cards:36, dur:'23:14', score:'1,980', pb:false, scoreColor:'#fafafa', xp:'+225', pauza:'2:40', prosek:'13.9', suits:[{s:'♥',c:'#ff5a6e',reps:80},{s:'♣',c:'#fafafa',reps:92},{s:'♠',c:'#ccff00',reps:70},{s:'♦',c:'#ffb340',reps:58}]},
+      {mode:'br', suit:'♦', title:'Quick Deal', date:'Jul 6', cards:24, dur:'14:52', score:'1,790', pb:false, scoreColor:'#fafafa', xp:'+200', pauza:'0:55', prosek:'13.1', suits:[{s:'♥',c:'#ff5a6e',reps:50},{s:'♣',c:'#fafafa',reps:58},{s:'♠',c:'#ccff00',reps:42},{s:'♦',c:'#ffb340',reps:37}]},
+      {mode:'ch', suit:'♠', title:'Perfect Deck', date:'Jul 4', cards:32, dur:'20:31', score:'1,940', pb:false, scoreColor:'#fafafa', xp:'+250', pauza:'2:05', prosek:'12.4', suits:[{s:'♥',c:'#ff5a6e',reps:68},{s:'♣',c:'#fafafa',reps:85},{s:'♠',c:'#ccff00',reps:55},{s:'♦',c:'#ffb340',reps:44}]}
+    ]},
+    {label:'June 2026', days:30, offset:0, today:0, trained:[2,4,7,9,11,14,16,18,21,25,28,30], rows:[
+      {mode:'ch', suit:'♠', title:'Perfect Deck', date:'Jun 30', cards:32, dur:'21:08', score:'1,890', pb:false, scoreColor:'#fafafa', xp:'+245', pauza:'2:20', prosek:'12.6', suits:[{s:'♥',c:'#ff5a6e',reps:66},{s:'♣',c:'#fafafa',reps:82},{s:'♠',c:'#ccff00',reps:54},{s:'♦',c:'#ffb340',reps:43}]},
+      {mode:'br', suit:'♦', title:'Quick Deal', date:'Jun 28', cards:24, dur:'15:12', score:'1,680', pb:false, scoreColor:'#fafafa', xp:'+185', pauza:'1:10', prosek:'13.6', suits:[{s:'♥',c:'#ff5a6e',reps:46},{s:'♣',c:'#fafafa',reps:54},{s:'♠',c:'#ccff00',reps:40},{s:'♦',c:'#ffb340',reps:34}]},
+      {mode:'cu', suit:'♣', title:'Stack the Deck', date:'Jun 25', cards:44, dur:'29:47', score:'2,260', pb:false, scoreColor:'#fafafa', xp:'+280', pauza:'3:15', prosek:'14.2', suits:[{s:'♥',c:'#ff5a6e',reps:94},{s:'♣',c:'#fafafa',reps:110},{s:'♠',c:'#ccff00',reps:86},{s:'♦',c:'#ffb340',reps:72}]},
+      {mode:'br', suit:'♦', title:'Quick Deal', date:'Jun 21', cards:24, dur:'16:03', score:'1,590', pb:false, scoreColor:'#fafafa', xp:'+175', pauza:'1:25', prosek:'14.4', suits:[{s:'♥',c:'#ff5a6e',reps:44},{s:'♣',c:'#fafafa',reps:52},{s:'♠',c:'#ccff00',reps:38},{s:'♦',c:'#ffb340',reps:33}]}
+    ]},
+    {label:'May 2026', days:31, offset:4, today:0, trained:[5,8,12,15,19,22,26,29], rows:[
+      {mode:'br', suit:'♦', title:'Quick Deal', date:'May 29', cards:20, dur:'13:26', score:'1,410', pb:false, scoreColor:'#fafafa', xp:'+150', pauza:'1:40', prosek:'15.0', suits:[{s:'♥',c:'#ff5a6e',reps:38},{s:'♣',c:'#fafafa',reps:45},{s:'♠',c:'#ccff00',reps:33},{s:'♦',c:'#ffb340',reps:28}]},
+      {mode:'ch', suit:'♠', title:'Perfect Deck', date:'May 22', cards:28, dur:'19:35', score:'1,550', pb:false, scoreColor:'#fafafa', xp:'+195', pauza:'2:30', prosek:'13.8', suits:[{s:'♥',c:'#ff5a6e',reps:56},{s:'♣',c:'#fafafa',reps:70},{s:'♠',c:'#ccff00',reps:47},{s:'♦',c:'#ffb340',reps:39}]},
+      {mode:'br', suit:'♦', title:'Quick Deal', date:'May 12', cards:20, dur:'14:11', score:'1,320', pb:false, scoreColor:'#fafafa', xp:'+140', pauza:'1:55', prosek:'15.6', suits:[{s:'♥',c:'#ff5a6e',reps:36},{s:'♣',c:'#fafafa',reps:42},{s:'♠',c:'#ccff00',reps:31},{s:'♦',c:'#ffb340',reps:26}]}
+    ]}
+  ];
+  componentDidMount(){
+    this.rm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this._tick = setInterval(this.tick, 100);
+    this._tos = [];
+    this.playSummary();
+  }
+  componentWillUnmount(){
+    clearInterval(this._tick); clearInterval(this._ci);
+    (this._tos||[]).forEach(clearTimeout);
+  }
+  tick = () => {
+    const qMax = this.props.quotaSeconds ?? 12, jMax = this.props.jokerSeconds ?? 30;
+    this.setState(s => {
+      const n = {};
+      n.quotaT = s.quotaT - .1; if(n.quotaT <= 0) n.quotaT = qMax;
+      n.jokerEl = s.jokerEl + .1;
+      n.jokerT = s.jokerT - .1; if(n.jokerT <= 0) n.jokerT = jMax;
+      if(!s.livePaused) n.sw = s.sw + .1;
+      n.progAcc = s.progAcc + .1;
+      if(n.progAcc >= 1.1){
+        n.progAcc = 0;
+        n.prog = s.prog + 1 > 32 ? 6 : s.prog + 1;
+        if(n.prog === 16) n.toastUntil = Date.now() + 2300;
+      }
+      if(s.combo > 0 && Date.now() > s.comboExp) n.combo = 0;
+      n.clock = s.clock + .1;
+      return n;
+    });
+  };
+  onDeal = () => {
+    if(this.state.dealPhase !== 'idle') return;
+    this.setState({dealPhase:'out'});
+    this._tos.push(setTimeout(() => {
+      this.setState(s => ({dealIdx: s.dealIdx + 1, dealPhase:'enter'}));
+      this._tos.push(setTimeout(() => {
+        requestAnimationFrame(() => this.setState({dealPhase:'idle'}));
+      }, 30));
+    }, 230));
+  };
+  drag(e, key, min, max, step){
+    if(e.type === 'pointerdown'){ try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(_){} }
+    else if(e.buttons !== 1) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    let p = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    let v = min + p * (max - min);
+    v = Math.round(v / step) * step;
+    this.setState({[key]: +v.toFixed(2)});
+  }
+  onMultDrag = (e) => this.drag(e, 'mult', 0.5, 2, 0.1);
+  onCardsDrag = (e) => this.drag(e, 'cards', 12, 52, 1);
+  playSummary = () => {
+    (this._tos||[]).forEach(clearTimeout); this._tos = [];
+    clearInterval(this._ci);
+    this.setState({sumStep:0, sumScore:0});
+    const st = (ms, fn) => this._tos.push(setTimeout(fn, ms));
+    st(250, () => this.setState({sumStep:1}));
+    st(600, () => {
+      this._ci = setInterval(() => {
+        this.setState(s => {
+          let v = s.sumScore + (2480 - s.sumScore) * .13 + 28;
+          if(v >= 2478){ v = 2480; clearInterval(this._ci); }
+          return {sumScore: v};
+        });
+      }, 40);
+    });
+    st(700, () => this.setState({sumStep:2}));
+    st(850, () => this.setState({sumStep:3}));
+    st(1000, () => this.setState({sumStep:4}));
+    st(1150, () => this.setState({sumStep:5}));
+    st(1950, () => this.setState({sumStep:6}));
+  };
+  replay = () => this.playSummary();
+  fbHit = () => {
+    const amt = 25 + Math.min(this.state.combo, 5) * 10;
+    this.setState(s => ({
+      fbScore: s.fbScore + amt, fbAmt: amt, fbKey: s.fbKey + 1,
+      combo: s.combo + 1, comboExp: Date.now() + 2600
+    }));
+  };
+  toggleLive = () => this.setState(s => ({livePaused: !s.livePaused}));
+  togglePause = () => this.setState(s => ({paused: !s.paused}));
+  togglePause2 = () => this.setState(s => ({paused2: !s.paused2}));
+  renderVals(){
+    const s = this.state, rm = this.rm;
+    const qMax = this.props.quotaSeconds ?? 12;
+    const c = this.cards[s.dealIdx % this.cards.length];
+    let cardT = 'none', cardO = '1',
+        cardTr = 'transform .3s cubic-bezier(.34,1.56,.64,1), opacity .2s ease';
+    if(s.dealPhase === 'out'){
+      cardT = 'translate(-135%,-48px) rotate(-16deg)'; cardO = '0';
+      cardTr = 'transform .23s cubic-bezier(.55,0,.9,.4), opacity .21s ease';
+    } else if(s.dealPhase === 'enter'){
+      cardT = 'translateY(54px) scale(.9) rotate(4deg)'; cardO = '0'; cardTr = 'none';
+    }
+    const qt = Math.max(0, s.quotaT), qp = qt / qMax;
+    const qColor = qp > .5 ? '#ccff00' : qp > .25 ? '#ffb340' : '#ff5147';
+    const panic = qp <= .25 && !rm;
+    const qVig = qp <= .25 ? ((.25 - qp) / .25 * .5).toFixed(2) : '0';
+    const ph = (s.jokerEl % 8) / 8;
+    const b = rm ? 0 : .5 - .5 * Math.cos(ph * 2 * Math.PI);
+    const swm = Math.floor(s.sw / 60), sws = Math.floor(s.sw % 60);
+    const segs = Array.from({length:32}, (_, i) =>
+      i < s.prog ? {bg:'#ccff00', h: i === s.prog - 1 ? '20' : '13', sh: i === s.prog - 1 ? '0 0 12px rgba(204,255,0,.6)' : 'none'}
+      : i === s.prog ? {bg:'#52525b', h:'20', sh:'0 0 10px rgba(204,255,0,.25)'}
+      : {bg:'#2c2c31', h:'13', sh:'none'});
+    const toastOn = Date.now() < s.toastUntil;
+    const inten = Math.max(0, Math.min(1, ((s.mult - .5) / 1.5) * .55 + ((s.cards - 12) / 40) * .45));
+    const intenColor = inten > .8 ? '#ff5147' : inten > .55 ? '#ffb340' : '#ccff00';
+    const intenLabel = inten > .8 ? 'ALL IN' : inten > .55 ? 'RAISE' : inten > .3 ? 'STEADY' : 'WARM-UP';
+    const pipsOn = Math.max(1, Math.round(inten * 5));
+    const rowsData = [
+      {suit:'♥', c:'#ff5a6e', name:'Push', cards:9, reps:74},
+      {suit:'♣', c:'#fafafa', name:'Pull', cards:8, reps:96},
+      {suit:'♠', c:'#ccff00', name:'Legs', cards:9, reps:61},
+      {suit:'♦', c:'#ffb340', name:'Core', cards:6, reps:49}
+    ];
+    const sumRows = rowsData.map((r, i) => ({...r,
+      o: s.sumStep >= i + 2 ? '1' : '0',
+      t: s.sumStep >= i + 2 ? 'translateY(0)' : 'translateY(14px)'}));
+    const shards = [0,1,2,3,4,5,6,7,8,9].map(i => {
+      const a = (i / 10) * Math.PI * 2;
+      return {l: 50 + Math.round(Math.cos(a) * 6), w: 10 + (i % 3) * 6,
+        dx: Math.round(Math.cos(a) * (90 + (i % 4) * 30)) + 'px',
+        dy: Math.round(Math.sin(a) * (70 + (i % 3) * 30)) + 'px',
+        rot: (120 + i * 40) + 'deg', dl: (i % 5) * .04 + 's',
+        bg: i % 3 === 0 ? '#fafafa' : '#ccff00'};
+    });
+    const par = s.fbKey % 2;
+    return {
+      dealNo: (s.dealIdx % 24) + 1,
+      cardT, cardO, cardTr,
+      cardColor: c.red ? '#ff5a6e' : '#fafafa',
+      cardR: c.r, cardS: c.s, cardReps: c.reps, cardName: c.n,
+      onDeal: this.onDeal,
+      qMax, qDeg: (qp * 360).toFixed(1),
+      qColor, qDisp: qt.toFixed(1),
+      qAnim: panic ? 'panicK .5s ease-in-out infinite' : 'none',
+      qGlow: qp > .5 ? 'rgba(204,255,0,.12)' : qp > .25 ? 'rgba(255,179,64,.2)' : 'rgba(255,81,71,.4)',
+      qVig,
+      jT: Math.ceil(Math.max(0, s.jokerT)),
+      br1: 'scale(' + (1 + b * .08).toFixed(3) + ')',
+      br2: 'scale(' + (1 + b * .15).toFixed(3) + ')',
+      br3: 'scale(' + (1 + b * .23).toFixed(3) + ')',
+      inO: ph < .5 ? '1' : '0', outO: ph < .5 ? '0' : '1',
+      swDisp: swm + ':' + String(sws).padStart(2, '0'),
+      liveState: s.livePaused ? 'paused' : 'running',
+      liveDotBg: s.livePaused ? '#71717a' : '#ccff00',
+      liveTextColor: s.livePaused ? '#71717a' : '#fafafa',
+      liveLabel: s.livePaused ? 'TABLE PAUSED' : 'DEAL IN PLAY',
+      liveBtn: s.livePaused ? 'RESUME' : 'PAUSE',
+      toggleLive: this.toggleLive,
+      prog: s.prog, segs,
+      toastO: toastOn ? '1' : '0',
+      toastT: toastOn ? '0' : '14px',
+      multDisp: s.mult.toFixed(1),
+      multPct: ((s.mult - .5) / 1.5 * 100).toFixed(1),
+      cardsDisp: s.cards, cardsPct: ((s.cards - 12) / 40 * 100).toFixed(1),
+      onMultDrag: this.onMultDrag, onCardsDrag: this.onCardsDrag,
+      aurO: (inten * .35).toFixed(2), aurS: (0.85 + inten * .5).toFixed(2),
+      intenColor, intenLabel,
+      tagGlow: Math.round(inten * 22), thumbGlow: Math.round(6 + inten * 26),
+      estReps: Math.round(s.cards * 8 * s.mult),
+      pips: [0,1,2,3,4].map(i => ({bg: i < pipsOn ? intenColor : '#2c2c31'})),
+      st1o: s.sumStep >= 1 ? '1' : '0',
+      st1t: s.sumStep >= 1 ? 'translateY(0)' : 'translateY(12px)',
+      scoreDisp: Math.round(s.sumScore).toLocaleString('en-US'),
+      sumRows, jackpot: s.sumStep >= 6 && !rm ? true : s.sumStep >= 6,
+      shards, replay: this.replay,
+      fbScore: s.fbScore.toLocaleString('en-US'),
+      fbShow: s.fbKey > 0, fbAmt: s.fbAmt,
+      popAnim: (par ? 'popA' : 'popB') + ' .95s cubic-bezier(.2,.7,.3,1) forwards',
+      bumpAnim: s.fbKey ? (par ? 'bumpA' : 'bumpB') + ' .35s ease' : 'none',
+      ringAnim: s.fbKey ? (par ? 'ringA' : 'ringB') + ' .55s ease-out' : 'none',
+      combo: s.combo,
+      comboO: s.combo >= 2 ? '1' : '0',
+      comboScale: 'scale(' + (s.combo >= 2 ? 1 + Math.min(s.combo, 8) * .045 : .8).toFixed(2) + ')',
+      comboColor: s.combo >= 6 ? '#ff5147' : s.combo >= 4 ? '#ffb340' : '#ccff00',
+      fbHit: this.fbHit,
+      pOv: s.paused ? '1' : '0', pPe: s.paused ? 'auto' : 'none',
+      pBtnO: s.paused ? '0' : '1',
+      togglePause: this.togglePause,
+      liveState2: s.paused2 ? 'paused' : 'running',
+      histBars: [22,0,34,41,0,28,56,18,0,38,30,44,26,50].map((h,i) => ({
+        h: h || 4,
+        bg: h === 0 ? '#242428' : i === 13 ? '#ccff00' : 'rgba(204,255,0,.45)',
+        sh: i === 13 ? '0 0 12px rgba(204,255,0,.5)' : 'none'})),
+      toggleRanks: this.toggleRanks,
+      ranksChev: s.ranksOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+      ranksH: s.ranksOpen ? '220px' : '0px',
+      ranksO: s.ranksOpen ? '1' : '0',
+      qtLevels: [
+        {tier:'Ⅰ', name:'Low Stakes', desc:'Lighter hands · ×0.75'},
+        {tier:'Ⅱ', name:'High Stakes', desc:'The standard table · ×1.0'},
+        {tier:'Ⅲ', name:'All In', desc:'Heavy hands · ×1.25'}
+      ].map((l, i) => {
+        const on = s.qtLevel === i;
+        return {...l, pick: () => this.setState({qtLevel: i}),
+          border: on ? 'rgba(204,255,0,.5)' : '#303036',
+          sh: on ? '0 0 18px rgba(204,255,0,.12)' : 'none',
+          tc: on ? '#ccff00' : '#52525b', nc: on ? '#fafafa' : '#a1a1aa',
+          rb: on ? '#ccff00' : '#3f3f46', rbg: on ? '#ccff00' : 'transparent'};
+      }),
+      qtLens: [
+        {name:'The Cut', cards:12, min:10}, {name:'Half Deck', cards:24, min:20}, {name:'Full Deck', cards:52, min:35}
+      ].map((l, i) => {
+        const on = s.qtLen === i;
+        return {...l, pick: () => this.setState({qtLen: i}),
+          border: on ? 'rgba(204,255,0,.5)' : '#303036',
+          sh: on ? '0 0 18px rgba(204,255,0,.12)' : 'none',
+          nc: on ? '#ccff00' : '#a1a1aa'};
+      }),
+      exGroups: [
+        {suit:'♥', c:'#ff5a6e', name:'PUSH', items:[['Wall push-up','Ⅰ'],['Knee push-up','Ⅰ'],['Push-up','Ⅱ'],['Chair dips','Ⅱ'],['Pike push-up','Ⅲ'],['Archer push-up','Ⅲ']]},
+        {suit:'♣', c:'#fafafa', name:'PULL', items:[['Superman pull','Ⅰ'],['Towel row','Ⅰ'],['Table row','Ⅱ'],['Towel curl','Ⅱ'],['Pull-up','Ⅲ'],['Archer pull-up','Ⅲ']]},
+        {suit:'♠', c:'#ccff00', name:'LEGS', items:[['Squat','Ⅰ'],['Glute bridge','Ⅰ'],['Lunge','Ⅱ'],['Bulgarian split squat','Ⅱ'],['Jump squat','Ⅲ'],['Pistol squat','Ⅲ']]},
+        {suit:'♦', c:'#ffb340', name:'CORE', items:[['Plank','Ⅰ'],['Dead bug','Ⅰ'],['Crunches','Ⅱ'],['Leg raises','Ⅱ'],['V-up','Ⅲ'],['Hollow hold','Ⅲ']]}
+      ].map((g, gi) => ({...g,
+        tiers: ['Ⅰ','Ⅱ','Ⅲ'].map((tg, ti) => {
+          const on = s.exTierG[gi] === ti;
+          const tc = ti === 0 ? '#8fd14f' : ti === 1 ? '#ffb340' : '#ff5147';
+          return {g: tg, pick: () => this.setState(st => ({exTierG: {...st.exTierG, [gi]: ti}})),
+            bg: on ? tc : 'transparent', border: on ? tc : '#3a3a40',
+            sh: on ? '0 0 9px ' + tc : 'none', c: on ? '#18181b' : '#71717a'};
+        }),
+        items: g.items.slice(s.exTierG[gi] * 2, s.exTierG[gi] * 2 + 2).map((it, ii) => {
+          const on = s.exSel[gi] === ii;
+          const tierC = it[1] === 'Ⅰ' ? '#8fd14f' : it[1] === 'Ⅱ' ? '#ffb340' : '#ff5147';
+          return {name: it[0], tier: it[1], tierC,
+            pick: () => this.setState(st => ({exSel: {...st.exSel, [gi]: ii}})),
+            bg: on ? 'linear-gradient(160deg,#2c2c20,#212124)' : '#212124',
+            border: on ? 'rgba(204,255,0,.55)' : '#2c2c31',
+            sh: on ? '0 0 14px rgba(204,255,0,.18)' : 'none',
+            nc: on ? '#ccff00' : '#a1a1aa'};
+        })})),
+      chModes: [
+        {g:'🎲', c2:'185,168,255', name:'Daily Deal', short:'One deck, 20 cards, same for everyone.', long:'A fresh 20-card deck every day, identical for every player — exercise tiers rotate by day. One run a day counts on the daily board. New deal at midnight.'},
+        {g:'⚡', c2:'204,255,0', name:'Perfect Deck', short:'Every card has a clock. Clear them all.', long:'All 52 cards, each on a clock. The goal: not a single one runs out. One blown clock spoils the perfect run — but the deck plays to the end.'},
+        {g:'🏃', c2:'255,179,64', name:'Blitz', short:'3, 5 or 10 minutes. Deal till the clock dies.', sprint:true, long:'Pick 3, 5 or 10 minutes. Cards keep coming until the clock dies — your score is cards cleared. Short, explosive, made for a stolen break.'},
+        {g:'👑', c2:'255,215,94', name:'The Court', short:'16 royals: J, Q, K — and the Ace to catch your breath.', long:'Court cards and Aces only — J=11, Q=12, K=13, with the Ace worth a single rep to catch your breath. Few cards, heavy hands.'},
+        {g:'⏳', c2:'255,81,71', name:'On the Clock', short:'A bank of seconds. Empty bank — game over.', long:'You start with a bank of seconds. Clear a card and its whole clock pours back in. The bank never stops draining. How deep into 52 can you go?'}
+      ].map((m, i) => ({...m,
+        c: 'rgb(' + m.c2 + ')', soft: 'rgba(' + m.c2 + ',.2)',
+        border: 'rgba(' + m.c2 + ',' + (s.chInfo === i ? '.55' : '.3') + ')',
+        glow: 'rgba(' + m.c2 + ',' + (s.chInfo === i ? '.14' : '.05') + ')',
+        info: () => this.setState(st => ({chInfo: st.chInfo === i ? -1 : i})),
+        detH: s.chInfo === i ? '140px' : '0px', detO: s.chInfo === i ? '1' : '0'})),
+      sprintPills: [3,5,10].map(m => {
+        const on = s.sprintDur === m;
+        return {label: m + ' min', pick: () => this.setState({sprintDur: m}),
+          c: on ? '#18181b' : '#a1a1aa', bg: on ? '#ffb340' : 'transparent',
+          border: on ? '#ffb340' : '#3a3a40'};
+      }),
+      spDisp: (() => { const r = Math.ceil(300 - (s.clock % 300)); return Math.floor(r/60) + ':' + String(r%60).padStart(2,'0'); })(),
+      spColor: (300 - (s.clock % 300)) < 60 ? '#ff5147' : (300 - (s.clock % 300)) < 120 ? '#ffb340' : '#ccff00',
+      spAnim: (300 - (s.clock % 300)) < 60 && !this.rm ? 'panicK .5s ease-in-out infinite' : 'none',
+      spPct: (((300 - (s.clock % 300)) / 300) * 100).toFixed(1),
+      spCards: Math.floor((s.clock % 300) / 11),
+      bankDisp: (() => { const b = 15 + 13 * Math.sin(s.clock / 4); return Math.round(b); })(),
+      bankPct: (((15 + 13 * Math.sin(s.clock / 4)) / 30) * 100).toFixed(1),
+      bankColor: (15 + 13 * Math.sin(s.clock / 4)) < 8 ? '#ff5147' : (15 + 13 * Math.sin(s.clock / 4)) < 15 ? '#ffb340' : '#ccff00',
+      bankGlow: (15 + 13 * Math.sin(s.clock / 4)) < 8 ? 'rgba(255,81,71,.5)' : 'rgba(204,255,0,.35)',
+      bankVig: (15 + 13 * Math.sin(s.clock / 4)) < 8 ? ((8 - (15 + 13 * Math.sin(s.clock / 4))) / 8 * .45).toFixed(2) : '0',
+      modal22: s.modal22, modal22Closed: !s.modal22,
+      closeModal22: () => this.setState(st => ({modal22: !st.modal22})),
+      toggleLang: () => this.setState(st => ({langOpen: !st.langOpen})),
+      lang: s.lang,
+      langChev: s.langOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+      langO: s.langOpen ? '1' : '0', langPe: s.langOpen ? 'auto' : 'none',
+      langT: s.langOpen ? 'translateY(0)' : 'translateY(-6px)',
+      langs: [
+        {code:'EN', name:'English', avail:true}, {code:'SR', name:'Srpski', avail:true},
+        {code:'DE', name:'Deutsch', avail:false}, {code:'ES', name:'Español', avail:false}
+      ].map(l => ({...l, on: s.lang === l.code,
+        pick: l.avail ? (() => this.setState({lang: l.code, langOpen: false})) : (() => {}),
+        c: l.avail ? '#fafafa' : '#52525b', op: l.avail ? '1' : '.55', cur: l.avail ? 'pointer' : 'default'})),
+      toggleGame: this.toggleGame,
+      gameChev: s.gameOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+      gameH: s.gameOpen ? '200px' : '0px',
+      gameO: s.gameOpen ? '1' : '0',
+      modes: [
+        {g:'♦', name:'Quick Deal', c:'255,179,64', short:'Pick your stakes, we build the deck.', long:'You pick the stakes and the deck size — we build the deck. No clocks here: Quick Deal and Stack the Deck run without them — just you and the stopwatch.'},
+        {g:'♠', name:'Challenge', c:'204,255,0', short:'Five tables. Records on the line.', long:'Five modes: Perfect Deck, Blitz, The Court, Sudden Death and Daily Deal. Clocks, runs and records — this is where the XP is made.'},
+        {g:'♣', name:'Stack the Deck', c:'185,168,255', short:'Every exercise, every card — rig it your way.', long:'Pick the number of cards (12–52) and the rep multiplier (0.5×–2×). A taller stack pays more XP. Your setup is saved for next time.'},
+        {g:'🃏', name:'Joker', c:'185,168,255', short:'30 seconds of guided breathing.', long:'When a joker turns up: 30 seconds of guided breathing — in, out. The stopwatch keeps running and your run stays alive. Two per deck.'}
+      ].map((m, i) => ({...m,
+        color: 'rgb(' + m.c + ')', soft: 'rgba(' + m.c + ',.22)', border: 'rgba(' + m.c + ',.4)', glow: 'rgba(' + m.c + ',.25)',
+        toggle: () => this.toggleMode(i),
+        chev: s.modeOpen === i ? 'rotate(180deg)' : 'rotate(0deg)',
+        detH: s.modeOpen === i ? '160px' : '0px',
+        detO: s.modeOpen === i ? '1' : '0'})),
+      rankSelName: this.rankInfo[s.rankSel].name,
+      rankSelDesc: this.rankInfo[s.rankSel].desc,
+      rankSelColor: s.rankSel === 12 ? '#ccff00' : '#fafafa',
+      ranks: ['🃏','A','2','3','4','5','6','7','8','9','10','J','Q','K'].map((g, i) => {
+        const cur = 12, done = i < cur, active = i === s.rankSel;
+        const t = i / 13, inten = Math.pow(t, 2.6);
+        const glow = Math.round(2 + inten * 30);
+        const a = (.06 + inten * .6).toFixed(2);
+        return {g, crown: i === 13, you: i === cur, pick: () => this.pickRank(i),
+          bg: active ? 'linear-gradient(160deg,#3a3a20,#232327)' : done ? 'linear-gradient(160deg,#2c2c30,#202023)' : '#1d1d20',
+          border: active ? '#ccff00' : 'rgba(204,255,0,' + (done ? Math.max(.18, a) : (inten * .45).toFixed(2)) + ')',
+          sh: active ? '0 0 22px rgba(204,255,0,.55)' : '0 0 ' + glow + 'px rgba(204,255,0,' + (done ? a : (inten * .5).toFixed(2)) + ')',
+          color: active ? '#ccff00' : done ? '#d4d4d8' : i >= 11 ? 'rgba(204,255,0,' + (.3 + inten * .7).toFixed(2) + ')' : '#52525b',
+          suitColor: active ? '#ccff00' : done ? '#71717a' : '#3f3f46',
+          tf: active ? 'scale(1.12)' : 'none'};
+      }),
+      monthLabel: this.histMonths[s.histMonth].label,
+      monthCount: this.histMonths[s.histMonth].rows.length,
+      monthPrev: () => this.monthShift(1),
+      monthNext: () => this.monthShift(-1),
+      monthPrevO: s.histMonth < this.histMonths.length - 1 ? '1' : '.3',
+      monthNextO: s.histMonth > 0 ? '1' : '.3',
+      histRows: this.histMonths[s.histMonth].rows.map((r, i) => ({...r,
+        modeColor: r.mode === 'ch' ? '#ccff00' : r.mode === 'br' ? '#ffb340' : '#b9a8ff',
+        modeSoft: r.mode === 'ch' ? 'rgba(204,255,0,.22)' : r.mode === 'br' ? 'rgba(255,179,64,.22)' : 'rgba(185,168,255,.22)',
+        modeBorder: r.mode === 'ch' ? 'rgba(204,255,0,.4)' : r.mode === 'br' ? 'rgba(255,179,64,.4)' : 'rgba(185,168,255,.4)',
+        modeGlow: r.mode === 'ch' ? 'rgba(204,255,0,.25)' : r.mode === 'br' ? 'rgba(255,179,64,.25)' : 'rgba(185,168,255,.25)',
+        toggle: () => this.toggleHist(i),
+        border: s.histOpen === i ? 'rgba(204,255,0,.35)' : '#303036',
+        chev: s.histOpen === i ? 'rotate(180deg)' : 'rotate(0deg)',
+        detH: s.histOpen === i ? '220px' : '0px',
+        detO: s.histOpen === i ? '1' : '0'})),
+      calHead: ['M','T','W','T','F','S','S'].map(d => ({d})),
+      calDays: (() => {
+        const m = this.histMonths[s.histMonth];
+        const trained = m.trained, today = m.today;
+        const blanks = Array.from({length:m.offset}, () => ({n:'', bg:'transparent', border:'transparent', color:'transparent', sh:'none'}));
+        return blanks.concat(Array.from({length:m.days}, (_, i) => {
+          const d = i + 1, tr = trained.includes(d), fut = today > 0 && d > today;
+          return {n: d,
+            bg: tr ? (d === today ? '#ccff00' : 'rgba(204,255,0,.16)') : '#1f1f22',
+            border: d === today ? '#ccff00' : tr ? 'rgba(204,255,0,.3)' : '#2a2a2e',
+            color: d === today ? '#18181b' : tr ? '#ccff00' : fut ? '#3f3f46' : '#71717a',
+            sh: d === today ? '0 0 14px rgba(204,255,0,.4)' : 'none'};
+        }));
+      })(),
+      pOv2: s.paused2 ? '1' : '0', pPe2: s.paused2 ? 'auto' : 'none',
+      togglePause2: this.togglePause2
+    };
+  }
+}
+</script>
+</body>
+</html>
