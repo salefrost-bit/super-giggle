@@ -4,34 +4,38 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { User } from '@supabase/supabase-js';
-import { useLocaleSetting } from '@/i18n/LocaleProvider';
 import { calculateStreak } from '@/lib/domain/streak';
 import { getCompletedSessionDates } from '@/lib/supabase/records';
 import { StreakInfoModal } from '@/components/streak/StreakInfoModal';
-import { LOCALES } from '@/i18n/locales';
-import type { AppLocale } from '@/i18n/LocaleProvider';
 
 interface LandingScreenProps {
   user: User | null;
+  rankSymbol: string;
   dailyDone?: boolean;
   onStartDaily?: () => void;
   onStartWorkout: () => void;
   onRepeatLast?: () => void;
-  onShowHistory: () => void;
+  repeatContext?: string;
+  onShowProfile: () => void;
+  onShowHowToPlay: () => void;
   onSignOut: () => void;
 }
 
+// s21: čipovi + glow CTA. Jezik-selektor je preseljen na Settings/Profile
+// (errata E5.3) — Task 16 ga vraća kao red u novom ProfileScreen-u.
 export function LandingScreen({
   user,
+  rankSymbol,
   dailyDone = false,
   onStartDaily,
   onStartWorkout,
   onRepeatLast,
-  onShowHistory,
+  repeatContext,
+  onShowProfile,
+  onShowHowToPlay,
   onSignOut,
 }: LandingScreenProps) {
   const t = useTranslations();
-  const { locale, setLocale } = useLocaleSetting();
   const [streak, setStreak] = useState<{ days: number; freezesLeftThisWeek: number } | null>(null);
   const [showStreakInfo, setShowStreakInfo] = useState(false);
 
@@ -43,105 +47,90 @@ export function LandingScreen({
   }, [user]);
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-between px-7 pt-12 pb-9">
-      <div className="absolute top-4 right-5">
-        <select
-          value={locale}
-          onChange={(e) => setLocale(e.target.value as AppLocale)}
-          aria-label={t('language.label')}
-          className="bg-surface text-foreground text-sm font-bold rounded-xl px-3 py-2 border-2 border-white/15"
+    <div className="relative min-h-screen flex flex-col justify-between px-7 pt-10 pb-9">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={onShowProfile}
+          className="flex items-center gap-2 bg-surface border border-white/15 rounded-full pl-1.5 pr-3.5 py-1.5 transition-transform active:scale-95"
         >
-          {LOCALES.map((option) => (
-            <option key={option.code} value={option.code}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div />
-      <div className="flex flex-col items-center gap-[18px] text-center">
-        <div className="w-[88px] h-[88px] rounded-3xl bg-surface border-2 border-accent/50 flex items-center justify-center text-[40px] font-black text-accent">
-          ♠
-        </div>
-        <div>
-          <h1 className="text-[38px] font-black leading-[1.05] tracking-tight">{t('landing.appName')}</h1>
-          <p className="text-base font-semibold text-muted mt-2 leading-snug whitespace-pre-line">
-            {t('landing.tagline')}
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-col gap-3.5">
-        {onStartDaily && (
-          <button
-            onClick={onStartDaily}
-            className="text-center text-accent font-extrabold"
+          <span
+            className="w-[26px] h-[26px] rounded-full flex items-center justify-center text-xs font-black text-accent"
+            style={{
+              background: 'linear-gradient(160deg, var(--color-surface), var(--color-background))',
+              border: '1px solid rgba(204,255,0,.5)',
+            }}
           >
-            {dailyDone ? t('landing.dailyDone') : t('landing.dailyPending')}
+            {rankSymbol}
+          </span>
+          <span className="text-[11px] font-extrabold text-muted">{t('profile.rank')}</span>
+        </button>
+        <button
+          onClick={onShowHowToPlay}
+          aria-label={t('landing.howToPlay')}
+          className="w-[34px] h-[34px] rounded-full border border-white/15 bg-surface text-muted font-black text-sm transition-transform active:scale-90"
+        >
+          ?
+        </button>
+      </div>
+
+      <div className="flex flex-col items-center gap-3.5 text-center">
+        <h1 className="text-[42px] font-black tracking-[0.28em] leading-none">{t('landing.appName')}</h1>
+        <div className="flex gap-2">
+          {user && streak !== null && streak.days > 0 && (
+            <button
+              onClick={() => setShowStreakInfo(true)}
+              className="flex items-center gap-1.5 rounded-full px-3.5 py-2 font-extrabold text-xs bg-surface"
+              style={{ border: '1px solid rgba(255,179,64,.35)', color: '#ffcf87' }}
+            >
+              🔥 {t('landing.streakDays', { days: streak.days })}
+            </button>
+          )}
+          {onStartDaily && (
+            <button
+              onClick={onStartDaily}
+              className="flex items-center gap-1.5 rounded-full px-3.5 py-2 font-extrabold text-xs bg-surface"
+              style={{
+                border: `1px solid ${dailyDone ? 'rgba(185,168,255,.35)' : 'rgba(255,255,255,.1)'}`,
+                color: dailyDone ? 'var(--color-joker)' : 'var(--color-muted)',
+              }}
+            >
+              {dailyDone ? t('landing.dailyDone') : t('landing.dailyPending')}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2.5">
+        <button
+          onClick={onStartWorkout}
+          className="w-full font-extrabold text-[15px] tracking-wide py-[17px] rounded-2xl bg-accent text-background transition-transform active:scale-[.97]"
+          style={{ boxShadow: '0 0 30px rgba(204,255,0,.22)' }}
+        >
+          {t('landing.dealMeIn')}
+        </button>
+        {onRepeatLast && (
+          <button
+            onClick={onRepeatLast}
+            className="w-full flex items-center justify-center gap-2 font-bold text-xs py-3.5 rounded-2xl border border-white/15 text-muted transition-transform active:scale-[.97]"
+          >
+            <span>↻</span>{' '}
+            {repeatContext ? t('landing.runItBackContext', { context: repeatContext }) : t('landing.repeatLast')}
           </button>
         )}
         {user ? (
-          <>
-            {streak !== null && streak.days > 0 && (
-              <button
-                onClick={() => setShowStreakInfo(true)}
-                className="text-center text-accent font-extrabold"
-              >
-                🔥 {t('landing.streakDays', { days: streak.days })}
-              </button>
-            )}
-            <p className="text-center text-[13px] text-muted font-semibold">{t('landing.loggedIn')}</p>
-            <button
-              onClick={onStartWorkout}
-              className="bg-accent text-background rounded-[18px] p-5 font-extrabold text-lg"
-            >
-              {t('landing.newWorkout')}
-            </button>
-            {onRepeatLast && (
-              <button
-                onClick={onRepeatLast}
-                className="border-2 border-white/15 text-foreground rounded-[18px] p-5 font-extrabold text-lg"
-              >
-                {t('landing.repeatLast')}
-              </button>
-            )}
-            <button onClick={onShowHistory} className="text-accent font-bold text-[15px] p-1.5">
-              {t('landing.viewProgress')}
-            </button>
-            <button onClick={onSignOut} className="text-sm text-muted underline">
+          <p className="text-center text-[11px] text-muted font-semibold">
+            {t('landing.loggedIn')} ·{' '}
+            <button onClick={onSignOut} className="text-accent font-bold">
               {t('landing.signOut')}
             </button>
-          </>
+          </p>
         ) : (
-          <>
-            <button
-              onClick={onStartWorkout}
-              className="bg-accent text-background rounded-[18px] p-5 font-extrabold text-lg"
-            >
-              {t('landing.continueGuest')}
-            </button>
-            {onRepeatLast && (
-              <button
-                onClick={onRepeatLast}
-                className="border-2 border-white/15 text-foreground rounded-[18px] p-5 font-extrabold text-lg"
-              >
-                {t('landing.repeatLast')}
-              </button>
-            )}
-            <div className="flex gap-3">
-              <Link
-                href="/login"
-                className="flex-1 border-2 border-white/15 text-foreground rounded-2xl p-3.5 font-bold text-[15px] text-center"
-              >
-                {t('landing.login')}
-              </Link>
-              <Link
-                href="/signup"
-                className="flex-1 border-2 border-white/15 text-foreground rounded-2xl p-3.5 font-bold text-[15px] text-center"
-              >
-                {t('landing.signup')}
-              </Link>
-            </div>
-          </>
+          <p className="text-center text-[11px] text-muted font-semibold">
+            {t('landing.playingAsGuest')} ·{' '}
+            <Link href="/login" className="text-accent font-bold">
+              {t('landing.signIn')}
+            </Link>
+          </p>
         )}
       </div>
       {showStreakInfo && streak !== null && (

@@ -14,11 +14,12 @@ import {
   fetchAllExercises,
   fetchDifficultyLevels,
 } from '@/lib/supabase/queries';
-import { getBestDurationSeconds, getBestScore } from '@/lib/supabase/records';
+import { getBestDurationSeconds, getBestScore, getTotalXp } from '@/lib/supabase/records';
 import { InfoModal } from '@/components/ui/InfoModal';
 import { hasSeenExplanation, markExplained } from '@/lib/modes/explained';
 import { MODES } from '@/lib/modes/registry';
 import { loadLastConfig, validateLastConfig } from '@/lib/domain/lastConfig';
+import type { LastConfig } from '@/lib/domain/lastConfig';
 import { drawSessionCards, createCourtDeck } from '@/lib/domain/deck';
 import { buildDraws } from '@/lib/domain/draws';
 import { calculateReps } from '@/lib/domain/reps';
@@ -27,8 +28,36 @@ import { buildDailySession, dailyDateString, isDailyDoneLocal } from '@/lib/doma
 import { hasDailyForDate } from '@/lib/supabase/sessions';
 import { SUIT_TO_CATEGORY } from '@/lib/domain/types';
 import type { CardDrawResult, CategoryKey, Exercise, SessionConfig, SessionResult } from '@/lib/domain/types';
+import { rankForXp } from '@/lib/domain/score';
 
-type Screen = 'landing' | 'setup' | 'session' | 'summary' | 'history';
+type Screen = 'landing' | 'setup' | 'session' | 'summary' | 'profile' | 'how-to-play';
+
+// "Run it back · {context}" (s21) — entry naziv + dužina iz LastConfig; za
+// challenge stazu prikazuje ime moda (i minute za Blitz) jer deckSize tu nije
+// smislen (sprint čuva fiksnih 52, daily fiksnih 20 — spec §9, ništa se ne dira).
+function describeLastConfig(
+  cfg: LastConfig,
+  t: (key: string, values?: Record<string, string | number | Date>) => string
+): string {
+  if (cfg.entry === 'challenge') {
+    const modeDef = MODES.find((m) => m.id === cfg.gameMode);
+    const modeLabel = modeDef ? t(modeDef.titleKey) : cfg.gameMode;
+    if (cfg.gameMode === 'sprint' && cfg.sprintMinutes != null) {
+      return `${modeLabel}, ${t('landing.minutesShort', { minutes: cfg.sprintMinutes })}`;
+    }
+    return modeLabel;
+  }
+  const entryLabel = cfg.entry === 'custom' ? t('landing.entryCustom') : t('landing.entryQuick');
+  const lengthLabel =
+    cfg.deckSize === 12
+      ? t('setup.quarterLabel')
+      : cfg.deckSize === 24
+        ? t('setup.halfLabel')
+        : cfg.deckSize === 52
+          ? t('setup.fullLabel')
+          : t('progress.cardsLine', { count: cfg.deckSize });
+  return `${entryLabel}, ${lengthLabel}`;
+}
 
 export default function Home() {
   const t = useTranslations();
@@ -41,7 +70,9 @@ export default function Home() {
   const [introStep, setIntroStep] = useState<'jokers' | 'challenge' | null>(null);
   const [pendingChallengeIntro, setPendingChallengeIntro] = useState(false);
   const [canRepeatLast, setCanRepeatLast] = useState(false);
+  const [repeatContext, setRepeatContext] = useState<string | undefined>(undefined);
   const [dailyDone, setDailyDone] = useState(false);
+  const [rankSymbol, setRankSymbol] = useState('🃏');
 
   useEffect(() => {
     if (screen !== 'landing') return;
@@ -56,11 +87,19 @@ export default function Home() {
         } catch {
           if (!cancelled) setDailyDone(false);
         }
+        try {
+          const xp = await getTotalXp(user.id);
+          if (!cancelled) setRankSymbol(rankForXp(xp).symbol);
+        } catch {
+          if (!cancelled) setRankSymbol('🃏');
+        }
       } else {
         if (!cancelled) setDailyDone(isDailyDoneLocal(dateString));
+        if (!cancelled) setRankSymbol('🃏');
       }
 
       const last = loadLastConfig();
+      if (!cancelled) setRepeatContext(last ? describeLastConfig(last, t) : undefined);
       if (
         !last ||
         (last.gameMode !== 'classic' &&
@@ -89,7 +128,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [screen, user?.id]);
+  }, [screen, user?.id, t]);
 
   if (isLoading) return <p className="p-6">{t('common.loading')}</p>;
 
@@ -277,11 +316,14 @@ export default function Home() {
     return (
       <LandingScreen
         user={user}
+        rankSymbol={rankSymbol}
         dailyDone={dailyDone}
         onStartDaily={handleStartDaily}
         onStartWorkout={() => setScreen('setup')}
         onRepeatLast={canRepeatLast ? handleRepeatLast : undefined}
-        onShowHistory={() => setScreen('history')}
+        repeatContext={repeatContext}
+        onShowProfile={() => setScreen(user ? 'profile' : 'landing')}
+        onShowHowToPlay={() => setScreen('how-to-play')}
         onSignOut={signOut}
       />
     );
@@ -346,8 +388,19 @@ export default function Home() {
       />
     );
   }
-  if (screen === 'history' && user) {
+  // Privremeni sadržaj (Task 7) — Faza D (Task 14/15) zamenjuje pravim
+  // ProfileScreen/HowToPlayScreen; guard user ovde je odbrana druge linije,
+  // onShowProfile već šalje gosta na 'landing'.
+  if (screen === 'profile' && user) {
     return <ProgressScreen userId={user.id} onBack={() => setScreen('landing')} />;
+  }
+  if (screen === 'how-to-play') {
+    return (
+      <InfoModal title={t('howToPlay.title')} closeLabel={t('common.close')} onClose={() => setScreen('landing')}>
+        <p className="mb-3">{t('howToPlay.deckIsTrainerDesc')}</p>
+        <p>{t('howToPlay.suitsExplainer')}</p>
+      </InfoModal>
+    );
   }
   return null;
 }

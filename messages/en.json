@@ -14,11 +14,14 @@
     "repeatLast": "Run it back",
     "runItBackContext": "Run it back · {context}",
     "dailyDone": "🎲 Daily Deal ✓",
-    "dailyPending": "🎲 Daily Deal",
+    "dailyPending": "🎲 Daily Deal –",
     "dealMeIn": "DEAL ME IN",
     "playingAsGuest": "Playing as guest",
     "signIn": "Sign in",
-    "howToPlay": "How to Play"
+    "howToPlay": "How to Play",
+    "entryQuick": "Quick Deal",
+    "entryCustom": "Stack the Deck",
+    "minutesShort": "{minutes} min"
   },
   "setup": {
     "step": "Step {current}/{total}",

@@ -14,11 +14,14 @@
     "repeatLast": "Ponovi podelu",
     "runItBackContext": "Ponovi podelu · {context}",
     "dailyDone": "🎲 Dnevna podela ✓",
-    "dailyPending": "🎲 Dnevna podela",
+    "dailyPending": "🎲 Dnevna podela –",
     "dealMeIn": "PODELI MI",
     "playingAsGuest": "Igraš kao gost",
     "signIn": "Prijavi se",
-    "howToPlay": "Kako se igra"
+    "howToPlay": "Kako se igra",
+    "entryQuick": "Brza podela",
+    "entryCustom": "Složi špil",
+    "minutesShort": "{minutes} min"
   },
   "setup": {
     "step": "Korak {current}/{total}",

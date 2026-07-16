@@ -39,12 +39,12 @@ describe('Home (top-level state machine)', () => {
     const user = userEvent.setup();
     renderWithIntl(<Home />);
 
-    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(screen.getByRole('button', { name: 'PODELI MI' }));
     await user.click(await screen.findByRole('button', { name: 'finish-setup' }));
     await user.click(await screen.findByRole('button', { name: 'finish-session' }));
     await user.click(await screen.findByRole('button', { name: 'finish-summary' }));
 
-    expect(await screen.findByRole('button', { name: 'Nastavi kao gost' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'PODELI MI' })).toBeInTheDocument();
   });
 
   it('shows the perfect_deck first-run explanation once, before the session starts', async () => {
@@ -53,7 +53,7 @@ describe('Home (top-level state machine)', () => {
     const user = userEvent.setup();
     const { unmount } = renderWithIntl(<Home />);
 
-    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(screen.getByRole('button', { name: 'PODELI MI' }));
     await user.click(await screen.findByRole('button', { name: 'finish-setup-challenge' }));
 
     // Gate: session has NOT started while the explanation is up.
@@ -67,7 +67,7 @@ describe('Home (top-level state machine)', () => {
     // Second run on the same device: no modal, straight to the session.
     unmount();
     renderWithIntl(<Home />);
-    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(screen.getByRole('button', { name: 'PODELI MI' }));
     await user.click(await screen.findByRole('button', { name: 'finish-setup-challenge' }));
     expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
     expect(screen.queryByText(/Svaka karta ima svoju vremensku kvotu/)).not.toBeInTheDocument();
@@ -78,7 +78,7 @@ describe('Home (top-level state machine)', () => {
     const user = userEvent.setup();
     const { unmount } = renderWithIntl(<Home />);
 
-    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(screen.getByRole('button', { name: 'PODELI MI' }));
     await user.click(await screen.findByRole('button', { name: 'finish-setup' }));
 
     expect(await screen.findByText(/Ako izvučeš džoker/)).toBeInTheDocument();
@@ -90,7 +90,7 @@ describe('Home (top-level state machine)', () => {
 
     unmount();
     renderWithIntl(<Home />);
-    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(screen.getByRole('button', { name: 'PODELI MI' }));
     await user.click(await screen.findByRole('button', { name: 'finish-setup' }));
     expect(await screen.findByRole('button', { name: 'finish-session' })).toBeInTheDocument();
     expect(screen.queryByText(/Ako izvučeš džoker/)).not.toBeInTheDocument();
@@ -102,7 +102,7 @@ describe('Home (top-level state machine)', () => {
     const user = userEvent.setup();
     renderWithIntl(<Home />);
 
-    await user.click(screen.getByRole('button', { name: 'Nastavi kao gost' }));
+    await user.click(screen.getByRole('button', { name: 'PODELI MI' }));
     await user.click(await screen.findByRole('button', { name: 'finish-setup-challenge' }));
 
     expect(await screen.findByText(/Ako izvučeš džoker/)).toBeInTheDocument();
