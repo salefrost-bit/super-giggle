@@ -103,8 +103,11 @@ export function CardDisplay({
 
   const { phase, content: displayed } = deal;
 
+  // Spec v0.4.8 §3: karta preuzima semantiku uklonjenog dugmeta — tap radi i
+  // tokom deal animacije (kao što je dugme radilo); dupli tap brani
+  // SessionScreen kroz nextDisabled/isAdvancing, ne animaciona faza.
   function handleTap() {
-    if (disabled || phase !== 'idle') return;
+    if (disabled) return;
     onTap?.();
   }
 
@@ -144,6 +147,10 @@ export function CardDisplay({
     <div
       role={onTap ? 'button' : undefined}
       tabIndex={onTap ? 0 : undefined}
+      // Spec v0.4.8 §3: karta JE kontrola za sledeću kartu (dugme uklonjeno) —
+      // ime i disabled stanje žive na njoj radi pristupačnosti i testova.
+      aria-label={onTap ? t('workout.nextCard') : undefined}
+      aria-disabled={onTap && disabled ? true : undefined}
       onClick={handleTap}
       onKeyDown={(e) => {
         if (onTap && (e.key === 'Enter' || e.key === ' ')) {
@@ -170,6 +177,11 @@ export function CardDisplay({
           {t('workout.reps')}
         </p>
         <p className="text-[23px] font-extrabold text-accent mt-2.5">{displayed.exerciseName}</p>
+        {onTap && (
+          <p className="text-[11px] font-extrabold tracking-[0.2em] text-muted uppercase mt-4">
+            {t('workout.tapForNext')} <span className="text-accent">→</span>
+          </p>
+        )}
       </div>
       <div className="self-end rotate-180">{cornerLabel}</div>
     </div>

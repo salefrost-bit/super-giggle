@@ -215,7 +215,8 @@ export function SessionScreen({
     if (hasShownHalfToastRef.current || currentIndex !== halfDeckIndex) return;
     hasShownHalfToastRef.current = true;
     setShowHalfToast(true);
-    const timeoutId = window.setTimeout(() => setShowHalfToast(false), 2300);
+    // Spec v0.4.8 §2: kratko iskoči i nestane — trajanje prati toastK animaciju.
+    const timeoutId = window.setTimeout(() => setShowHalfToast(false), 1500);
     return () => window.clearTimeout(timeoutId);
   }, [currentIndex, halfDeckIndex]);
 
@@ -599,17 +600,6 @@ export function SessionScreen({
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5 min-w-0">
-          {onAbort && (
-            <button
-              type="button"
-              onClick={() => setConfirmQuit(true)}
-              aria-label={t('workout.quitAria')}
-              data-testid="quit-button"
-              className="flex-none w-8 h-8 rounded-lg bg-surface text-muted text-base font-black flex items-center justify-center"
-            >
-              ✕
-            </button>
-          )}
           {isDaily ? (
             <div
               data-testid="daily-chip"
@@ -660,7 +650,7 @@ export function SessionScreen({
 
       {showHalfToast && (
         <div
-          className="fixed left-1/2 -translate-x-1/2 bottom-32 z-20 bg-[#232327] border border-accent/40 rounded-full px-[18px] py-2.5 text-[13px] font-black tracking-[0.08em] text-accent whitespace-nowrap shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
+          className="fixed left-1/2 bottom-32 z-20 bg-[#232327] border border-accent/40 rounded-full px-[18px] py-2.5 text-[13px] font-black tracking-[0.08em] text-accent whitespace-nowrap shadow-[0_8px_24px_rgba(0,0,0,0.5)] -translate-x-1/2 motion-safe:animate-[toastK_1.5s_cubic-bezier(.2,.9,.3,1.2)_both]"
           role="status"
         >
           {t('workout.halfDeckDown')}
@@ -835,20 +825,36 @@ export function SessionScreen({
         </p>
       )}
 
+      {/* Spec v0.4.8 §3/§4: karta je kontrola za "sledeću"; dole široka
+          narandžasta Pauza + crveni ✕ za prekid. */}
       <div className="flex gap-3 mt-6">
         <button
           onClick={stopwatch.isPaused ? handleResume : handleManualPause}
-          className="flex-1 bg-surface/60 border-2 border-white/15 text-foreground rounded-[18px] p-5 font-extrabold text-base"
+          className="flex-1 rounded-[18px] p-5 font-extrabold text-base"
+          style={{
+            background: 'var(--color-heat-warn)',
+            color: 'var(--color-background)',
+            boxShadow: '0 0 24px rgba(255,179,64,.25)',
+          }}
         >
           {stopwatch.isPaused ? t('workout.resume') : t('workout.pause')}
         </button>
-        <button
-          onClick={handleNext}
-          disabled={nextDisabled}
-          className="flex-[2] bg-accent text-background rounded-[18px] p-5 font-extrabold text-lg disabled:opacity-50"
-        >
-          {isWaitingForSession ? t('workout.preparing') : t('workout.nextCard')}
-        </button>
+        {onAbort && (
+          <button
+            type="button"
+            onClick={() => setConfirmQuit(true)}
+            aria-label={t('workout.quitAria')}
+            data-testid="quit-button"
+            className="flex-none w-[64px] rounded-[18px] border-2 font-black text-xl"
+            style={{
+              borderColor: 'rgba(255,81,71,.5)',
+              color: 'var(--color-heat-danger)',
+              background: 'rgba(255,81,71,.08)',
+            }}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {stopwatch.isPaused && (

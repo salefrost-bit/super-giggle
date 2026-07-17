@@ -1,5 +1,9 @@
 # Šta je novo u ŠPIL-u
 
+## v0.4.8 — Ispravke iz žive probe 3 (2026-07-17)
+
+Doterivanje ekrana treninga po utiscima iz probe. Dugme „Sledeća karta" je izbačeno — **sama karta je dugme**: tapni je za sledeću, a na njoj sada piše „TAP FOR NEXT →" da se to vidi. Pauza je zato šira i narandžasta, a crveni ✕ za prekid treninga stoji odmah pored nje (umesto gore u uglu). Obaveštenje na pola špila sada iskoči uz kratku animaciju i samo nestane umesto da stoji na ekranu. Vraćanje na isto mesto posle osvežavanja stranice usred treninga stiže uz PWA izdanje.
+
 ## v0.4.7 — Ispravke iz žive probe 2 (2026-07-17)
 
 Druga runda ispravki posle probe na telefonu. Svaki trening sada može da se **prekine** — ✕ u uglu, uz pitanje za potvrdu; prekinut trening se ne upisuje u istoriju. **Džokeri** se više ne pojavljuju u špilovima kraćim od 20 karata, a kad se pojave, odmor može da se **preskoči** jednim tapom. Mod **On the Clock** je dobio novu logiku: banka kreće od 5 minuta i stalno otkucava; svaka karta nosi svoj sat od 20 sekundi koji prelazi u minus — brzina puni banku, kašnjenje je prazni (najviše −20s po karti); isprazni ceo špil pre nule za ×1.5 bonus, a džoker i pauza zamrzavaju banku. Lista sesija u istoriji sada jasno pokazuje da se skroluje unutar svoje zone (tanak klizač + prelaz na dnu), kao u dizajnu.

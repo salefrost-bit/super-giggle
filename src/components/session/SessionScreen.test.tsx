@@ -120,10 +120,19 @@ describe('SessionScreen — logged in', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: 'Priprema treninga...' })).toBeDisabled();
+    // ERRATA v0.4.8 §3 (dugme uklonjeno, karta je kontrola): "Priprema
+    // treninga..." labela ne postoji — čekanje se vidi kao aria-disabled karta.
+    expect(screen.getByRole('button', { name: 'Sledeća karta' })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
 
     resolveCreateSession('session-1');
-    await screen.findByRole('button', { name: 'Sledeća karta' });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Sledeća karta' })).not.toHaveAttribute(
+        'aria-disabled'
+      )
+    );
 
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
     await user.click(screen.getByRole('button', { name: 'Sledeća karta' }));
@@ -785,12 +794,14 @@ describe('SessionScreen — joker rest', () => {
     }
 
     expect(await screen.findByText('DŽOKER · 30s PREDAH')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Sledeća karta' })).toBeDisabled();
+    // ERRATA v0.4.8 §3 (dugme "Sledeća karta" uklonjeno, karta je kontrola):
+    // tokom odmora karta nije renderovana, pa kontrola ne postoji.
+    expect(screen.queryByRole('button', { name: 'Sledeća karta' })).not.toBeInTheDocument();
 
     await vi.advanceTimersByTimeAsync(30_000);
 
     await waitFor(() => expect(screen.queryByText('DŽOKER · 30s PREDAH')).not.toBeInTheDocument());
-    expect(screen.getByRole('button', { name: 'Sledeća karta' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Sledeća karta' })).not.toHaveAttribute('aria-disabled');
     vi.useRealTimers();
   });
 

@@ -43,7 +43,6 @@
   },
   "workout": {
     "nextCard": "Next card",
-    "preparing": "Preparing workout...",
     "pause": "Pause",
     "resume": "Resume",
     "paused": "PAUSED",
@@ -66,7 +65,8 @@
     "quitBody": "If you quit, this workout won't be saved to your history.",
     "quitConfirm": "QUIT",
     "quitCancel": "KEEP GOING",
-    "cardClockCaption": "CARD CLOCK"
+    "cardClockCaption": "CARD CLOCK",
+    "tapForNext": "TAP FOR NEXT"
   },
   "results": {
     "score": "{score}/{total} cards beaten",

@@ -43,7 +43,6 @@
   },
   "workout": {
     "nextCard": "Sledeća karta",
-    "preparing": "Priprema treninga...",
     "pause": "Pauza",
     "resume": "Nastavi",
     "paused": "PAUZIRANO",
@@ -66,7 +65,8 @@
     "quitBody": "Ako prekineš, ovaj trening se neće sačuvati u istoriju.",
     "quitConfirm": "PREKINI",
     "quitCancel": "NASTAVI",
-    "cardClockCaption": "SAT KARTE"
+    "cardClockCaption": "SAT KARTE",
+    "tapForNext": "TAPNI ZA SLEDEĆU"
   },
   "results": {
     "score": "{score}/{total} oborenih karata",
